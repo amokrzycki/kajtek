@@ -6,7 +6,7 @@ export const ALL_STATIONS = [
     genre: "Pop / Hity",
     cat: "national",
     stream: "https://rs202-krk.rmfstream.pl/rmf_fm",
-    playlistUrl: "https://api.rmfon.pl/stations/5/playlist",
+    playlistUrl: "/api/rmf/stations/5/playlist",
   },
 ];
 

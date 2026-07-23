@@ -132,26 +132,40 @@ export function updateNowPlayingTrack(track) {
 }
 
 export function updateHistoryUI() {
-  if (state.history.length === 0) {
+  if (!state.history || state.history.length === 0) {
     els.historyEmpty.style.display = "block";
     els.historyList.innerHTML = "";
-  } else {
-    els.historyEmpty.style.display = "none";
-    els.historyList.innerHTML = state.history
-      .slice(0, 3)
-      .map(
-        (t) => `
-      <div class="history-item">
-        <span class="history-dot"></span>
+    return;
+  }
+
+  els.historyEmpty.style.display = "none";
+  els.historyList.innerHTML = state.history
+    .map((t) => {
+      if (t.isBreak) {
+        return `
+      <div class="history-item history-break" style="opacity: 0.85; font-style: italic; background: rgba(232, 160, 64, 0.12); padding: 4px 8px; border-radius: 4px; margin: 4px 0; border: 1px dashed rgba(232, 160, 64, 0.3);">
+        <span class="history-dot" style="background: var(--k-accent); width: 6px; height: 6px;"></span>
+        <span class="history-title" style="color: var(--k-accent); font-size: 0.75rem; font-family: var(--k-font-mono);">📻 ${t.label}</span>
+      </div>
+    `;
+      }
+
+      const isUpcoming = t.order > 0;
+      const isCurrent = t.order === 0;
+
+      return `
+      <div class="history-item ${isCurrent ? "history-current" : ""}" style="${isCurrent ? "font-weight: 700; opacity: 1;" : ""}">
+        <span class="history-dot" style="${isCurrent ? "background: #10b981; transform: scale(1.3);" : ""}"></span>
         ${t.start ? `<span class="history-time" style="font-family: var(--k-font-mono); font-size: 0.65rem; color: var(--k-accent); opacity: 0.85;">${t.start}</span><span class="history-sep">·</span>` : ""}
+        ${isUpcoming ? `<span style="font-size: 0.65rem; font-weight: 700; color: var(--k-accent); margin-right: 4px;">[ZARAZ]</span>` : ""}
+        ${isCurrent ? `<span style="font-size: 0.65rem; font-weight: 700; color: #10b981; margin-right: 4px;">[TERAZ]</span>` : ""}
         <span class="history-artist">${t.artist}</span>
         <span class="history-sep">·</span>
         <span class="history-title">${t.title}</span>
       </div>
-    `,
-      )
-      .join("");
-  }
+    `;
+    })
+    .join("");
 }
 
 export function updateUI(currentTrack, onSelect, onToggleFav) {
