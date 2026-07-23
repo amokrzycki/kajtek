@@ -1,62 +1,78 @@
+import { getProvider } from "./providers.js";
 import { radioAudio, setTrackInterval, state, trackInterval } from "./state.js";
 import { updateHistoryUI, updateNowPlayingTrack } from "./ui.js";
 
-function decodeEntities(str) {
-  if (!str) return "";
-  const txt = document.createElement("textarea");
-  txt.innerHTML = str;
-  return txt.value;
+async function fetchWithTimeout(url, timeoutMs = 3500) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { signal: controller.signal });
+    clearTimeout(timer);
+    return res;
+  } catch (err) {
+    clearTimeout(timer);
+    throw err;
+  }
+}
+
+async function parseJsonFromRes(res) {
+  if (!res.ok) return null;
+  const json = await res.json();
+  if (Array.isArray(json)) return json;
+  if (json?.contents) {
+    try {
+      const parsed = JSON.parse(json.contents);
+      if (Array.isArray(parsed) || typeof parsed === "object") return parsed;
+    } catch (_) {}
+  }
+  if (typeof json === "object") return json;
+  return null;
 }
 
 export async function fetchPlaylist(station) {
-  if (!station || !station.playlistUrl || station._apiFailed) return null;
+  if (!station?.playlistUrl || (station._consecutiveFailures || 0) > 5) return null;
 
-  try {
-    const res = await fetch(station.playlistUrl);
-    if (!res.ok) throw new Error();
-    const data = await res.json();
-
-    if (Array.isArray(data) && data.length > 0) {
-      const cur = data.find((item) => item.order === 0) || data[0];
-      const upcoming = data
-        .filter((item) => item.order > 0)
-        .sort((a, b) => a.order - b.order)
-        .map((item) => ({
-          artist: decodeEntities(item.author),
-          title: decodeEntities(item.title),
-          start: item.start,
-        }));
-
-      return {
-        current: cur ? { artist: decodeEntities(cur.author), title: decodeEntities(cur.title) } : null,
-        upcoming,
-      };
-    }
-  } catch (e) {
-    station._apiFailed = true;
+  const provider = getProvider(station);
+  const target = station.playlistUrl;
+  const urls = [target];
+  if (target.startsWith("http")) {
+    urls.push(
+      `https://corsproxy.io/?${encodeURIComponent(target)}`,
+      `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`,
+    );
   }
 
+  for (const url of urls) {
+    try {
+      const res = await fetchWithTimeout(url, 3500);
+      const data = await parseJsonFromRes(res);
+
+      if (data) {
+        const parsed = provider.parse(data, station);
+        if (parsed) {
+          station._consecutiveFailures = 0;
+          return parsed;
+        }
+      }
+    } catch (_) {}
+  }
+
+  station._consecutiveFailures = (station._consecutiveFailures || 0) + 1;
   return null;
 }
 
 async function refreshTrackInfo() {
   if (!state.playing || !state.station) return;
 
-  if (state.station.playlistUrl && !state.station._apiFailed) {
+  if (state.station.playlistUrl) {
     const data = await fetchPlaylist(state.station);
-    if (data && data.current) {
+    if (data?.current) {
       state.liveTrack = data.current;
-      state.history = data.upcoming;
+      state.history = data.all || [];
       updateNowPlayingTrack(state.liveTrack);
       updateHistoryUI();
-      return;
     }
   }
-
-  state.liveTrack = null;
-  state.history = [];
-  updateNowPlayingTrack(null);
-  updateHistoryUI();
 }
 
 function stopTrackRotation() {
@@ -76,6 +92,7 @@ export function currentTrack() {
 
 export function selectStation(s, onUIUpdate) {
   state.station = s;
+  delete s._consecutiveFailures;
   delete s._apiFailed;
   state.playing = true;
   state.liveTrack = null;

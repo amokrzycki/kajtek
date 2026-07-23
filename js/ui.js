@@ -73,7 +73,7 @@ export function renderStationList(onSelect, onToggleFav) {
         card.setAttribute("tabindex", "0");
         card.innerHTML = `
           <div class="sc-main">
-            <div class="sc-name">${s.name}</div>
+            <div class="sc-name">${isSelected ? '<span class="sc-led-dot" aria-hidden="true"></span>' : ""}${s.name}</div>
             <div class="sc-meta">
               <span class="sc-freq">${s.freq} FM</span>
               <span class="sc-genre">${s.genre}</span>
@@ -124,6 +124,9 @@ export function updateNowPlayingTrack(track) {
     return;
   }
   els.npTrackWrap.style.display = "block";
+  if (els.npArtist.textContent === track.artist && els.npTitle.textContent === track.title) {
+    return;
+  }
   els.npArtist.textContent = track.artist;
   els.npTitle.textContent = track.title;
   els.npTitle.classList.remove("fade-in");
@@ -132,26 +135,40 @@ export function updateNowPlayingTrack(track) {
 }
 
 export function updateHistoryUI() {
-  if (state.history.length === 0) {
+  if (!state.history || state.history.length === 0) {
     els.historyEmpty.style.display = "block";
     els.historyList.innerHTML = "";
-  } else {
-    els.historyEmpty.style.display = "none";
-    els.historyList.innerHTML = state.history
-      .slice(0, 3)
-      .map(
-        (t) => `
-      <div class="history-item">
+    return;
+  }
+
+  els.historyEmpty.style.display = "none";
+  els.historyList.innerHTML = state.history
+    .map((t) => {
+      if (t.isBreak) {
+        return `
+      <div class="history-item history-break">
         <span class="history-dot"></span>
-        ${t.start ? `<span class="history-time" style="font-family: var(--k-font-mono); font-size: 0.65rem; color: var(--k-accent); opacity: 0.85;">${t.start}</span><span class="history-sep">·</span>` : ""}
+        <span class="history-title">📻 ${t.label}</span>
+      </div>
+    `;
+      }
+
+      const isUpcoming = t.order > 0;
+      const isCurrent = t.order === 0;
+
+      return `
+      <div class="history-item${isCurrent ? " history-current" : ""}">
+        <span class="history-dot"></span>
+        ${t.start ? `<span class="history-time">${t.start}</span><span class="history-sep">·</span>` : ""}
+        ${isUpcoming ? `<span class="history-badge upcoming">[ZARAZ]</span>` : ""}
+        ${isCurrent ? `<span class="history-badge current">[TERAZ]</span>` : ""}
         <span class="history-artist">${t.artist}</span>
         <span class="history-sep">·</span>
         <span class="history-title">${t.title}</span>
       </div>
-    `,
-      )
-      .join("");
-  }
+    `;
+    })
+    .join("");
 }
 
 export function updateUI(currentTrack, onSelect, onToggleFav) {

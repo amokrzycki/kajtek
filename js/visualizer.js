@@ -55,10 +55,13 @@ export function stopVisualizer() {
 
 let currentEqLevels = [4, 4, 4, 4, 4];
 let currentVuLevels = new Array(VU_COUNT).fill(3);
+// ponytail: simplified AGC using peakTracker exponential decay instead of full RMS sliding window (ceiling: extreme volume transients; upgrade: 50ms windowed RMS)
+let peakTracker = 180;
 
 function resetVisuals() {
   currentEqLevels = [4, 4, 4, 4, 4];
   currentVuLevels = new Array(VU_COUNT).fill(3);
+  peakTracker = 180;
 
   const eqBars = els.equalizer.querySelectorAll(".eq-bar");
   eqBars.forEach((bar) => {
@@ -87,13 +90,17 @@ function updateFrame() {
     const dataArray = new Uint8Array(analyser.frequencyBinCount);
     analyser.getByteFrequencyData(dataArray);
 
+    let maxBinVal = 0;
     let sum = 0;
     for (let i = 0; i < dataArray.length; i++) {
-      sum += dataArray[i];
+      const v = dataArray[i];
+      sum += v;
+      if (v > maxBinVal) maxBinVal = v;
     }
 
     if (sum > 0) {
-      // 1. Main Equalizer (5 bands) with smoothing
+      peakTracker = Math.max(120, Math.max(peakTracker * 0.96, maxBinVal));
+
       const binIndices = [2, 6, 14, 24, 36];
       const minH = 4;
       const maxH = 30;
@@ -101,39 +108,35 @@ function updateFrame() {
       eqBars.forEach((bar, idx) => {
         const binIndex = binIndices[idx] || idx * 6;
         const val = dataArray[binIndex] || 0;
-        const norm = val / 255;
-        const targetH = Math.max(minH, Math.round(norm * maxH));
+        const norm = Math.min(1, val / peakTracker);
+        const power = norm ** 1.35;
+        const targetH = Math.max(minH, Math.round(power * maxH));
 
-        // Smooth interpolation (fast rise, smooth decay)
         if (targetH > currentEqLevels[idx]) {
-          currentEqLevels[idx] = currentEqLevels[idx] * 0.4 + targetH * 0.6;
+          currentEqLevels[idx] = currentEqLevels[idx] * 0.3 + targetH * 0.7;
         } else {
-          currentEqLevels[idx] = currentEqLevels[idx] * 0.8 + targetH * 0.2;
+          currentEqLevels[idx] = currentEqLevels[idx] * 0.72 + targetH * 0.28;
         }
 
         bar.style.height = `${Math.round(currentEqLevels[idx])}px`;
       });
 
-      // 2. Winamp-style Spectrum VU Strip (18 bouncy, expressive bars)
       vuSegs.forEach((seg, idx) => {
         const progress = idx / (VU_COUNT - 1);
-        // Exponential bin mapping with spread across 1..44 to avoid bass bar clustering
-        const binIndex = Math.min(44, Math.max(1, Math.floor(progress ** 1.15 * 43) + 1));
+        const binIndex = Math.min(46, Math.max(2, Math.floor(progress ** 1.15 * 44) + 2));
 
-        // Individual frequency band curve so neighboring bars dance independently
-        const bandVariation = 1 + Math.sin(idx * 1.8 + binIndex) * 0.12;
-        const hfBoost = 1 + progress * 0.9;
+        const bandVariation = 1 + Math.sin(idx * 1.8 + binIndex) * 0.1;
+        const hfBoost = 1 + progress * 0.35;
         const rawVal = (dataArray[binIndex] || 0) * hfBoost * bandVariation;
 
-        // Non-linear power curve for classic Winamp punchy dynamic range
-        const norm = Math.min(1, (rawVal / 255) ** 0.78);
-        const targetH = Math.max(3, Math.round(norm * 24));
+        const norm = Math.min(1, rawVal / peakTracker);
+        const power = norm ** 1.4;
+        const targetH = Math.max(3, Math.round(power * 24));
 
-        // Winamp floating decay (instant attack on hits, smooth fluid release)
         if (targetH > currentVuLevels[idx]) {
-          currentVuLevels[idx] = currentVuLevels[idx] * 0.35 + targetH * 0.65;
+          currentVuLevels[idx] = currentVuLevels[idx] * 0.25 + targetH * 0.75;
         } else {
-          currentVuLevels[idx] = currentVuLevels[idx] * 0.86 + targetH * 0.14;
+          currentVuLevels[idx] = currentVuLevels[idx] * 0.75 + targetH * 0.25;
         }
 
         const renderH = Math.round(currentVuLevels[idx]);
@@ -147,32 +150,36 @@ function updateFrame() {
 
   if (!useRealData) {
     const now = Date.now() / 1000;
-    const volFactor = state.muted ? 0 : state.vol / 100;
+    const rawVol = state.muted ? 0 : state.vol / 100;
 
-    if (volFactor === 0) {
+    if (rawVol === 0) {
       resetVisuals();
     } else {
-      // Fallback EQ bars with smoothing
+      const volFactor = 0.4 + rawVol * 0.6;
       const minH = 4;
       const maxH = 30;
+
       eqBars.forEach((bar, idx) => {
         const speed = [3.2, 4.5, 3.8, 5.1, 4.1][idx];
         const phase = [0, 1.2, 2.4, 3.6, 4.8][idx];
-        const val = (Math.sin(now * speed + phase) + 1) / 2;
+        const val = ((Math.sin(now * speed + phase) + 1) / 2) ** 1.6;
         const targetH = Math.max(minH, Math.round(val * maxH * volFactor));
 
-        currentEqLevels[idx] = currentEqLevels[idx] * 0.8 + targetH * 0.2;
+        currentEqLevels[idx] = currentEqLevels[idx] * 0.7 + targetH * 0.3;
         bar.style.height = `${Math.round(currentEqLevels[idx])}px`;
       });
 
-      // Fallback VU strip - Winamp-style individual bouncing wave per segment
       vuSegs.forEach((seg, idx) => {
         const speed = 3.6 + (idx % 6) * 0.55;
         const phase = idx * 0.5;
-        const wave = (Math.sin(now * speed + phase) + Math.cos(now * 2.3 - idx * 0.3) + 2) / 4;
+        const wave = ((Math.sin(now * speed + phase) + Math.cos(now * 2.7 - idx * 0.4) + 2) / 4) ** 1.5;
         const targetH = Math.max(3, Math.round(wave * 24 * volFactor));
 
-        currentVuLevels[idx] = currentVuLevels[idx] * 0.85 + targetH * 0.15;
+        if (targetH > currentVuLevels[idx]) {
+          currentVuLevels[idx] = currentVuLevels[idx] * 0.3 + targetH * 0.7;
+        } else {
+          currentVuLevels[idx] = currentVuLevels[idx] * 0.75 + targetH * 0.25;
+        }
         const renderH = Math.round(currentVuLevels[idx]);
         seg.style.height = `${renderH}px`;
         seg.classList.toggle("on", renderH > 4);
