@@ -71,15 +71,19 @@ export const rmfProvider: Provider = {
         const nextItem = sorted[i + 1];
         if (item.timestamp && len && nextItem?.timestamp && endTs) {
           const gapSec = nextItem.timestamp - endTs;
-          if (gapSec > 60) {
+          if (gapSec >= 30) {
             const gapMin = Math.round(gapSec / 60);
+            const label =
+              gapSec >= 150
+                ? `Przerwa / Reklamy (~${gapMin} min)`
+                : `Wejście DJ / Dżingel (${gapSec}s)`;
             processed.push({
               artist: "",
               title: "",
               isBreak: true,
               gapSec,
               gapMin,
-              label: `Przerwa / Reklamy (~${gapMin} min)`,
+              label,
             });
           }
         }
@@ -155,12 +159,16 @@ export const eskaProvider: Provider = {
 
     if (rawTracks.length === 0) return null;
 
-    const processed: TrackInfo[] = rawTracks.map((item, idx) => ({
-      order: item.order ?? idx,
-      artist: decodeEntities(item.artist || item.author || item.name || station?.name),
-      title: decodeEntities(item.title || item.song || item.name || "Utwór"),
-      start: item.start || item.startTime || null,
-    }));
+    const processed: TrackInfo[] = rawTracks.map((item, idx) => {
+      const len = Number.parseInt(String(item.lenght || item.length || "0"), 10);
+      return {
+        order: item.order ?? idx,
+        artist: decodeEntities(item.artist || item.author || item.name || station?.name),
+        title: decodeEntities(item.title || item.song || item.name || "Utwór"),
+        start: item.start || item.startTime || null,
+        length: len > 0 ? len : undefined,
+      };
+    });
 
     const active = processed.find((t) => t.order === 0) || processed[0];
     return {
@@ -180,12 +188,16 @@ export const genericProvider: Provider = {
       : payload.tracks || payload.playlist || [payload];
     if (list.length === 0) return null;
 
-    const processed: TrackInfo[] = list.map((item: RawTrack, idx: number) => ({
-      order: item.order ?? idx,
-      artist: decodeEntities(item.artist || item.author || item.name || station?.name),
-      title: decodeEntities(item.title || item.song || "Utwór"),
-      start: item.start || null,
-    }));
+    const processed: TrackInfo[] = list.map((item: RawTrack, idx: number) => {
+      const len = Number.parseInt(String(item.lenght || item.length || "0"), 10);
+      return {
+        order: item.order ?? idx,
+        artist: decodeEntities(item.artist || item.author || item.name || station?.name),
+        title: decodeEntities(item.title || item.song || "Utwór"),
+        start: item.start || null,
+        length: len > 0 ? len : undefined,
+      };
+    });
 
     const cur = processed[0];
     return {

@@ -137,6 +137,13 @@ export function updateNowPlayingTrack(track: TrackInfo | null) {
   els.npTitle.classList.add("fade-in");
 }
 
+function formatDuration(sec?: number): string {
+  if (!sec || sec <= 0) return "";
+  const m = Math.floor(sec / 60);
+  const s = String(sec % 60).padStart(2, "0");
+  return `${m}:${s}`;
+}
+
 export function updateHistoryUI() {
   if (!state.history || state.history.length === 0) {
     els.historyEmpty.style.display = "block";
@@ -158,6 +165,7 @@ export function updateHistoryUI() {
 
       const isUpcoming = (t.order ?? 0) > 0;
       const isCurrent = t.order === 0;
+      const durStr = formatDuration(t.length);
 
       return `
       <div class="history-item${isCurrent ? " history-current" : ""}">
@@ -168,6 +176,7 @@ export function updateHistoryUI() {
         <span class="history-artist">${t.artist}</span>
         <span class="history-sep">·</span>
         <span class="history-title">${t.title}</span>
+        ${durStr ? `<span class="history-duration">${durStr}</span>` : ""}
       </div>
     `;
     })

@@ -684,6 +684,17 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+.history-duration {
+  font-family: var(--k-font-mono);
+  font-size: 0.68rem;
+  color: var(--k-text-muted);
+  opacity: 0.8;
+  margin-left: auto;
+  padding-left: 0.4rem;
+  flex-shrink: 0;
 }
 .history-time {
   font-family: var(--k-font-mono);
