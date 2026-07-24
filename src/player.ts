@@ -1,3 +1,4 @@
+import { applyAudioVolume } from "./controls.js";
 import type { Station } from "./data.js";
 import { getProvider, getRmfFactsTimeInfo } from "./providers.js";
 import { radioAudio, setTrackInterval, state, type TrackInfo, trackInterval } from "./state.js";
@@ -175,7 +176,7 @@ export function selectStation(s: Station, onUIUpdate: () => void) {
 
   if (s.stream) {
     radioAudio.src = s.stream;
-    radioAudio.volume = state.muted ? 0 : state.vol / 100;
+    applyAudioVolume();
     radioAudio.play().catch(() => {
       // Ignore autoplay restriction errors
     });

@@ -10,7 +10,7 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 2. **Dark / Light Theme** - Retro-styled theme toggle persisted in `localStorage`.
 3. **Favorite Stations** - Bookmark your favorite stations with ★ and keep them saved locally.
 4. **Sleep Timer** - Automatically turn off audio after 15, 30, 60, or 90 minutes.
-5. **VU Meter & Cassette Reels** - Smooth cassette tape reel animations and an interactive VU meter during playback.
+5. **VU Meter & Cassette Reels** - Smooth cassette tape reel animations and an interactive VU meter during playback (uses real Web Audio FFT spectrum analysis when CORS permits, with dynamic beat emulation fallback on iOS WebKit where live stream frequency data inspection is restricted).
 
 ---
 

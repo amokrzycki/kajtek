@@ -1076,6 +1076,9 @@
   box-shadow: var(--k-sh-btn);
   cursor: pointer;
 }
+.hidden {
+  display: none !important;
+}
 
 .vol-val {
   font-family: var(--k-font-mono);

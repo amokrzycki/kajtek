@@ -1,9 +1,11 @@
+import { isIOS } from "./platform.js";
 import { radioAudio, setSleepInterval, sleepInterval, state } from "./state.js";
 import { updateSleepUI } from "./ui.js";
 
 export function applyAudioVolume(): void {
-  const eff = state.muted ? 0 : state.vol / 100;
-  radioAudio.volume = eff;
+  // iOS ignores HTMLMediaElement.volume (uses hardware buttons);
+  radioAudio.muted = state.muted;
+  radioAudio.volume = isIOS() ? 1 : state.vol / 100;
 }
 
 export function updateVolume(val: number, onUIUpdate: () => void): void {

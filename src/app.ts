@@ -2,7 +2,7 @@ import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.j
 import type { Station } from "./data.js";
 import { currentTrack, selectStation, togglePlay } from "./player.js";
 import { state } from "./state.js";
-import { els, initVU, renderStationList, triggerHistorySlideIn, updateUI } from "./ui.js";
+import { els, initVolumeControlUI, initVU, renderStationList, triggerHistorySlideIn, updateUI } from "./ui.js";
 
 function onSelect(s: Station) {
   selectStation(s, refresh);
@@ -43,6 +43,7 @@ function attachEvents() {
 
 function init() {
   initVU();
+  initVolumeControlUI();
   attachEvents();
   renderStationList(onSelect, onToggleFav);
   refresh();
