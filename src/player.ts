@@ -1,8 +1,9 @@
+import type { Station } from "./data.js";
 import { getProvider } from "./providers.js";
-import { radioAudio, setTrackInterval, state, trackInterval } from "./state.js";
+import { radioAudio, setTrackInterval, state, type TrackInfo, trackInterval } from "./state.js";
 import { updateHistoryUI, updateNowPlayingTrack } from "./ui.js";
 
-async function fetchWithTimeout(url, timeoutMs = 3500) {
+async function fetchWithTimeout(url: string, timeoutMs = 3500): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -15,7 +16,7 @@ async function fetchWithTimeout(url, timeoutMs = 3500) {
   }
 }
 
-async function parseJsonFromRes(res) {
+async function parseJsonFromRes(res: Response): Promise<unknown> {
   if (!res.ok) return null;
   const json = await res.json();
   if (Array.isArray(json)) return json;
@@ -23,13 +24,15 @@ async function parseJsonFromRes(res) {
     try {
       const parsed = JSON.parse(json.contents);
       if (Array.isArray(parsed) || typeof parsed === "object") return parsed;
-    } catch (_) {}
+    } catch (_) {
+      // Ignore parse errors
+    }
   }
   if (typeof json === "object") return json;
   return null;
 }
 
-export async function fetchPlaylist(station) {
+export async function fetchPlaylist(station: Station) {
   if (!station?.playlistUrl || (station._consecutiveFailures || 0) > 5) return null;
 
   const provider = getProvider(station);
@@ -54,7 +57,9 @@ export async function fetchPlaylist(station) {
           return parsed;
         }
       }
-    } catch (_) {}
+    } catch (_) {
+      // Ignore network or parse failures
+    }
   }
 
   station._consecutiveFailures = (station._consecutiveFailures || 0) + 1;
@@ -86,11 +91,11 @@ function startTrackRotation() {
   setTrackInterval(setInterval(refreshTrackInfo, 15000));
 }
 
-export function currentTrack() {
+export function currentTrack(): TrackInfo | null {
   return state.liveTrack;
 }
 
-export function selectStation(s, onUIUpdate) {
+export function selectStation(s: Station, onUIUpdate: () => void) {
   state.station = s;
   delete s._consecutiveFailures;
   delete s._apiFailed;
@@ -101,19 +106,24 @@ export function selectStation(s, onUIUpdate) {
   if (s.stream) {
     radioAudio.src = s.stream;
     radioAudio.volume = state.muted ? 0 : state.vol / 100;
-    radioAudio.play().catch(() => {});
+    radioAudio.play().catch(() => {
+      // Ignore autoplay restriction errors
+    });
   }
 
   startTrackRotation();
   onUIUpdate();
 }
 
-export function togglePlay(onUIUpdate) {
+export function togglePlay(onUIUpdate: () => void) {
   if (!state.station) return;
   state.playing = !state.playing;
 
   if (state.playing) {
-    if (state.station.stream) radioAudio.play().catch(() => {});
+    if (state.station.stream)
+      radioAudio.play().catch(() => {
+        // Ignore autoplay restriction errors
+      });
     startTrackRotation();
   } else {
     radioAudio.pause();

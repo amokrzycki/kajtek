@@ -1,4 +1,17 @@
-export const ALL_STATIONS = [
+export interface Station {
+  id: string;
+  name: string;
+  freq: string;
+  genre: string;
+  cat: string;
+  provider: string;
+  stream: string;
+  playlistUrl?: string;
+  _consecutiveFailures?: number;
+  _apiFailed?: boolean;
+}
+
+export const ALL_STATIONS: Station[] = [
   {
     id: "rmf",
     name: "RMF FM",
@@ -31,5 +44,5 @@ export const ALL_STATIONS = [
   },
 ];
 
-export const DEFAULT_FAVS = ["rmf"];
+export const DEFAULT_FAVS: string[] = ["rmf"];
 export const VU_COUNT = 18;

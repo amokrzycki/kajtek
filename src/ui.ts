@@ -1,32 +1,32 @@
-import { ALL_STATIONS, VU_COUNT } from "./data.js";
+import { ALL_STATIONS, type Station, VU_COUNT } from "./data.js";
 import { ICONS } from "./icons.js";
-import { state } from "./state.js";
+import { state, type TrackInfo } from "./state.js";
 import { startVisualizer, stopVisualizer } from "./visualizer.js";
 
 export const els = {
-  darkToggle: document.getElementById("dark-toggle"),
-  vuStrip: document.getElementById("vu-strip"),
-  reelLeft: document.getElementById("reel-left"),
-  reelRight: document.getElementById("reel-right"),
-  npFreq: document.getElementById("np-freq"),
-  npLiveDot: document.getElementById("np-live-dot"),
-  npStation: document.getElementById("np-station"),
-  npTrackWrap: document.getElementById("np-track"),
-  npArtist: document.getElementById("np-artist"),
-  npTitle: document.getElementById("np-title"),
-  equalizer: document.getElementById("equalizer"),
-  playBtn: document.getElementById("play-btn"),
-  historyToggleBtn: document.getElementById("history-toggle-btn"),
-  historyArrow: document.getElementById("history-arrow"),
-  historyPanel: document.getElementById("history-panel"),
-  historyEmpty: document.getElementById("history-empty"),
-  historyList: document.getElementById("history-list"),
-  muteBtn: document.getElementById("mute-btn"),
-  volSlider: document.getElementById("vol-slider"),
-  volVal: document.getElementById("vol-val"),
-  sleepKeys: document.querySelectorAll(".sleep-key"),
-  sleepCount: document.getElementById("sleep-count"),
-  stationListContainer: document.getElementById("station-list-container"),
+  darkToggle: document.getElementById("dark-toggle") as HTMLButtonElement,
+  vuStrip: document.getElementById("vu-strip") as HTMLDivElement,
+  reelLeft: document.getElementById("reel-left") as HTMLDivElement,
+  reelRight: document.getElementById("reel-right") as HTMLDivElement,
+  npFreq: document.getElementById("np-freq") as HTMLSpanElement,
+  npLiveDot: document.getElementById("np-live-dot") as HTMLSpanElement,
+  npStation: document.getElementById("np-station") as HTMLDivElement,
+  npTrackWrap: document.getElementById("np-track") as HTMLDivElement,
+  npArtist: document.getElementById("np-artist") as HTMLDivElement,
+  npTitle: document.getElementById("np-title") as HTMLSpanElement,
+  equalizer: document.getElementById("equalizer") as HTMLDivElement,
+  playBtn: document.getElementById("play-btn") as HTMLButtonElement,
+  historyToggleBtn: document.getElementById("history-toggle-btn") as HTMLButtonElement,
+  historyArrow: document.getElementById("history-arrow") as HTMLSpanElement,
+  historyPanel: document.getElementById("history-panel") as HTMLDivElement,
+  historyEmpty: document.getElementById("history-empty") as HTMLDivElement,
+  historyList: document.getElementById("history-list") as HTMLDivElement,
+  muteBtn: document.getElementById("mute-btn") as HTMLButtonElement,
+  volSlider: document.getElementById("vol-slider") as HTMLInputElement,
+  volVal: document.getElementById("vol-val") as HTMLSpanElement,
+  sleepKeys: document.querySelectorAll<HTMLButtonElement>(".sleep-key"),
+  sleepCount: document.getElementById("sleep-count") as HTMLDivElement,
+  stationListContainer: document.getElementById("station-list-container") as HTMLElement,
 };
 
 export function initVU() {
@@ -38,7 +38,7 @@ export function initVU() {
   }
 }
 
-export function renderStationList(onSelect, onToggleFav) {
+export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (id: string) => void) {
   els.stationListContainer.innerHTML = "";
 
   const sections = [
@@ -85,13 +85,16 @@ export function renderStationList(onSelect, onToggleFav) {
         `;
 
         card.addEventListener("click", () => onSelect(s));
-        card.addEventListener("keydown", (e) => {
+        card.addEventListener("keydown", (e: KeyboardEvent) => {
           if (e.key === "Enter") onSelect(s);
         });
-        card.querySelector(".sc-star").addEventListener("click", (e) => {
-          e.stopPropagation();
-          onToggleFav(s.id);
-        });
+        const starBtn = card.querySelector(".sc-star");
+        if (starBtn) {
+          starBtn.addEventListener("click", (e: Event) => {
+            e.stopPropagation();
+            onToggleFav(s.id);
+          });
+        }
 
         grid.appendChild(card);
       });
@@ -117,7 +120,7 @@ export function updateSleepUI() {
   });
 }
 
-export function updateNowPlayingTrack(track) {
+export function updateNowPlayingTrack(track: TrackInfo | null) {
   if (!state.station) return;
   if (!track) {
     els.npTrackWrap.style.display = "none";
@@ -153,7 +156,7 @@ export function updateHistoryUI() {
     `;
       }
 
-      const isUpcoming = t.order > 0;
+      const isUpcoming = (t.order ?? 0) > 0;
       const isCurrent = t.order === 0;
 
       return `
@@ -171,7 +174,11 @@ export function updateHistoryUI() {
     .join("");
 }
 
-export function updateUI(currentTrack, onSelect, onToggleFav) {
+export function updateUI(
+  currentTrack: TrackInfo | null,
+  onSelect: (s: Station) => void,
+  onToggleFav: (id: string) => void,
+) {
   applyTheme();
 
   els.vuStrip.classList.toggle("active", state.playing);
@@ -210,13 +217,13 @@ export function updateUI(currentTrack, onSelect, onToggleFav) {
   els.muteBtn.classList.toggle("muted", state.muted);
   els.muteBtn.innerHTML = ICONS.vol(state.muted, state.vol);
   const dispVol = state.muted ? 0 : state.vol;
-  els.volSlider.value = dispVol;
+  els.volSlider.value = String(dispVol);
   els.volSlider.style.setProperty("--vol", `${dispVol}%`);
-  els.volVal.textContent = state.muted ? "—" : state.vol;
+  els.volVal.textContent = state.muted ? "—" : String(state.vol);
 
   updateSleepUI();
 
-  els.historyToggleBtn.setAttribute("aria-expanded", state.showHistory);
+  els.historyToggleBtn.setAttribute("aria-expanded", String(state.showHistory));
   els.historyArrow.textContent = state.showHistory ? "▲" : "▼";
   els.historyPanel.classList.toggle("open", state.showHistory);
   updateHistoryUI();

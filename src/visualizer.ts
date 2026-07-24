@@ -2,17 +2,25 @@ import { VU_COUNT } from "./data.js";
 import { radioAudio, state } from "./state.js";
 import { els } from "./ui.js";
 
-let audioCtx = null;
-let analyser = null;
-let sourceNode = null;
-let animId = null;
+declare global {
+  interface Window {
+    webkitAudioContext?: typeof AudioContext;
+  }
+}
+
+let audioCtx: AudioContext | null = null;
+let analyser: AnalyserNode | null = null;
+let sourceNode: MediaElementAudioSourceNode | null = null;
+let animId: number | null = null;
 let isConnected = false;
 let corsFailed = false;
 
 function initAudioContext() {
   if (audioCtx) {
     if (audioCtx.state === "suspended") {
-      audioCtx.resume().catch(() => {});
+      audioCtx.resume().catch(() => {
+        // ignore autoplay policy restrictions
+      });
     }
     return;
   }
@@ -38,7 +46,9 @@ function initAudioContext() {
 export function startVisualizer() {
   initAudioContext();
   if (audioCtx && audioCtx.state === "suspended") {
-    audioCtx.resume().catch(() => {});
+    audioCtx.resume().catch(() => {
+      // ignore autoplay policy restrictions
+    });
   }
 
   if (animId) cancelAnimationFrame(animId);
@@ -54,8 +64,7 @@ export function stopVisualizer() {
 }
 
 let currentEqLevels = [4, 4, 4, 4, 4];
-let currentVuLevels = new Array(VU_COUNT).fill(3);
-// ponytail: simplified AGC using peakTracker exponential decay instead of full RMS sliding window (ceiling: extreme volume transients; upgrade: 50ms windowed RMS)
+let currentVuLevels: number[] = new Array(VU_COUNT).fill(3);
 let peakTracker = 180;
 
 function resetVisuals() {
@@ -63,14 +72,14 @@ function resetVisuals() {
   currentVuLevels = new Array(VU_COUNT).fill(3);
   peakTracker = 180;
 
-  const eqBars = els.equalizer.querySelectorAll(".eq-bar");
+  const eqBars = els.equalizer ? els.equalizer.querySelectorAll(".eq-bar") : [];
   eqBars.forEach((bar) => {
-    bar.style.height = "4px";
+    (bar as HTMLElement).style.height = "4px";
   });
 
-  const vuSegs = els.vuStrip.querySelectorAll(".vu-seg");
+  const vuSegs = els.vuStrip ? els.vuStrip.querySelectorAll(".vu-seg") : [];
   vuSegs.forEach((seg) => {
-    seg.style.height = "6px";
+    (seg as HTMLElement).style.height = "6px";
     seg.classList.remove("on");
   });
 }
@@ -81,8 +90,8 @@ function updateFrame() {
     return;
   }
 
-  const eqBars = els.equalizer.querySelectorAll(".eq-bar");
-  const vuSegs = els.vuStrip.querySelectorAll(".vu-seg");
+  const eqBars = els.equalizer ? els.equalizer.querySelectorAll(".eq-bar") : [];
+  const vuSegs = els.vuStrip ? els.vuStrip.querySelectorAll(".vu-seg") : [];
 
   let useRealData = isConnected && !corsFailed && !state.muted;
 
@@ -94,8 +103,10 @@ function updateFrame() {
     let sum = 0;
     for (let i = 0; i < dataArray.length; i++) {
       const v = dataArray[i];
-      sum += v;
-      if (v > maxBinVal) maxBinVal = v;
+      if (v !== undefined) {
+        sum += v;
+        if (v > maxBinVal) maxBinVal = v;
+      }
     }
 
     if (sum > 0) {
@@ -112,13 +123,13 @@ function updateFrame() {
         const power = norm ** 1.35;
         const targetH = Math.max(minH, Math.round(power * maxH));
 
-        if (targetH > currentEqLevels[idx]) {
-          currentEqLevels[idx] = currentEqLevels[idx] * 0.3 + targetH * 0.7;
+        if (targetH > (currentEqLevels[idx] ?? 0)) {
+          currentEqLevels[idx] = (currentEqLevels[idx] ?? 0) * 0.3 + targetH * 0.7;
         } else {
-          currentEqLevels[idx] = currentEqLevels[idx] * 0.72 + targetH * 0.28;
+          currentEqLevels[idx] = (currentEqLevels[idx] ?? 0) * 0.72 + targetH * 0.28;
         }
 
-        bar.style.height = `${Math.round(currentEqLevels[idx])}px`;
+        (bar as HTMLElement).style.height = `${Math.round(currentEqLevels[idx] ?? 0)}px`;
       });
 
       vuSegs.forEach((seg, idx) => {
@@ -133,14 +144,15 @@ function updateFrame() {
         const power = norm ** 1.4;
         const targetH = Math.max(3, Math.round(power * 24));
 
-        if (targetH > currentVuLevels[idx]) {
-          currentVuLevels[idx] = currentVuLevels[idx] * 0.25 + targetH * 0.75;
+        const curVu = currentVuLevels[idx] ?? 0;
+        if (targetH > curVu) {
+          currentVuLevels[idx] = curVu * 0.25 + targetH * 0.75;
         } else {
-          currentVuLevels[idx] = currentVuLevels[idx] * 0.75 + targetH * 0.25;
+          currentVuLevels[idx] = curVu * 0.75 + targetH * 0.25;
         }
 
-        const renderH = Math.round(currentVuLevels[idx]);
-        seg.style.height = `${renderH}px`;
+        const renderH = Math.round(currentVuLevels[idx] ?? 0);
+        (seg as HTMLElement).style.height = `${renderH}px`;
         seg.classList.toggle("on", renderH > 4);
       });
     } else {
@@ -160,13 +172,14 @@ function updateFrame() {
       const maxH = 30;
 
       eqBars.forEach((bar, idx) => {
-        const speed = [3.2, 4.5, 3.8, 5.1, 4.1][idx];
-        const phase = [0, 1.2, 2.4, 3.6, 4.8][idx];
+        const speed = [3.2, 4.5, 3.8, 5.1, 4.1][idx] ?? 4;
+        const phase = [0, 1.2, 2.4, 3.6, 4.8][idx] ?? 0;
         const val = ((Math.sin(now * speed + phase) + 1) / 2) ** 1.6;
         const targetH = Math.max(minH, Math.round(val * maxH * volFactor));
 
-        currentEqLevels[idx] = currentEqLevels[idx] * 0.7 + targetH * 0.3;
-        bar.style.height = `${Math.round(currentEqLevels[idx])}px`;
+        const curEq = currentEqLevels[idx] ?? 0;
+        currentEqLevels[idx] = curEq * 0.7 + targetH * 0.3;
+        (bar as HTMLElement).style.height = `${Math.round(currentEqLevels[idx] ?? 0)}px`;
       });
 
       vuSegs.forEach((seg, idx) => {
@@ -175,13 +188,14 @@ function updateFrame() {
         const wave = ((Math.sin(now * speed + phase) + Math.cos(now * 2.7 - idx * 0.4) + 2) / 4) ** 1.5;
         const targetH = Math.max(3, Math.round(wave * 24 * volFactor));
 
-        if (targetH > currentVuLevels[idx]) {
-          currentVuLevels[idx] = currentVuLevels[idx] * 0.3 + targetH * 0.7;
+        const curVu = currentVuLevels[idx] ?? 0;
+        if (targetH > curVu) {
+          currentVuLevels[idx] = curVu * 0.3 + targetH * 0.7;
         } else {
-          currentVuLevels[idx] = currentVuLevels[idx] * 0.75 + targetH * 0.25;
+          currentVuLevels[idx] = curVu * 0.75 + targetH * 0.25;
         }
-        const renderH = Math.round(currentVuLevels[idx]);
-        seg.style.height = `${renderH}px`;
+        const renderH = Math.round(currentVuLevels[idx] ?? 0);
+        (seg as HTMLElement).style.height = `${renderH}px`;
         seg.classList.toggle("on", renderH > 4);
       });
     }
