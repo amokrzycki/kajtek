@@ -16,29 +16,75 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 
 ## Project Structure
 
-- `index.html` - Core HTML5 layout and semantic structure.
+- `src/` - Modular TypeScript application source code:
+  - `app.ts` - Application entry point.
+  - `controls.ts` - Audio control event handling and keyboard shortcuts.
+  - `data.ts` - Default radio station presets and data structures.
+  - `icons.ts` - SVG icon component definitions.
+  - `player.ts` - Audio playback management.
+  - `providers.ts` - External radio provider integrations.
+  - `state.ts` - Local state management and localStorage persistence.
+  - `ui.ts` - DOM rendering and UI updates.
+  - `visualizer.ts` - VU meter and audio visualization animation engine.
+- `index.html` - Core HTML5 layout and structure.
 - `style.css` - Retro design system (CSS variables, dark/light modes, animations).
-- `js/` - Modular application logic (station management, audio streams, timers, UI reactivity).
-- `biome.json` - Code formatting configuration (dev environment).
+- `dist/` - Production build directory (generated assets).
+- `tsconfig.json` - Strict TypeScript configuration.
+- `biome.json` - Code formatting and linting configuration.
+- `.github/workflows/` - Automated GitHub Actions workflows:
+  - `ci.yml` - Linting (Biome) and type checking (`tsc`) on pushes & PRs.
+  - `deploy.yml` - Automated build & deployment via rsync on release tags (`v*`).
 
 ---
 
-## Development & Formatting
+## Development & Building
 
-`biome.json` is used for code formatting in the development environment:
+### Installation
+
+Install project dependencies:
 
 ```bash
-npx @biomejs/biome format --write ./
+npm install
 ```
+
+### Build
+
+Build production bundle (esbuild compilation of `src/app.ts` into `dist/app.js` and static assets copy):
+
+```bash
+npm run build
+```
+
+### Type Checking & Linting
+
+Run TypeScript type check:
+
+```bash
+npx tsc --noEmit
+```
+
+Check and format code with Biome:
+
+```bash
+npx @biomejs/biome check ./
+```
+
+---
+
+## CI / CD Pipelines
+
+- **CI Workflow (`ci.yml`)**: Executes on `push` and `pull_request` to `main`. Validates code style with Biome (`npx @biomejs/biome ci ./`) and performs type safety checks (`npx tsc --noEmit`).
+- **Deploy Workflow (`deploy.yml`)**: Executes on pushing version tags matching `v*`. Builds the application (`npm run build`) and deploys the contents of `dist/` to the host via SSH/rsync.
 
 ---
 
 ## Getting Started
 
-Simply open `index.html` directly in any browser, or run a simple local HTTP server:
+To serve the project locally, build the distribution files and run a local HTTP server pointing to `dist/`:
 
 ```bash
-python3 -m http.server 8080
+npm run build
+python3 -m http.server 8080 --directory dist
 ```
 
-Then navigate to `http://localhost:8080` in your web browser.
+Then open `http://localhost:8080` in your web browser.
