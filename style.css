@@ -499,8 +499,21 @@
 }
 
 .np-track {
-  margin-top: 0.4rem;
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  margin-top: 0;
   min-width: 0;
+  transition: grid-template-rows 0.38s ease, opacity 0.38s ease, margin-top 0.38s ease;
+}
+.np-track-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.np-track.visible {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  margin-top: 0.4rem;
 }
 .np-artist {
   font-size: 0.7rem;

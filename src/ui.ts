@@ -120,22 +120,78 @@ export function updateSleepUI() {
   });
 }
 
+const SCRAMBLE_GLYPHS = "░▒▓█▞▚░▒▓#@&%";
+
+interface ScrambleElement extends HTMLElement {
+  _scrambleTimer?: number;
+}
+
+export function animateScrambleText(el: HTMLElement, targetText: string, durationMs = 900) {
+  const elem = el as ScrambleElement;
+  if (elem.textContent === targetText) return;
+
+  if (elem._scrambleTimer) {
+    cancelAnimationFrame(elem._scrambleTimer);
+  }
+
+  const startTime = performance.now();
+  let lastFlip = 0;
+  const currentGlyphs: string[] = [];
+
+  function frame(now: number) {
+    const elapsed = now - startTime;
+    const rawProgress = Math.min(elapsed / durationMs, 1);
+    const easeProgress = 1 - Math.pow(1 - rawProgress, 3);
+
+    if (now - lastFlip > 60 || rawProgress === 1) {
+      lastFlip = now;
+      for (let i = 0; i < targetText.length; i++) {
+        if (targetText[i] === " ") {
+          currentGlyphs[i] = " ";
+        } else {
+          currentGlyphs[i] = SCRAMBLE_GLYPHS[Math.floor(Math.random() * SCRAMBLE_GLYPHS.length)]!;
+        }
+      }
+    }
+
+    const settledCount = Math.floor(easeProgress * (targetText.length + 1));
+
+    let result = "";
+    for (let i = 0; i < targetText.length; i++) {
+      if (i < settledCount || rawProgress === 1) {
+        result += targetText[i];
+      } else {
+        result += currentGlyphs[i] || "░";
+      }
+    }
+
+    elem.textContent = result;
+
+    if (rawProgress < 1) {
+      elem._scrambleTimer = requestAnimationFrame(frame);
+    } else {
+      elem.textContent = targetText;
+      delete elem._scrambleTimer;
+    }
+  }
+
+  elem._scrambleTimer = requestAnimationFrame(frame);
+}
+
 export function updateNowPlayingTrack(track: TrackInfo | null) {
   if (!state.station) return;
-  els.npTrackWrap.style.display = "block";
+  els.npTrackWrap.classList.add("visible");
 
   const artistText = track?.artist || state.station.name;
   const titleText = track?.title || "Audycja na żywo";
 
-  if (els.npArtist.textContent === artistText && els.npTitle.textContent === titleText) {
-    return;
+  if (els.npArtist.textContent !== artistText) {
+    animateScrambleText(els.npArtist, artistText, 850);
   }
 
-  els.npArtist.textContent = artistText;
-  els.npTitle.textContent = titleText;
-  els.npTitle.classList.remove("fade-in");
-  void els.npTitle.offsetWidth;
-  els.npTitle.classList.add("fade-in");
+  if (els.npTitle.textContent !== titleText) {
+    animateScrambleText(els.npTitle, titleText, 950);
+  }
 }
 
 function formatDuration(sec?: number): string {
@@ -155,38 +211,102 @@ export function updateHistoryUI() {
     return;
   }
 
+  const nowSec = Math.floor(Date.now() / 1000);
   const filtered = state.history.filter((t) => {
-    const isPast = (t.order ?? 0) < 0;
+    const isPast = t.endTimestamp ? nowSec >= t.endTimestamp : (t.order ?? 0) < 0;
     if (t.isBreak && isPast && t.gapSec && t.gapSec < 150) {
       return false;
     }
     return true;
   });
 
+  const activeIdx = filtered.findIndex((t) => {
+    if (t.timestamp && t.endTimestamp) {
+      return nowSec >= t.timestamp && nowSec < t.endTimestamp;
+    }
+    if (t.timestamp && t.length) {
+      return nowSec >= t.timestamp && nowSec < t.timestamp + t.length;
+    }
+    return false;
+  });
+
+  const renderedItems = filtered.map((t, idx) => {
+    let isCurrent = false;
+    let isNext = false;
+    let isUpcoming = false;
+    let isPast = false;
+
+    if (activeIdx !== -1) {
+      if (idx === activeIdx) {
+        isCurrent = true;
+      } else if (idx < activeIdx) {
+        isPast = true;
+      } else if (idx === activeIdx + 1) {
+        isNext = true;
+      } else {
+        isUpcoming = true;
+      }
+    } else {
+      if (t.timestamp && t.endTimestamp) {
+        if (nowSec >= t.endTimestamp) isPast = true;
+        else if (nowSec < t.timestamp) isUpcoming = true;
+      } else if (t.order !== undefined) {
+        if (t.order < 0) {
+          isPast = true;
+        } else if (t.order === 0) {
+          if (state.liveTrack?.isLiveBreak || (t.endTimestamp && nowSec >= t.endTimestamp)) {
+            isPast = true;
+          } else {
+            isCurrent = true;
+          }
+        } else if (t.order === 1) {
+          isNext = true;
+        } else {
+          isUpcoming = true;
+        }
+      }
+    }
+
+    return { t, idx, isCurrent, isNext, isUpcoming, isPast };
+  });
+
   const signature = JSON.stringify(
-    filtered.map((t) => [t.artist, t.title, t.start, t.order, t.isBreak, t.label, t.length]),
+    renderedItems.map(({ t, isCurrent, isNext, isPast }) => [
+      t.artist,
+      t.title,
+      t.start,
+      t.isBreak,
+      t.label,
+      isCurrent,
+      isNext,
+      isPast,
+    ]),
   );
 
   if (els.historyList.dataset.signature === signature) {
     return;
   }
+  els.historyList.dataset.signature = signature;
 
-  const newHTML = filtered
-    .map((t, idx) => {
-      const isCurrent = t.order === 0;
-      const isNext = t.order === 1;
-      const isUpcoming = (t.order ?? 0) > 1;
-
+  const newHTML = renderedItems
+    .map(({ t, idx, isCurrent, isNext, isUpcoming, isPast }) => {
       let statusCls = "is-past";
       if (isCurrent) statusCls = "is-current";
       else if (isNext) statusCls = "is-next";
       else if (isUpcoming) statusCls = "is-upcoming";
+      else if (isPast) statusCls = "is-past";
 
       const itemCls = `pl-item ${statusCls}${t.isBreak ? " is-break" : ""}`;
       const delayStyle = `style="animation-delay: ${idx * 35}ms"`;
 
       if (t.isBreak) {
-        const breakDur = t.gapMin ? `${t.gapMin} min` : t.gapSec ? `${t.gapSec}s` : "";
+        const breakDur = t.gapSec
+          ? t.gapSec >= 60
+            ? `${Math.floor(t.gapSec / 60)}m${t.gapSec % 60 ? ` ${t.gapSec % 60}s` : ""}`
+            : `${t.gapSec}s`
+          : t.gapMin
+          ? `${t.gapMin} min`
+          : "";
         return `
           <div class="${itemCls}" ${delayStyle}>
             <span class="pl-time">${t.start || ""}</span>
@@ -290,15 +410,21 @@ export function updateUI(
   els.playBtn.innerHTML = state.playing ? ICONS.pause : ICONS.play;
 
   if (state.station) {
-    els.npFreq.textContent = `${state.station.freq} FM`;
-    els.npStation.textContent = state.station.name;
+    const freqText = `${state.station.freq} FM`;
+    if (els.npFreq.textContent !== freqText) {
+      animateScrambleText(els.npFreq, freqText, 700);
+    }
+    if (els.npStation.textContent !== state.station.name) {
+      els.npStation.classList.remove("empty");
+      animateScrambleText(els.npStation, state.station.name, 950);
+    }
     els.npLiveDot.classList.toggle("on", state.playing);
     updateNowPlayingTrack(currentTrack);
   } else {
     els.npFreq.textContent = "— FM";
     els.npStation.textContent = "wybierz stację";
     els.npStation.classList.add("empty");
-    els.npTrackWrap.style.display = "none";
+    els.npTrackWrap.classList.remove("visible");
     els.npLiveDot.classList.remove("on");
   }
 

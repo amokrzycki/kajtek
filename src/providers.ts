@@ -71,14 +71,25 @@ export const rmfProvider: Provider = {
         const nextItem = sorted[i + 1];
         if (item.timestamp && len && nextItem?.timestamp && endTs) {
           const gapSec = nextItem.timestamp - endTs;
-          if (gapSec >= 30) {
+          if (gapSec >= 15) {
             const gapMin = Math.round(gapSec / 60);
-            const label = gapSec >= 150 ? `Przerwa / Reklamy (~${gapMin} min)` : `Wejście DJ / Dżingel (${gapSec}s)`;
+            const d = new Date(endTs * 1000);
+            const hh = String(d.getHours()).padStart(2, "0");
+            const mm = String(d.getMinutes()).padStart(2, "0");
+            const ss = String(d.getSeconds()).padStart(2, "0");
+            const hasSeconds = item.start?.split(":").length === 3 || ss !== "00";
+            const breakStartStr = hasSeconds ? `${hh}:${mm}:${ss}` : `${hh}:${mm}`;
+
+            const label = gapSec >= 120 ? `Przerwa / Reklamy` : `Wejście DJ / Dżingel`;
             processed.push({
               order: item.order ?? i,
               artist: "",
               title: "",
               isBreak: true,
+              start: breakStartStr,
+              timestamp: endTs,
+              endTimestamp: nextItem.timestamp,
+              length: gapSec,
               gapSec,
               gapMin,
               label,
@@ -97,6 +108,12 @@ export const rmfProvider: Provider = {
       const endDate = new Date(curEndTs * 1000);
       const endMin = endDate.getMinutes();
       const endHour = endDate.getHours();
+      const endSec = endDate.getSeconds();
+      const hasSeconds = curItem?.start?.split(":").length === 3 || endSec !== 0;
+      const breakStartStr = hasSeconds
+        ? `${String(endHour).padStart(2, "0")}:${String(endMin).padStart(2, "0")}:${String(endSec).padStart(2, "0")}`
+        : `${String(endHour).padStart(2, "0")}:${String(endMin).padStart(2, "0")}`;
+
       const nextHourStr = `${String((endHour + (endMin >= 55 ? 1 : 0)) % 24).padStart(2, "0")}:00`;
 
       const isTopOfHour = endMin >= 55 || endMin <= 3;
@@ -110,15 +127,39 @@ export const rmfProvider: Provider = {
         title: "",
         isBreak: true,
         isPredicted: true,
+        start: breakStartStr,
+        timestamp: curEndTs,
         label: breakLabel,
       });
     }
 
+    const currentActive = processed.find(
+      (t) => t.timestamp && t.timestamp <= nowSec && t.endTimestamp && t.endTimestamp > nowSec,
+    );
+
     let activeTrack: TrackInfo | null = null;
-    if (curEndTs && nowSec > curEndTs + 15 && !hasUpcoming) {
+    if (currentActive) {
+      if (currentActive.isBreak) {
+        activeTrack = {
+          artist: station?.name || "Radio",
+          title: `📻 ${currentActive.label || "Przerwa / Reklamy"}`,
+          isLiveBreak: true,
+        };
+      } else {
+        activeTrack = {
+          artist: currentActive.artist,
+          title: currentActive.title,
+        };
+      }
+    } else if (curEndTs && nowSec >= curEndTs) {
+      const isTopOfHour =
+        new Date(nowSec * 1000).getMinutes() >= 55 || new Date(nowSec * 1000).getMinutes() <= 3;
+      const breakTitle = isTopOfHour
+        ? `📻 Serwis informacyjny / Fakty ${station?.name || ""}`.trim()
+        : "📻 Przerwa / Reklamy";
       activeTrack = {
         artist: station?.name || "Radio",
-        title: "📻 Serwis informacyjny / Fakty",
+        title: breakTitle,
         isLiveBreak: true,
       };
     } else if (curItem) {

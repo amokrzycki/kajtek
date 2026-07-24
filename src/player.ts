@@ -66,6 +66,53 @@ export async function fetchPlaylist(station: Station) {
   return null;
 }
 
+function checkRealtimeTrackState() {
+  if (!state.playing || !state.station || !state.history || state.history.length === 0) return;
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const activeItem = state.history.find(
+    (t) => t.timestamp && t.timestamp <= nowSec && t.endTimestamp && t.endTimestamp > nowSec,
+  );
+
+  let evaluated: TrackInfo | null = null;
+  if (activeItem) {
+    if (activeItem.isBreak) {
+      evaluated = {
+        artist: state.station.name,
+        title: `📻 ${activeItem.label || "Przerwa / Reklamy"}`,
+        isLiveBreak: true,
+      };
+    } else {
+      evaluated = {
+        artist: activeItem.artist,
+        title: activeItem.title,
+      };
+    }
+  } else {
+    const curTrack = state.history.find((t) => t.order === 0) || state.history[0];
+    if (curTrack?.endTimestamp && nowSec >= curTrack.endTimestamp) {
+      const isTopOfHour =
+        new Date(nowSec * 1000).getMinutes() >= 55 || new Date(nowSec * 1000).getMinutes() <= 3;
+      const breakTitle = isTopOfHour
+        ? `📻 Serwis informacyjny / Fakty ${state.station.name}`
+        : "📻 Przerwa / Reklamy";
+      evaluated = {
+        artist: state.station.name,
+        title: breakTitle,
+        isLiveBreak: true,
+      };
+    }
+  }
+
+  if (
+    evaluated &&
+    (state.liveTrack?.artist !== evaluated.artist || state.liveTrack?.title !== evaluated.title)
+  ) {
+    state.liveTrack = evaluated;
+    updateNowPlayingTrack(state.liveTrack);
+  }
+}
+
 async function refreshTrackInfo() {
   if (!state.playing || !state.station) return;
 
@@ -74,6 +121,7 @@ async function refreshTrackInfo() {
     if (data?.current) {
       state.liveTrack = data.current;
       state.history = data.all || [];
+      checkRealtimeTrackState();
       updateNowPlayingTrack(state.liveTrack);
       updateHistoryUI();
     }
@@ -88,7 +136,12 @@ function stopTrackRotation() {
 function startTrackRotation() {
   stopTrackRotation();
   refreshTrackInfo();
-  setTrackInterval(setInterval(refreshTrackInfo, 15000));
+  setTrackInterval(
+    setInterval(() => {
+      checkRealtimeTrackState();
+      refreshTrackInfo();
+    }, 5000),
+  );
 }
 
 export function currentTrack(): TrackInfo | null {
