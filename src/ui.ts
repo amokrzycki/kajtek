@@ -120,78 +120,29 @@ export function updateSleepUI() {
   });
 }
 
-const SCRAMBLE_GLYPHS = "░▒▓█▞▚░▒▓#@&%";
-
-interface ScrambleElement extends HTMLElement {
-  _scrambleTimer?: number;
-}
-
-export function animateScrambleText(el: HTMLElement, targetText: string, durationMs = 900) {
-  const elem = el as ScrambleElement;
-  if (elem.textContent === targetText) return;
-
-  if (elem._scrambleTimer) {
-    cancelAnimationFrame(elem._scrambleTimer);
-  }
-
-  const startTime = performance.now();
-  let lastFlip = 0;
-  const currentGlyphs: string[] = [];
-
-  function frame(now: number) {
-    const elapsed = now - startTime;
-    const rawProgress = Math.min(elapsed / durationMs, 1);
-    const easeProgress = 1 - Math.pow(1 - rawProgress, 3);
-
-    if (now - lastFlip > 60 || rawProgress === 1) {
-      lastFlip = now;
-      for (let i = 0; i < targetText.length; i++) {
-        if (targetText[i] === " ") {
-          currentGlyphs[i] = " ";
-        } else {
-          currentGlyphs[i] = SCRAMBLE_GLYPHS[Math.floor(Math.random() * SCRAMBLE_GLYPHS.length)]!;
-        }
-      }
-    }
-
-    const settledCount = Math.floor(easeProgress * (targetText.length + 1));
-
-    let result = "";
-    for (let i = 0; i < targetText.length; i++) {
-      if (i < settledCount || rawProgress === 1) {
-        result += targetText[i];
-      } else {
-        result += currentGlyphs[i] || "░";
-      }
-    }
-
-    elem.textContent = result;
-
-    if (rawProgress < 1) {
-      elem._scrambleTimer = requestAnimationFrame(frame);
-    } else {
-      elem.textContent = targetText;
-      delete elem._scrambleTimer;
-    }
-  }
-
-  elem._scrambleTimer = requestAnimationFrame(frame);
+export function triggerFade(el: HTMLElement, newText: string) {
+  if (el.textContent === newText) return;
+  el.textContent = newText;
+  el.classList.remove("fade-in");
+  void el.offsetWidth;
+  el.classList.add("fade-in");
 }
 
 export function updateNowPlayingTrack(track: TrackInfo | null) {
   if (!state.station) return;
+
+  if (!track && state.station.playlistUrl) {
+    els.npTrackWrap.classList.remove("visible");
+    return;
+  }
+
   els.npTrackWrap.classList.add("visible");
 
   const artistText = track?.artist || state.station.name;
   const titleText = track?.title || "Audycja na żywo";
 
-  if (els.npArtist.textContent !== artistText) {
-    animateScrambleText(els.npArtist, artistText, 850);
-  }
-
-  if (els.npTitle.textContent !== titleText) {
-    animateScrambleText(els.npTitle, titleText, 950);
-  }
+  triggerFade(els.npArtist, artistText);
+  triggerFade(els.npTitle, titleText);
 }
 
 function formatDuration(sec?: number): string {
@@ -411,13 +362,11 @@ export function updateUI(
 
   if (state.station) {
     const freqText = `${state.station.freq} FM`;
-    if (els.npFreq.textContent !== freqText) {
-      animateScrambleText(els.npFreq, freqText, 700);
-    }
+    triggerFade(els.npFreq, freqText);
     if (els.npStation.textContent !== state.station.name) {
       els.npStation.classList.remove("empty");
-      animateScrambleText(els.npStation, state.station.name, 950);
     }
+    triggerFade(els.npStation, state.station.name);
     els.npLiveDot.classList.toggle("on", state.playing);
     updateNowPlayingTrack(currentTrack);
   } else {
