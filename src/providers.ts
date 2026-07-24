@@ -1,6 +1,23 @@
 import type { Station } from "./data.js";
 import type { TrackInfo } from "./state.js";
 
+export function getRmfFactsTimeInfo(timestamp: number): { isFacts: boolean; targetHourStr: string } {
+  const d = new Date(timestamp * 1000);
+  const hour = d.getHours();
+  const min = d.getMinutes();
+
+  const isTopOfHour = min >= 55 || min <= 3;
+  if (!isTopOfHour) {
+    return { isFacts: false, targetHourStr: "" };
+  }
+
+  const targetHour = (hour + (min >= 55 ? 1 : 0)) % 24;
+  const isFacts = targetHour >= 6 && targetHour <= 23;
+  const targetHourStr = `${String(targetHour).padStart(2, "0")}:00`;
+
+  return { isFacts, targetHourStr };
+}
+
 function decodeEntities(str?: string | null): string {
   if (!str) return "";
   const txt = document.createElement("textarea");
@@ -80,7 +97,12 @@ export const rmfProvider: Provider = {
             const hasSeconds = item.start?.split(":").length === 3 || ss !== "00";
             const breakStartStr = hasSeconds ? `${hh}:${mm}:${ss}` : `${hh}:${mm}`;
 
-            const label = gapSec >= 120 ? `Przerwa / Reklamy` : `Wejście DJ / Dżingel`;
+            const isRmf = station?.id === "rmf";
+            const factsInfo = isRmf ? getRmfFactsTimeInfo(endTs) : { isFacts: false, targetHourStr: "" };
+            const label = factsInfo.isFacts
+              ? `Serwis informacyjny / Fakty RMF FM (~${factsInfo.targetHourStr})`
+              : gapSec >= 120 ? `Przerwa / Reklamy` : `Wejście DJ / Dżingel`;
+
             processed.push({
               order: item.order ?? i,
               artist: "",
@@ -114,12 +136,10 @@ export const rmfProvider: Provider = {
         ? `${String(endHour).padStart(2, "0")}:${String(endMin).padStart(2, "0")}:${String(endSec).padStart(2, "0")}`
         : `${String(endHour).padStart(2, "0")}:${String(endMin).padStart(2, "0")}`;
 
-      const nextHourStr = `${String((endHour + (endMin >= 55 ? 1 : 0)) % 24).padStart(2, "0")}:00`;
-
-      const isTopOfHour = endMin >= 55 || endMin <= 3;
-      const stationBrand = station?.name || "Stacja";
-      const breakLabel = isTopOfHour
-        ? `Serwis informacyjny / Fakty ${stationBrand} (~${nextHourStr})`
+      const isRmf = station?.id === "rmf";
+      const factsInfo = isRmf ? getRmfFactsTimeInfo(curEndTs) : { isFacts: false, targetHourStr: "" };
+      const breakLabel = factsInfo.isFacts
+        ? `Serwis informacyjny / Fakty RMF FM (~${factsInfo.targetHourStr})`
         : "Przerwa / Serwis informacyjny";
 
       processed.push({
@@ -140,9 +160,15 @@ export const rmfProvider: Provider = {
     let activeTrack: TrackInfo | null = null;
     if (currentActive) {
       if (currentActive.isBreak) {
+        const isRmf = station?.id === "rmf";
+        const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
+        const label = factsInfo.isFacts
+          ? `Serwis informacyjny / Fakty RMF FM (~${factsInfo.targetHourStr})`
+          : currentActive.label || "Przerwa / Reklamy";
+
         activeTrack = {
           artist: station?.name || "Radio",
-          title: `📻 ${currentActive.label || "Przerwa / Reklamy"}`,
+          title: `📻 ${label}`,
           isLiveBreak: true,
         };
       } else {
@@ -152,10 +178,10 @@ export const rmfProvider: Provider = {
         };
       }
     } else if (curEndTs && nowSec >= curEndTs) {
-      const isTopOfHour =
-        new Date(nowSec * 1000).getMinutes() >= 55 || new Date(nowSec * 1000).getMinutes() <= 3;
-      const breakTitle = isTopOfHour
-        ? `📻 Serwis informacyjny / Fakty ${station?.name || ""}`.trim()
+      const isRmf = station?.id === "rmf";
+      const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
+      const breakTitle = factsInfo.isFacts
+        ? `📻 Serwis informacyjny / Fakty RMF FM (~${factsInfo.targetHourStr})`
         : "📻 Przerwa / Reklamy";
       activeTrack = {
         artist: station?.name || "Radio",

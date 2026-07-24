@@ -256,8 +256,8 @@ export function updateHistoryUI() {
             ? `${Math.floor(t.gapSec / 60)}m${t.gapSec % 60 ? ` ${t.gapSec % 60}s` : ""}`
             : `${t.gapSec}s`
           : t.gapMin
-          ? `${t.gapMin} min`
-          : "";
+            ? `${t.gapMin} min`
+            : "";
         return `
           <div class="${itemCls}" ${delayStyle}>
             <span class="pl-time">${t.start || ""}</span>

@@ -1,5 +1,5 @@
 import type { Station } from "./data.js";
-import { getProvider } from "./providers.js";
+import { getProvider, getRmfFactsTimeInfo } from "./providers.js";
 import { radioAudio, setTrackInterval, state, type TrackInfo, trackInterval } from "./state.js";
 import { updateHistoryUI, updateNowPlayingTrack } from "./ui.js";
 
@@ -77,9 +77,20 @@ function checkRealtimeTrackState() {
   let evaluated: TrackInfo | null = null;
   if (activeItem) {
     if (activeItem.isBreak) {
+      const isRmf = state.station.id === "rmf";
+      const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
+      let label = activeItem.label || "Przerwa / Reklamy";
+      if (factsInfo.isFacts) {
+        label = `Serwis informacyjny / Fakty RMF FM (~${factsInfo.targetHourStr})`;
+      } else if (activeItem.gapSec && activeItem.gapSec < 120) {
+        label = `Wejście DJ / Dżingel`;
+      } else {
+        label = `Przerwa / Reklamy`;
+      }
+
       evaluated = {
         artist: state.station.name,
-        title: `📻 ${activeItem.label || "Przerwa / Reklamy"}`,
+        title: `📻 ${label}`,
         isLiveBreak: true,
       };
     } else {
@@ -91,23 +102,21 @@ function checkRealtimeTrackState() {
   } else {
     const curTrack = state.history.find((t) => t.order === 0) || state.history[0];
     if (curTrack?.endTimestamp && nowSec >= curTrack.endTimestamp) {
-      const isTopOfHour =
-        new Date(nowSec * 1000).getMinutes() >= 55 || new Date(nowSec * 1000).getMinutes() <= 3;
-      const breakTitle = isTopOfHour
-        ? `📻 Serwis informacyjny / Fakty ${state.station.name}`
-        : "📻 Przerwa / Reklamy";
+      const isRmf = state.station.id === "rmf";
+      const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
+      let label = "Przerwa / Reklamy";
+      if (factsInfo.isFacts) {
+        label = `Serwis informacyjny / Fakty RMF FM (~${factsInfo.targetHourStr})`;
+      }
       evaluated = {
         artist: state.station.name,
-        title: breakTitle,
+        title: `📻 ${label}`,
         isLiveBreak: true,
       };
     }
   }
 
-  if (
-    evaluated &&
-    (state.liveTrack?.artist !== evaluated.artist || state.liveTrack?.title !== evaluated.title)
-  ) {
+  if (evaluated && (state.liveTrack?.artist !== evaluated.artist || state.liveTrack?.title !== evaluated.title)) {
     state.liveTrack = evaluated;
     updateNowPlayingTrack(state.liveTrack);
   }
