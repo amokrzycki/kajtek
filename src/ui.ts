@@ -385,7 +385,7 @@ export function updateHistoryUI(animateSlideIn = false) {
     startViewTransition?: (cb: () => void) => void;
   };
 
-  if (typeof doc.startViewTransition === "function" && els.historyList.children.length > 0) {
+  if (isPanelOpen && typeof doc.startViewTransition === "function" && els.historyList.children.length > 0) {
     doc.startViewTransition(reconcile);
   } else {
     reconcile();

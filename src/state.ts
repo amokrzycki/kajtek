@@ -1,4 +1,4 @@
-import { DEFAULT_FAVS, type Station } from "./data.js";
+import type { Station } from "./data.js";
 
 export interface TrackInfo {
   artist: string;
@@ -38,7 +38,7 @@ export const state: AppState = {
   playing: false,
   vol: 10,
   muted: false,
-  favs: new Set<string>(JSON.parse(localStorage.getItem("kajtek_favs") || JSON.stringify(DEFAULT_FAVS))),
+  favs: new Set<string>(JSON.parse(localStorage.getItem("kajtek_favs") || "[]")),
   sleepMin: null,
   sleepSec: null,
   liveTrack: null,
