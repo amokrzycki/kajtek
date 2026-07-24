@@ -26,6 +26,7 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
   - `state.ts` - Local state management and localStorage persistence.
   - `ui.ts` - DOM rendering and UI updates.
   - `visualizer.ts` - VU meter and audio visualization animation engine.
+- `dev.mjs` - Zero-dependency dev server with esbuild watching and API proxying.
 - `index.html` - Core HTML5 layout and structure.
 - `style.css` - Retro design system (CSS variables, dark/light modes, animations).
 - `dist/` - Production build directory (generated assets).
@@ -39,6 +40,16 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 
 ## Development & Building
 
+### Local Development Server
+
+Run local dev server with hot esbuild recompilation and built-in proxy for APIs (bypasses CORS locally):
+
+```bash
+npm run dev
+```
+
+Then open `http://localhost:3000` in your web browser.
+
 ### Installation
 
 Install project dependencies:
@@ -47,7 +58,7 @@ Install project dependencies:
 npm install
 ```
 
-### Build
+### Production Build
 
 Build production bundle (esbuild compilation of `src/app.ts` into `dist/app.js` and static assets copy):
 
@@ -75,16 +86,3 @@ npx @biomejs/biome check ./
 
 - **CI Workflow (`ci.yml`)**: Executes on `push` and `pull_request` to `main`. Validates code style with Biome (`npx @biomejs/biome ci ./`) and performs type safety checks (`npx tsc --noEmit`).
 - **Deploy Workflow (`deploy.yml`)**: Executes on pushing version tags matching `v*`. Builds the application (`npm run build`) and deploys the contents of `dist/` to the host via SSH/rsync.
-
----
-
-## Getting Started
-
-To serve the project locally, build the distribution files and run a local HTTP server pointing to `dist/`:
-
-```bash
-npm run build
-python3 -m http.server 8080 --directory dist
-```
-
-Then open `http://localhost:8080` in your web browser.
