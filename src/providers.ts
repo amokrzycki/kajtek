@@ -78,6 +78,7 @@ export const rmfProvider: Provider = {
                 ? `Przerwa / Reklamy (~${gapMin} min)`
                 : `Wejście DJ / Dżingel (${gapSec}s)`;
             processed.push({
+              order: item.order ?? i,
               artist: "",
               title: "",
               isBreak: true,

@@ -153,32 +153,62 @@ export function updateHistoryUI() {
 
   els.historyEmpty.style.display = "none";
   els.historyList.innerHTML = state.history
+    .filter((t) => {
+      const isPast = (t.order ?? 0) < 0;
+      if (t.isBreak && isPast && t.gapSec && t.gapSec < 150) {
+        return false;
+      }
+      return true;
+    })
     .map((t) => {
+      const isCurrent = t.order === 0;
+      const isNext = t.order === 1;
+      const isUpcoming = (t.order ?? 0) > 1;
+
+      let statusCls = "is-past";
+      if (isCurrent) statusCls = "is-current";
+      else if (isNext) statusCls = "is-next";
+      else if (isUpcoming) statusCls = "is-upcoming";
+
+      const itemCls = `pl-item ${statusCls}${t.isBreak ? " is-break" : ""}`;
+
       if (t.isBreak) {
+        const breakDur = t.gapMin ? `${t.gapMin} min` : t.gapSec ? `${t.gapSec}s` : "";
         return `
-      <div class="history-item history-break">
-        <span class="history-dot"></span>
-        <span class="history-title">📻 ${t.label}</span>
-      </div>
-    `;
+          <div class="${itemCls}">
+            <span class="pl-time">${t.start || ""}</span>
+            <span class="pl-dot"></span>
+            <span class="pl-break-label">
+              <span class="pl-tape-icon">${ICONS.tape}</span>
+              ${t.label}
+            </span>
+            <span class="pl-dur">${breakDur}</span>
+          </div>
+        `;
       }
 
-      const isUpcoming = (t.order ?? 0) > 0;
-      const isCurrent = t.order === 0;
       const durStr = formatDuration(t.length);
+      const hasTag = isCurrent || isNext;
 
       return `
-      <div class="history-item${isCurrent ? " history-current" : ""}">
-        <span class="history-dot"></span>
-        ${t.start ? `<span class="history-time">${t.start}</span><span class="history-sep">·</span>` : ""}
-        ${isUpcoming ? `<span class="history-badge upcoming">[ZARAZ]</span>` : ""}
-        ${isCurrent ? `<span class="history-badge current">[TERAZ]</span>` : ""}
-        <span class="history-artist">${t.artist}</span>
-        <span class="history-sep">·</span>
-        <span class="history-title">${t.title}</span>
-        ${durStr ? `<span class="history-duration">${durStr}</span>` : ""}
-      </div>
-    `;
+        <div class="${itemCls}">
+          <span class="pl-time">${t.start || ""}</span>
+          <span class="pl-dot"></span>
+          <div class="pl-track">
+            ${
+              hasTag
+                ? `<div class="pl-tags"><span class="pl-tag ${isCurrent ? "tag-current" : "tag-next"}">${isCurrent ? "TERAZ" : "ZARAZ"}</span></div>`
+                : ""
+            }
+            <div class="pl-line">
+              <span class="pl-artist">${t.artist}</span>
+              <span class="pl-sep">·</span>
+              <span class="pl-title">${t.title}</span>
+            </div>
+          </div>
+          <span class="pl-dur">${durStr}</span>
+        </div>
+      `;
     })
     .join("");
 }
