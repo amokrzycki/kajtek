@@ -18,7 +18,9 @@ let corsFailed = false;
 function initAudioContext() {
   if (audioCtx) {
     if (audioCtx.state === "suspended") {
-      audioCtx.resume().catch(() => {});
+      audioCtx.resume().catch(() => {
+        // ignore autoplay policy restrictions
+      });
     }
     return;
   }
@@ -44,7 +46,9 @@ function initAudioContext() {
 export function startVisualizer() {
   initAudioContext();
   if (audioCtx && audioCtx.state === "suspended") {
-    audioCtx.resume().catch(() => {});
+    audioCtx.resume().catch(() => {
+      // ignore autoplay policy restrictions
+    });
   }
 
   if (animId) cancelAnimationFrame(animId);

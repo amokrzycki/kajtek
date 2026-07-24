@@ -4,7 +4,8 @@
     "build": "esbuild src/app.ts --bundle --minify --sourcemap --outfile=dist/app.js --format=esm"
   },
   "devDependencies": {
-    "esbuild": "0.28.1"
+    "esbuild": "0.28.1",
+    "typescript": "7.0.2"
   },
   "allowScripts": {
     "esbuild@0.28.1": true
