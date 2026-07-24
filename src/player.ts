@@ -101,7 +101,6 @@ export function selectStation(s: Station, onUIUpdate: () => void) {
   delete s._apiFailed;
   state.playing = true;
   state.liveTrack = null;
-  state.history = [];
 
   if (s.stream) {
     radioAudio.src = s.stream;

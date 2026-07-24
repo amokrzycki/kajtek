@@ -73,10 +73,7 @@ export const rmfProvider: Provider = {
           const gapSec = nextItem.timestamp - endTs;
           if (gapSec >= 30) {
             const gapMin = Math.round(gapSec / 60);
-            const label =
-              gapSec >= 150
-                ? `Przerwa / Reklamy (~${gapMin} min)`
-                : `Wejście DJ / Dżingel (${gapSec}s)`;
+            const label = gapSec >= 150 ? `Przerwa / Reklamy (~${gapMin} min)` : `Wejście DJ / Dżingel (${gapSec}s)`;
             processed.push({
               order: item.order ?? i,
               artist: "",
@@ -167,7 +164,7 @@ export const eskaProvider: Provider = {
         artist: decodeEntities(item.artist || item.author || item.name || station?.name),
         title: decodeEntities(item.title || item.song || item.name || "Utwór"),
         start: item.start || item.startTime || null,
-        length: len > 0 ? len : undefined,
+        ...(len > 0 ? { length: len } : {}),
       };
     });
 
@@ -196,7 +193,7 @@ export const genericProvider: Provider = {
         artist: decodeEntities(item.artist || item.author || item.name || station?.name),
         title: decodeEntities(item.title || item.song || "Utwór"),
         start: item.start || null,
-        length: len > 0 ? len : undefined,
+        ...(len > 0 ? { length: len } : {}),
       };
     });
 

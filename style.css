@@ -638,22 +638,30 @@
 .history-panel {
   overflow: hidden;
   max-height: 0;
-  transition: max-height 340ms ease;
+  transition: max-height 300ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 .history-panel.open {
-  max-height: 380px;
+  max-height: 600px;
 }
 .history-inner {
   border-top: 1px solid var(--k-border);
   padding: 0.6rem 1.5rem 0.9rem;
-  overflow-y: auto;
-  max-height: 320px;
   transition: border-color var(--k-tr);
 }
 .history-empty {
   font-size: 0.76rem;
   color: var(--k-text-faint);
   font-style: italic;
+}
+
+#history-list {
+  view-transition-name: history-list;
+}
+
+::view-transition-old(history-list),
+::view-transition-new(history-list) {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.2, 0, 0, 1);
 }
 
 /* Playlist items from new design */
@@ -665,8 +673,26 @@
   padding: 0.32rem 0.4rem;
   border-radius: 5px;
   min-height: 32px;
-  transition: background var(--k-tr);
+  transition:
+    background 300ms ease,
+    border-color 300ms ease,
+    opacity 300ms ease,
+    transform 300ms ease;
 }
+.history-panel.open .pl-item {
+  animation: pl-slide-in 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes pl-slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .pl-item + .pl-item {
   border-top: 1px solid var(--k-border);
 }
@@ -698,7 +724,7 @@
   letter-spacing: 0.03em;
   color: var(--k-accent);
   white-space: nowrap;
-  transition: color var(--k-tr);
+  transition: color 300ms ease;
 }
 .pl-item.is-past .pl-time {
   color: var(--k-text-faint);
@@ -716,11 +742,14 @@
   flex-shrink: 0;
   justify-self: center;
   transition:
-    background var(--k-tr),
-    box-shadow var(--k-tr);
+    background 300ms ease,
+    box-shadow 300ms ease,
+    transform 300ms ease,
+    opacity 300ms ease;
 }
 .pl-item.is-current .pl-dot {
   background: var(--k-green);
+  transform: scale(1.25);
 }
 .pl-item.is-next .pl-dot {
   background: var(--k-accent);
@@ -760,6 +789,20 @@
   border-radius: 3px;
   line-height: 1.5;
   border: 1px solid;
+  transition: all 300ms ease;
+}
+.history-panel.open .pl-tag {
+  animation: pl-tag-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes pl-tag-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.82);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 .pl-tag.tag-current {
   background: rgba(82, 184, 98, 0.15);

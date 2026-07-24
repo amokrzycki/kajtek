@@ -122,16 +122,17 @@ export function updateSleepUI() {
 
 export function updateNowPlayingTrack(track: TrackInfo | null) {
   if (!state.station) return;
-  if (!track) {
-    els.npTrackWrap.style.display = "none";
-    return;
-  }
   els.npTrackWrap.style.display = "block";
-  if (els.npArtist.textContent === track.artist && els.npTitle.textContent === track.title) {
+
+  const artistText = track?.artist || state.station.name;
+  const titleText = track?.title || "Audycja na żywo";
+
+  if (els.npArtist.textContent === artistText && els.npTitle.textContent === titleText) {
     return;
   }
-  els.npArtist.textContent = track.artist;
-  els.npTitle.textContent = track.title;
+
+  els.npArtist.textContent = artistText;
+  els.npTitle.textContent = titleText;
   els.npTitle.classList.remove("fade-in");
   void els.npTitle.offsetWidth;
   els.npTitle.classList.add("fade-in");
@@ -146,21 +147,32 @@ function formatDuration(sec?: number): string {
 
 export function updateHistoryUI() {
   if (!state.history || state.history.length === 0) {
-    els.historyEmpty.style.display = "block";
-    els.historyList.innerHTML = "";
+    if (els.historyList.dataset.signature !== "empty") {
+      els.historyEmpty.style.display = "block";
+      els.historyList.innerHTML = "";
+      els.historyList.dataset.signature = "empty";
+    }
     return;
   }
 
-  els.historyEmpty.style.display = "none";
-  els.historyList.innerHTML = state.history
-    .filter((t) => {
-      const isPast = (t.order ?? 0) < 0;
-      if (t.isBreak && isPast && t.gapSec && t.gapSec < 150) {
-        return false;
-      }
-      return true;
-    })
-    .map((t) => {
+  const filtered = state.history.filter((t) => {
+    const isPast = (t.order ?? 0) < 0;
+    if (t.isBreak && isPast && t.gapSec && t.gapSec < 150) {
+      return false;
+    }
+    return true;
+  });
+
+  const signature = JSON.stringify(
+    filtered.map((t) => [t.artist, t.title, t.start, t.order, t.isBreak, t.label, t.length]),
+  );
+
+  if (els.historyList.dataset.signature === signature) {
+    return;
+  }
+
+  const newHTML = filtered
+    .map((t, idx) => {
       const isCurrent = t.order === 0;
       const isNext = t.order === 1;
       const isUpcoming = (t.order ?? 0) > 1;
@@ -171,11 +183,12 @@ export function updateHistoryUI() {
       else if (isUpcoming) statusCls = "is-upcoming";
 
       const itemCls = `pl-item ${statusCls}${t.isBreak ? " is-break" : ""}`;
+      const delayStyle = `style="animation-delay: ${idx * 35}ms"`;
 
       if (t.isBreak) {
         const breakDur = t.gapMin ? `${t.gapMin} min` : t.gapSec ? `${t.gapSec}s` : "";
         return `
-          <div class="${itemCls}">
+          <div class="${itemCls}" ${delayStyle}>
             <span class="pl-time">${t.start || ""}</span>
             <span class="pl-dot"></span>
             <span class="pl-break-label">
@@ -191,7 +204,7 @@ export function updateHistoryUI() {
       const hasTag = isCurrent || isNext;
 
       return `
-        <div class="${itemCls}">
+        <div class="${itemCls}" ${delayStyle}>
           <span class="pl-time">${t.start || ""}</span>
           <span class="pl-dot"></span>
           <div class="pl-track">
@@ -211,6 +224,47 @@ export function updateHistoryUI() {
       `;
     })
     .join("");
+
+  if (!state.showHistory) {
+    els.historyEmpty.style.display = "none";
+    els.historyList.innerHTML = newHTML;
+    els.historyList.dataset.signature = signature;
+    return;
+  }
+
+  const applyUpdate = () => {
+    els.historyEmpty.style.display = "none";
+    const prevHeight = els.historyList.getBoundingClientRect().height;
+
+    els.historyList.innerHTML = newHTML;
+    els.historyList.dataset.signature = signature;
+
+    const newHeight = els.historyList.getBoundingClientRect().height;
+
+    if (prevHeight > 0 && newHeight > 0 && Math.abs(prevHeight - newHeight) > 2) {
+      els.historyList.style.height = `${prevHeight}px`;
+      els.historyList.style.overflow = "hidden";
+      els.historyList.style.transition = "height 320ms cubic-bezier(0.2, 0, 0, 1)";
+      requestAnimationFrame(() => {
+        els.historyList.style.height = `${newHeight}px`;
+      });
+      setTimeout(() => {
+        els.historyList.style.height = "";
+        els.historyList.style.overflow = "";
+        els.historyList.style.transition = "";
+      }, 340);
+    }
+  };
+
+  const doc = document as unknown as {
+    startViewTransition?: (cb: () => void) => void;
+  };
+
+  if (typeof doc.startViewTransition === "function" && els.historyList.children.length > 0) {
+    doc.startViewTransition(applyUpdate);
+  } else {
+    applyUpdate();
+  }
 }
 
 export function updateUI(
@@ -238,13 +292,8 @@ export function updateUI(
   if (state.station) {
     els.npFreq.textContent = `${state.station.freq} FM`;
     els.npStation.textContent = state.station.name;
-    els.npStation.classList.remove("empty");
     els.npLiveDot.classList.toggle("on", state.playing);
-    if (currentTrack) {
-      updateNowPlayingTrack(currentTrack);
-    } else {
-      els.npTrackWrap.style.display = "none";
-    }
+    updateNowPlayingTrack(currentTrack);
   } else {
     els.npFreq.textContent = "— FM";
     els.npStation.textContent = "wybierz stację";
