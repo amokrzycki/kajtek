@@ -1,6 +1,7 @@
 {
   "version": "0.1.1",
   "scripts": {
+    "dev": "node dev.mjs",
     "build": "npm run build:js && npm run build:assets",
     "build:js": "esbuild src/app.ts --bundle --minify --sourcemap --outfile=dist/app.js --format=esm",
     "build:assets": "cp index.html style.css dist/"
