@@ -1,7 +1,9 @@
 {
   "version": "0.1.1",
   "scripts": {
-    "build": "esbuild src/app.ts --bundle --minify --sourcemap --outfile=dist/app.js --format=esm"
+    "build": "npm run build:js && npm run build:assets",
+    "build:js": "esbuild src/app.ts --bundle --minify --sourcemap --outfile=dist/app.js --format=esm",
+    "build:assets": "cp index.html style.css dist/"
   },
   "devDependencies": {
     "esbuild": "0.28.1",
