@@ -152,6 +152,52 @@ function formatDuration(sec?: number): string {
   return `${m}:${s}`;
 }
 
+function getTrackKey(t: TrackInfo): string {
+  return t.timestamp ? `ts_${t.timestamp}` : `key_${t.start || ""}_${t.artist}_${t.title}_${t.label || ""}`;
+}
+
+function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean): string {
+  if (t.isBreak) {
+    const breakDur = t.gapSec
+      ? t.gapSec >= 60
+        ? `${Math.floor(t.gapSec / 60)}m${t.gapSec % 60 ? ` ${t.gapSec % 60}s` : ""}`
+        : `${t.gapSec}s`
+      : t.gapMin
+        ? `${t.gapMin} min`
+        : "";
+    return `
+      <span class="pl-time">${t.start || ""}</span>
+      <span class="pl-dot"></span>
+      <span class="pl-break-label">
+        <span class="pl-tape-icon">${ICONS.tape}</span>
+        ${t.label}
+      </span>
+      <span class="pl-dur">${breakDur}</span>
+    `;
+  }
+
+  const durStr = formatDuration(t.length);
+  const hasTag = isCurrent || isNext;
+
+  return `
+    <span class="pl-time">${t.start || ""}</span>
+    <span class="pl-dot"></span>
+    <div class="pl-track">
+      ${
+        hasTag
+          ? `<div class="pl-tags"><span class="pl-tag ${isCurrent ? "tag-current" : "tag-next"}">${isCurrent ? "TERAZ" : "ZARAZ"}</span></div>`
+          : ""
+      }
+      <div class="pl-line">
+        <span class="pl-artist">${t.artist}</span>
+        <span class="pl-sep">·</span>
+        <span class="pl-title">${t.title}</span>
+      </div>
+    </div>
+    <span class="pl-dur">${durStr}</span>
+  `;
+}
+
 export function updateHistoryUI() {
   if (!state.history || state.history.length === 0) {
     if (els.historyList.dataset.signature !== "empty") {
@@ -239,92 +285,72 @@ export function updateHistoryUI() {
   }
   els.historyList.dataset.signature = signature;
 
-  const newHTML = renderedItems
-    .map(({ t, idx, isCurrent, isNext, isUpcoming, isPast }) => {
-      let statusCls = "is-past";
-      if (isCurrent) statusCls = "is-current";
-      else if (isNext) statusCls = "is-next";
-      else if (isUpcoming) statusCls = "is-upcoming";
-      else if (isPast) statusCls = "is-past";
+  const targetItems = renderedItems.map((item) => {
+    let statusCls = "is-past";
+    if (item.isCurrent) statusCls = "is-current";
+    else if (item.isNext) statusCls = "is-next";
+    else if (item.isUpcoming) statusCls = "is-upcoming";
+    else if (item.isPast) statusCls = "is-past";
 
-      const itemCls = `pl-item ${statusCls}${t.isBreak ? " is-break" : ""}`;
-      const delayStyle = `style="animation-delay: ${idx * 35}ms"`;
+    const key = getTrackKey(item.t);
+    return { ...item, statusCls, key };
+  });
 
-      if (t.isBreak) {
-        const breakDur = t.gapSec
-          ? t.gapSec >= 60
-            ? `${Math.floor(t.gapSec / 60)}m${t.gapSec % 60 ? ` ${t.gapSec % 60}s` : ""}`
-            : `${t.gapSec}s`
-          : t.gapMin
-            ? `${t.gapMin} min`
-            : "";
-        return `
-          <div class="${itemCls}" ${delayStyle}>
-            <span class="pl-time">${t.start || ""}</span>
-            <span class="pl-dot"></span>
-            <span class="pl-break-label">
-              <span class="pl-tape-icon">${ICONS.tape}</span>
-              ${t.label}
-            </span>
-            <span class="pl-dur">${breakDur}</span>
-          </div>
-        `;
+  const reconcile = () => {
+    els.historyEmpty.style.display = "none";
+
+    const targetKeys = new Set(targetItems.map((item) => item.key));
+    const currentChildren = Array.from(els.historyList.children) as HTMLElement[];
+
+    // Remove old items
+    currentChildren.forEach((child) => {
+      const key = child.getAttribute("data-key");
+      if (!key || !targetKeys.has(key)) {
+        child.remove();
       }
+    });
 
-      const durStr = formatDuration(t.length);
-      const hasTag = isCurrent || isNext;
+    // Update or append items
+    targetItems.forEach((item, idx) => {
+      let child = els.historyList.querySelector(`[data-key="${CSS.escape(item.key)}"]`) as HTMLElement | null;
+      const vtName = `vt-${item.key.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
 
-      return `
-        <div class="${itemCls}" ${delayStyle}>
-          <span class="pl-time">${t.start || ""}</span>
-          <span class="pl-dot"></span>
-          <div class="pl-track">
-            ${
-              hasTag
-                ? `<div class="pl-tags"><span class="pl-tag ${isCurrent ? "tag-current" : "tag-next"}">${isCurrent ? "TERAZ" : "ZARAZ"}</span></div>`
-                : ""
-            }
-            <div class="pl-line">
-              <span class="pl-artist">${t.artist}</span>
-              <span class="pl-sep">·</span>
-              <span class="pl-title">${t.title}</span>
-            </div>
-          </div>
-          <span class="pl-dur">${durStr}</span>
-        </div>
-      `;
-    })
-    .join("");
+      if (!child) {
+        child = document.createElement("div");
+        child.setAttribute("data-key", item.key);
+        child.style.viewTransitionName = vtName;
+        child.className = `pl-item ${item.statusCls}${item.t.isBreak ? " is-break" : ""}`;
+        child.innerHTML = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext);
 
-  if (!state.showHistory) {
-    els.historyEmpty.style.display = "none";
-    els.historyList.innerHTML = newHTML;
-    els.historyList.dataset.signature = signature;
-    return;
-  }
+        const currentNodes = Array.from(els.historyList.children);
+        if (idx < currentNodes.length && currentNodes[idx]) {
+          els.historyList.insertBefore(child, currentNodes[idx]);
+        } else {
+          els.historyList.appendChild(child);
+        }
+      } else {
+        child.style.viewTransitionName = vtName;
 
-  const applyUpdate = () => {
-    els.historyEmpty.style.display = "none";
-    const prevHeight = els.historyList.getBoundingClientRect().height;
+        const newClass = `pl-item ${item.statusCls}${item.t.isBreak ? " is-break" : ""}`;
+        if (child.className !== newClass) {
+          child.className = newClass;
+        }
 
-    els.historyList.innerHTML = newHTML;
-    els.historyList.dataset.signature = signature;
+        const newInner = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext);
+        if (child.innerHTML !== newInner) {
+          child.innerHTML = newInner;
+        }
 
-    const newHeight = els.historyList.getBoundingClientRect().height;
-
-    if (prevHeight > 0 && newHeight > 0 && Math.abs(prevHeight - newHeight) > 2) {
-      els.historyList.style.height = `${prevHeight}px`;
-      els.historyList.style.overflow = "hidden";
-      els.historyList.style.transition = "height 320ms cubic-bezier(0.2, 0, 0, 1)";
-      requestAnimationFrame(() => {
-        els.historyList.style.height = `${newHeight}px`;
-      });
-      setTimeout(() => {
-        els.historyList.style.height = "";
-        els.historyList.style.overflow = "";
-        els.historyList.style.transition = "";
-      }, 340);
-    }
+        const currentNodes = Array.from(els.historyList.children);
+        if (currentNodes[idx] !== child) {
+          if (idx < currentNodes.length && currentNodes[idx]) {
+            els.historyList.insertBefore(child, currentNodes[idx]);
+          } else {
+            els.historyList.appendChild(child);
+          }
+        }
+      }
+    });
   };
 
   const doc = document as unknown as {
@@ -332,9 +358,9 @@ export function updateHistoryUI() {
   };
 
   if (typeof doc.startViewTransition === "function" && els.historyList.children.length > 0) {
-    doc.startViewTransition(applyUpdate);
+    doc.startViewTransition(reconcile);
   } else {
-    applyUpdate();
+    reconcile();
   }
 }
 
