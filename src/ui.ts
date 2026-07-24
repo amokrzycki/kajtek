@@ -120,58 +120,290 @@ export function updateSleepUI() {
   });
 }
 
-export function updateNowPlayingTrack(track: TrackInfo | null) {
-  if (!state.station) return;
-  if (!track) {
-    els.npTrackWrap.style.display = "none";
-    return;
-  }
-  els.npTrackWrap.style.display = "block";
-  if (els.npArtist.textContent === track.artist && els.npTitle.textContent === track.title) {
-    return;
-  }
-  els.npArtist.textContent = track.artist;
-  els.npTitle.textContent = track.title;
-  els.npTitle.classList.remove("fade-in");
-  void els.npTitle.offsetWidth;
-  els.npTitle.classList.add("fade-in");
+export function triggerFade(el: HTMLElement, newText: string) {
+  if (el.textContent === newText) return;
+  el.textContent = newText;
+  el.classList.remove("fade-in");
+  void el.offsetWidth;
+  el.classList.add("fade-in");
 }
 
-export function updateHistoryUI() {
-  if (!state.history || state.history.length === 0) {
-    els.historyEmpty.style.display = "block";
-    els.historyList.innerHTML = "";
+let slideTimer: number | undefined;
+
+export function triggerHistorySlideIn() {
+  if (slideTimer) window.clearTimeout(slideTimer);
+  els.historyPanel.classList.remove("slide-in");
+  void els.historyPanel.offsetWidth;
+  els.historyPanel.classList.add("slide-in");
+  slideTimer = window.setTimeout(() => {
+    els.historyPanel.classList.remove("slide-in");
+  }, 700);
+}
+
+export function updateNowPlayingTrack(track: TrackInfo | null) {
+  if (!state.station) return;
+
+  if (!track && state.station.playlistUrl) {
+    els.npTrackWrap.classList.remove("visible");
     return;
   }
 
-  els.historyEmpty.style.display = "none";
-  els.historyList.innerHTML = state.history
-    .map((t) => {
-      if (t.isBreak) {
-        return `
-      <div class="history-item history-break">
-        <span class="history-dot"></span>
-        <span class="history-title">📻 ${t.label}</span>
-      </div>
+  els.npTrackWrap.classList.add("visible");
+
+  const artistText = track?.artist || state.station.name;
+  const titleText = track?.title || "Audycja na żywo";
+
+  triggerFade(els.npArtist, artistText);
+  triggerFade(els.npTitle, titleText);
+}
+
+function formatDuration(sec?: number): string {
+  if (!sec || sec <= 0) return "";
+  const m = Math.floor(sec / 60);
+  const s = String(sec % 60).padStart(2, "0");
+  return `${m}:${s}`;
+}
+
+function getTrackKey(t: TrackInfo): string {
+  return t.timestamp ? `ts_${t.timestamp}` : `key_${t.start || ""}_${t.artist}_${t.title}_${t.label || ""}`;
+}
+
+function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean): string {
+  if (t.isBreak) {
+    const breakDur = t.gapSec
+      ? t.gapSec >= 60
+        ? `${Math.floor(t.gapSec / 60)}m${t.gapSec % 60 ? ` ${t.gapSec % 60}s` : ""}`
+        : `${t.gapSec}s`
+      : t.gapMin
+        ? `${t.gapMin} min`
+        : "";
+    return `
+      <span class="pl-time">${t.start || ""}</span>
+      <span class="pl-dot"></span>
+      <span class="pl-break-label">
+        <span class="pl-tape-icon">${ICONS.tape}</span>
+        ${t.label}
+      </span>
+      <span class="pl-dur">${breakDur}</span>
     `;
+  }
+
+  const durStr = formatDuration(t.length);
+  const hasTag = isCurrent || isNext;
+
+  return `
+    <span class="pl-time">${t.start || ""}</span>
+    <span class="pl-dot"></span>
+    <div class="pl-track">
+      ${
+        hasTag
+          ? `<div class="pl-tags"><span class="pl-tag ${isCurrent ? "tag-current" : "tag-next"}">${isCurrent ? "TERAZ" : "ZARAZ"}</span></div>`
+          : ""
       }
-
-      const isUpcoming = (t.order ?? 0) > 0;
-      const isCurrent = t.order === 0;
-
-      return `
-      <div class="history-item${isCurrent ? " history-current" : ""}">
-        <span class="history-dot"></span>
-        ${t.start ? `<span class="history-time">${t.start}</span><span class="history-sep">·</span>` : ""}
-        ${isUpcoming ? `<span class="history-badge upcoming">[ZARAZ]</span>` : ""}
-        ${isCurrent ? `<span class="history-badge current">[TERAZ]</span>` : ""}
-        <span class="history-artist">${t.artist}</span>
-        <span class="history-sep">·</span>
-        <span class="history-title">${t.title}</span>
+      <div class="pl-line">
+        <span class="pl-artist">${t.artist}</span>
+        <span class="pl-sep">·</span>
+        <span class="pl-title">${t.title}</span>
       </div>
-    `;
-    })
-    .join("");
+    </div>
+    <span class="pl-dur">${durStr}</span>
+  `;
+}
+
+export function updateHistoryUI(animateSlideIn = false) {
+  const isPanelOpen = state.showHistory && els.historyPanel.classList.contains("open");
+  const prevHeight = isPanelOpen ? els.historyList.getBoundingClientRect().height : 0;
+
+  if (!state.history || state.history.length === 0) {
+    if (els.historyList.dataset.signature !== "empty") {
+      els.historyEmpty.style.display = "block";
+      els.historyList.innerHTML = "";
+      els.historyList.dataset.signature = "empty";
+    }
+    els.historyList.classList.remove("is-loading");
+    return;
+  }
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const filtered = state.history.filter((t) => {
+    const isPast = t.endTimestamp ? nowSec >= t.endTimestamp : (t.order ?? 0) < 0;
+    if (t.isBreak && isPast && t.gapSec && t.gapSec < 150) {
+      return false;
+    }
+    return true;
+  });
+
+  const activeIdx = filtered.findIndex((t) => {
+    if (t.timestamp && t.endTimestamp) {
+      return nowSec >= t.timestamp && nowSec < t.endTimestamp;
+    }
+    if (t.timestamp && t.length) {
+      return nowSec >= t.timestamp && nowSec < t.timestamp + t.length;
+    }
+    return false;
+  });
+
+  const renderedItems = filtered.map((t, idx) => {
+    let isCurrent = false;
+    let isNext = false;
+    let isUpcoming = false;
+    let isPast = false;
+
+    if (activeIdx !== -1) {
+      if (idx === activeIdx) {
+        isCurrent = true;
+      } else if (idx < activeIdx) {
+        isPast = true;
+      } else if (idx === activeIdx + 1) {
+        isNext = true;
+      } else {
+        isUpcoming = true;
+      }
+    } else {
+      if (t.timestamp && t.endTimestamp) {
+        if (nowSec >= t.endTimestamp) isPast = true;
+        else if (nowSec < t.timestamp) isUpcoming = true;
+      } else if (t.order !== undefined) {
+        if (t.order < 0) {
+          isPast = true;
+        } else if (t.order === 0) {
+          if (state.liveTrack?.isLiveBreak || (t.endTimestamp && nowSec >= t.endTimestamp)) {
+            isPast = true;
+          } else {
+            isCurrent = true;
+          }
+        } else if (t.order === 1) {
+          isNext = true;
+        } else {
+          isUpcoming = true;
+        }
+      }
+    }
+
+    return { t, idx, isCurrent, isNext, isUpcoming, isPast };
+  });
+
+  const signature = JSON.stringify(
+    renderedItems.map(({ t, isCurrent, isNext, isPast }) => [
+      t.artist,
+      t.title,
+      t.start,
+      t.isBreak,
+      t.label,
+      isCurrent,
+      isNext,
+      isPast,
+    ]),
+  );
+
+  if (els.historyList.dataset.signature === signature) {
+    return;
+  }
+  els.historyList.dataset.signature = signature;
+
+  const targetItems = renderedItems.map((item) => {
+    let statusCls = "is-past";
+    if (item.isCurrent) statusCls = "is-current";
+    else if (item.isNext) statusCls = "is-next";
+    else if (item.isUpcoming) statusCls = "is-upcoming";
+    else if (item.isPast) statusCls = "is-past";
+
+    const key = getTrackKey(item.t);
+    return { ...item, statusCls, key };
+  });
+
+  const reconcile = () => {
+    els.historyEmpty.style.display = "none";
+
+    const targetKeys = new Set(targetItems.map((item) => item.key));
+    const currentChildren = Array.from(els.historyList.children) as HTMLElement[];
+
+    // Remove old items
+    currentChildren.forEach((child) => {
+      const key = child.getAttribute("data-key");
+      if (!key || !targetKeys.has(key)) {
+        child.remove();
+      }
+    });
+
+    // Update or append items
+    targetItems.forEach((item, idx) => {
+      let child = els.historyList.querySelector(`[data-key="${CSS.escape(item.key)}"]`) as HTMLElement | null;
+      const vtName = `vt-${item.key.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
+
+      const delayStr = `${idx * 35}ms`;
+      if (!child) {
+        child = document.createElement("div");
+        child.setAttribute("data-key", item.key);
+        child.style.viewTransitionName = vtName;
+        child.style.animationDelay = delayStr;
+        child.className = `pl-item ${item.statusCls}${item.t.isBreak ? " is-break" : ""}`;
+        child.innerHTML = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext);
+
+        const currentNodes = Array.from(els.historyList.children);
+        if (idx < currentNodes.length && currentNodes[idx]) {
+          els.historyList.insertBefore(child, currentNodes[idx]);
+        } else {
+          els.historyList.appendChild(child);
+        }
+      } else {
+        child.style.viewTransitionName = vtName;
+        child.style.animationDelay = delayStr;
+
+        const newClass = `pl-item ${item.statusCls}${item.t.isBreak ? " is-break" : ""}`;
+        if (child.className !== newClass) {
+          child.className = newClass;
+        }
+
+        const newInner = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext);
+        if (child.innerHTML !== newInner) {
+          child.innerHTML = newInner;
+        }
+
+        const currentNodes = Array.from(els.historyList.children);
+        if (currentNodes[idx] !== child) {
+          if (idx < currentNodes.length && currentNodes[idx]) {
+            els.historyList.insertBefore(child, currentNodes[idx]);
+          } else {
+            els.historyList.appendChild(child);
+          }
+        }
+      }
+    });
+  };
+
+  const doc = document as unknown as {
+    startViewTransition?: (cb: () => void) => void;
+  };
+
+  if (typeof doc.startViewTransition === "function" && els.historyList.children.length > 0) {
+    doc.startViewTransition(reconcile);
+  } else {
+    reconcile();
+  }
+
+  els.historyList.classList.remove("is-loading");
+
+  if (isPanelOpen && prevHeight > 0) {
+    const newHeight = els.historyList.getBoundingClientRect().height;
+    if (newHeight > 0 && Math.abs(prevHeight - newHeight) > 2) {
+      els.historyList.style.height = `${prevHeight}px`;
+      els.historyList.style.overflow = "hidden";
+      els.historyList.style.transition = "height 320ms cubic-bezier(0.2, 0, 0, 1)";
+      requestAnimationFrame(() => {
+        els.historyList.style.height = `${newHeight}px`;
+      });
+      setTimeout(() => {
+        els.historyList.style.height = "";
+        els.historyList.style.overflow = "";
+        els.historyList.style.transition = "";
+      }, 340);
+    }
+  }
+
+  if (animateSlideIn && state.showHistory) {
+    triggerHistorySlideIn();
+  }
 }
 
 export function updateUI(
@@ -197,20 +429,19 @@ export function updateUI(
   els.playBtn.innerHTML = state.playing ? ICONS.pause : ICONS.play;
 
   if (state.station) {
-    els.npFreq.textContent = `${state.station.freq} FM`;
-    els.npStation.textContent = state.station.name;
-    els.npStation.classList.remove("empty");
-    els.npLiveDot.classList.toggle("on", state.playing);
-    if (currentTrack) {
-      updateNowPlayingTrack(currentTrack);
-    } else {
-      els.npTrackWrap.style.display = "none";
+    const freqText = `${state.station.freq} FM`;
+    triggerFade(els.npFreq, freqText);
+    if (els.npStation.textContent !== state.station.name) {
+      els.npStation.classList.remove("empty");
     }
+    triggerFade(els.npStation, state.station.name);
+    els.npLiveDot.classList.toggle("on", state.playing);
+    updateNowPlayingTrack(currentTrack);
   } else {
     els.npFreq.textContent = "— FM";
     els.npStation.textContent = "wybierz stację";
     els.npStation.classList.add("empty");
-    els.npTrackWrap.style.display = "none";
+    els.npTrackWrap.classList.remove("visible");
     els.npLiveDot.classList.remove("on");
   }
 

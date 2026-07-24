@@ -1,7 +1,7 @@
 import type { Station } from "./data.js";
-import { getProvider } from "./providers.js";
+import { getProvider, getRmfFactsTimeInfo } from "./providers.js";
 import { radioAudio, setTrackInterval, state, type TrackInfo, trackInterval } from "./state.js";
-import { updateHistoryUI, updateNowPlayingTrack } from "./ui.js";
+import { els, updateHistoryUI, updateNowPlayingTrack } from "./ui.js";
 
 async function fetchWithTimeout(url: string, timeoutMs = 3500): Promise<Response> {
   const controller = new AbortController();
@@ -66,16 +66,80 @@ export async function fetchPlaylist(station: Station) {
   return null;
 }
 
+function checkRealtimeTrackState() {
+  if (!state.playing || !state.station || !state.history || state.history.length === 0) return;
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const activeItem = state.history.find(
+    (t) => t.timestamp && t.timestamp <= nowSec && t.endTimestamp && t.endTimestamp > nowSec,
+  );
+
+  let evaluated: TrackInfo | null = null;
+  if (activeItem) {
+    if (activeItem.isBreak) {
+      const isRmf = state.station.id === "rmf";
+      const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
+      let label = activeItem.label || "Przerwa / Reklamy";
+      if (factsInfo.isFacts) {
+        label = `Serwis informacyjny / Fakty RMF FM (~${factsInfo.targetHourStr})`;
+      } else if (activeItem.gapSec && activeItem.gapSec < 120) {
+        label = `Wejście DJ / Dżingel`;
+      } else {
+        label = `Przerwa / Reklamy`;
+      }
+
+      evaluated = {
+        artist: state.station.name,
+        title: `📻 ${label}`,
+        isLiveBreak: true,
+      };
+    } else {
+      evaluated = {
+        artist: activeItem.artist,
+        title: activeItem.title,
+      };
+    }
+  } else {
+    const curTrack = state.history.find((t) => t.order === 0) || state.history[0];
+    if (curTrack?.endTimestamp && nowSec >= curTrack.endTimestamp) {
+      const isRmf = state.station.id === "rmf";
+      const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
+      let label = "Przerwa / Reklamy";
+      if (factsInfo.isFacts) {
+        label = `Serwis informacyjny / Fakty RMF FM (~${factsInfo.targetHourStr})`;
+      }
+      evaluated = {
+        artist: state.station.name,
+        title: `📻 ${label}`,
+        isLiveBreak: true,
+      };
+    }
+  }
+
+  if (evaluated && (state.liveTrack?.artist !== evaluated.artist || state.liveTrack?.title !== evaluated.title)) {
+    state.liveTrack = evaluated;
+    updateNowPlayingTrack(state.liveTrack);
+  }
+}
+
+let pendingStationSlideIn = false;
+
 async function refreshTrackInfo() {
   if (!state.playing || !state.station) return;
 
   if (state.station.playlistUrl) {
+    const targetId = state.station.id;
     const data = await fetchPlaylist(state.station);
+    if (state.station?.id !== targetId) return;
+
     if (data?.current) {
       state.liveTrack = data.current;
       state.history = data.all || [];
+      checkRealtimeTrackState();
       updateNowPlayingTrack(state.liveTrack);
-      updateHistoryUI();
+      const doFullSlide = pendingStationSlideIn;
+      pendingStationSlideIn = false;
+      updateHistoryUI(doFullSlide);
     }
   }
 }
@@ -88,7 +152,12 @@ function stopTrackRotation() {
 function startTrackRotation() {
   stopTrackRotation();
   refreshTrackInfo();
-  setTrackInterval(setInterval(refreshTrackInfo, 15000));
+  setTrackInterval(
+    setInterval(() => {
+      checkRealtimeTrackState();
+      refreshTrackInfo();
+    }, 5000),
+  );
 }
 
 export function currentTrack(): TrackInfo | null {
@@ -101,7 +170,8 @@ export function selectStation(s: Station, onUIUpdate: () => void) {
   delete s._apiFailed;
   state.playing = true;
   state.liveTrack = null;
-  state.history = [];
+  pendingStationSlideIn = true;
+  els.historyList.classList.add("is-loading");
 
   if (s.stream) {
     radioAudio.src = s.stream;

@@ -1,6 +1,23 @@
 import type { Station } from "./data.js";
 import type { TrackInfo } from "./state.js";
 
+export function getRmfFactsTimeInfo(timestamp: number): { isFacts: boolean; targetHourStr: string } {
+  const d = new Date(timestamp * 1000);
+  const hour = d.getHours();
+  const min = d.getMinutes();
+
+  const isTopOfHour = min >= 55 || min <= 3;
+  if (!isTopOfHour) {
+    return { isFacts: false, targetHourStr: "" };
+  }
+
+  const targetHour = (hour + (min >= 55 ? 1 : 0)) % 24;
+  const isFacts = targetHour >= 6 && targetHour <= 23;
+  const targetHourStr = `${String(targetHour).padStart(2, "0")}:00`;
+
+  return { isFacts, targetHourStr };
+}
+
 function decodeEntities(str?: string | null): string {
   if (!str) return "";
   const txt = document.createElement("textarea");
@@ -71,15 +88,35 @@ export const rmfProvider: Provider = {
         const nextItem = sorted[i + 1];
         if (item.timestamp && len && nextItem?.timestamp && endTs) {
           const gapSec = nextItem.timestamp - endTs;
-          if (gapSec > 60) {
+          if (gapSec >= 15) {
             const gapMin = Math.round(gapSec / 60);
+            const d = new Date(endTs * 1000);
+            const hh = String(d.getHours()).padStart(2, "0");
+            const mm = String(d.getMinutes()).padStart(2, "0");
+            const ss = String(d.getSeconds()).padStart(2, "0");
+            const hasSeconds = item.start?.split(":").length === 3 || ss !== "00";
+            const breakStartStr = hasSeconds ? `${hh}:${mm}:${ss}` : `${hh}:${mm}`;
+
+            const isRmf = station?.id === "rmf";
+            const factsInfo = isRmf ? getRmfFactsTimeInfo(endTs) : { isFacts: false, targetHourStr: "" };
+            const label = factsInfo.isFacts
+              ? `Serwis informacyjny / Fakty RMF FM (~${factsInfo.targetHourStr})`
+              : gapSec >= 120
+                ? `Przerwa / Reklamy`
+                : `Wejście DJ / Dżingel`;
+
             processed.push({
+              order: item.order ?? i,
               artist: "",
               title: "",
               isBreak: true,
+              start: breakStartStr,
+              timestamp: endTs,
+              endTimestamp: nextItem.timestamp,
+              length: gapSec,
               gapSec,
               gapMin,
-              label: `Przerwa / Reklamy (~${gapMin} min)`,
+              label,
             });
           }
         }
@@ -95,12 +132,16 @@ export const rmfProvider: Provider = {
       const endDate = new Date(curEndTs * 1000);
       const endMin = endDate.getMinutes();
       const endHour = endDate.getHours();
-      const nextHourStr = `${String((endHour + (endMin >= 55 ? 1 : 0)) % 24).padStart(2, "0")}:00`;
+      const endSec = endDate.getSeconds();
+      const hasSeconds = curItem?.start?.split(":").length === 3 || endSec !== 0;
+      const breakStartStr = hasSeconds
+        ? `${String(endHour).padStart(2, "0")}:${String(endMin).padStart(2, "0")}:${String(endSec).padStart(2, "0")}`
+        : `${String(endHour).padStart(2, "0")}:${String(endMin).padStart(2, "0")}`;
 
-      const isTopOfHour = endMin >= 55 || endMin <= 3;
-      const stationBrand = station?.name || "Stacja";
-      const breakLabel = isTopOfHour
-        ? `Serwis informacyjny / Fakty ${stationBrand} (~${nextHourStr})`
+      const isRmf = station?.id === "rmf";
+      const factsInfo = isRmf ? getRmfFactsTimeInfo(curEndTs) : { isFacts: false, targetHourStr: "" };
+      const breakLabel = factsInfo.isFacts
+        ? `Serwis informacyjny / Fakty RMF FM (~${factsInfo.targetHourStr})`
         : "Przerwa / Serwis informacyjny";
 
       processed.push({
@@ -108,15 +149,45 @@ export const rmfProvider: Provider = {
         title: "",
         isBreak: true,
         isPredicted: true,
+        start: breakStartStr,
+        timestamp: curEndTs,
         label: breakLabel,
       });
     }
 
+    const currentActive = processed.find(
+      (t) => t.timestamp && t.timestamp <= nowSec && t.endTimestamp && t.endTimestamp > nowSec,
+    );
+
     let activeTrack: TrackInfo | null = null;
-    if (curEndTs && nowSec > curEndTs + 15 && !hasUpcoming) {
+    if (currentActive) {
+      if (currentActive.isBreak) {
+        const isRmf = station?.id === "rmf";
+        const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
+        const label = factsInfo.isFacts
+          ? `Serwis informacyjny / Fakty RMF FM (~${factsInfo.targetHourStr})`
+          : currentActive.label || "Przerwa / Reklamy";
+
+        activeTrack = {
+          artist: station?.name || "Radio",
+          title: `📻 ${label}`,
+          isLiveBreak: true,
+        };
+      } else {
+        activeTrack = {
+          artist: currentActive.artist,
+          title: currentActive.title,
+        };
+      }
+    } else if (curEndTs && nowSec >= curEndTs) {
+      const isRmf = station?.id === "rmf";
+      const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
+      const breakTitle = factsInfo.isFacts
+        ? `📻 Serwis informacyjny / Fakty RMF FM (~${factsInfo.targetHourStr})`
+        : "📻 Przerwa / Reklamy";
       activeTrack = {
         artist: station?.name || "Radio",
-        title: "📻 Serwis informacyjny / Fakty",
+        title: breakTitle,
         isLiveBreak: true,
       };
     } else if (curItem) {
@@ -155,12 +226,16 @@ export const eskaProvider: Provider = {
 
     if (rawTracks.length === 0) return null;
 
-    const processed: TrackInfo[] = rawTracks.map((item, idx) => ({
-      order: item.order ?? idx,
-      artist: decodeEntities(item.artist || item.author || item.name || station?.name),
-      title: decodeEntities(item.title || item.song || item.name || "Utwór"),
-      start: item.start || item.startTime || null,
-    }));
+    const processed: TrackInfo[] = rawTracks.map((item, idx) => {
+      const len = Number.parseInt(String(item.lenght || item.length || "0"), 10);
+      return {
+        order: item.order ?? idx,
+        artist: decodeEntities(item.artist || item.author || item.name || station?.name),
+        title: decodeEntities(item.title || item.song || item.name || "Utwór"),
+        start: item.start || item.startTime || null,
+        ...(len > 0 ? { length: len } : {}),
+      };
+    });
 
     const active = processed.find((t) => t.order === 0) || processed[0];
     return {
@@ -180,12 +255,16 @@ export const genericProvider: Provider = {
       : payload.tracks || payload.playlist || [payload];
     if (list.length === 0) return null;
 
-    const processed: TrackInfo[] = list.map((item: RawTrack, idx: number) => ({
-      order: item.order ?? idx,
-      artist: decodeEntities(item.artist || item.author || item.name || station?.name),
-      title: decodeEntities(item.title || item.song || "Utwór"),
-      start: item.start || null,
-    }));
+    const processed: TrackInfo[] = list.map((item: RawTrack, idx: number) => {
+      const len = Number.parseInt(String(item.lenght || item.length || "0"), 10);
+      return {
+        order: item.order ?? idx,
+        artist: decodeEntities(item.artist || item.author || item.name || station?.name),
+        title: decodeEntities(item.title || item.song || "Utwór"),
+        start: item.start || null,
+        ...(len > 0 ? { length: len } : {}),
+      };
+    });
 
     const cur = processed[0];
     return {

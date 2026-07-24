@@ -80,5 +80,11 @@
       "trailingCommas": "all",
       "bracketSameLine": true
     }
+  },
+  "html": {
+    "formatter": {
+      "enabled": true,
+      "bracketSameLine": true
+    }
   }
 }
