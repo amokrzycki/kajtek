@@ -1,25 +1,25 @@
 import { radioAudio, setSleepInterval, sleepInterval, state } from "./state.js";
 import { updateSleepUI } from "./ui.js";
 
-export function applyAudioVolume() {
+export function applyAudioVolume(): void {
   const eff = state.muted ? 0 : state.vol / 100;
   radioAudio.volume = eff;
 }
 
-export function updateVolume(val, onUIUpdate) {
+export function updateVolume(val: number, onUIUpdate: () => void): void {
   state.vol = val;
   if (state.muted && val > 0) state.muted = false;
   applyAudioVolume();
   onUIUpdate();
 }
 
-export function toggleMute(onUIUpdate) {
+export function toggleMute(onUIUpdate: () => void): void {
   state.muted = !state.muted;
   applyAudioVolume();
   onUIUpdate();
 }
 
-export function setSleepTimer(minutes, onUIUpdate) {
+export function setSleepTimer(minutes: number, onUIUpdate: () => void): void {
   if (state.sleepMin === minutes) {
     cancelSleepTimer(onUIUpdate);
     return;
@@ -31,12 +31,12 @@ export function setSleepTimer(minutes, onUIUpdate) {
 
   setSleepInterval(
     setInterval(() => {
-      if (state.sleepSec <= 0) {
+      if (state.sleepSec !== null && state.sleepSec <= 0) {
         state.playing = false;
         radioAudio.pause();
         cancelSleepTimer(onUIUpdate);
         onUIUpdate();
-      } else {
+      } else if (state.sleepSec !== null) {
         state.sleepSec--;
         updateSleepUI();
       }
@@ -46,7 +46,7 @@ export function setSleepTimer(minutes, onUIUpdate) {
   onUIUpdate();
 }
 
-export function cancelSleepTimer(onUIUpdate) {
+export function cancelSleepTimer(onUIUpdate?: () => void): void {
   state.sleepMin = null;
   state.sleepSec = null;
   if (sleepInterval) clearInterval(sleepInterval);
@@ -54,7 +54,7 @@ export function cancelSleepTimer(onUIUpdate) {
   if (onUIUpdate) onUIUpdate();
 }
 
-export function toggleFav(id, onUIUpdate) {
+export function toggleFav(id: string, onUIUpdate: () => void): void {
   if (state.favs.has(id)) {
     state.favs.delete(id);
   } else {

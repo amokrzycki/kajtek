@@ -1,18 +1,31 @@
-function decodeEntities(str) {
+import type { Station } from "./data.js";
+import type { TrackInfo } from "./state.js";
+
+function decodeEntities(str?: string | null): string {
   if (!str) return "";
   const txt = document.createElement("textarea");
   txt.innerHTML = str;
   return txt.value;
 }
 
-export const PROVIDERS = {
+export interface PlaylistResult {
+  current: TrackInfo | null;
+  all: TrackInfo[];
+}
+
+export interface Provider {
+  name: string;
+  parse(data: any, station?: Station | null): PlaylistResult | null;
+}
+
+export const PROVIDERS: Record<string, Provider> = {
   rmf: {
     name: "RMF Network Provider",
-    parse(data, station) {
+    parse(data: any, station?: Station | null): PlaylistResult | null {
       if (!Array.isArray(data) || data.length === 0) return null;
 
       const sorted = [...data].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-      const processed = [];
+      const processed: TrackInfo[] = [];
       const nowSec = Math.floor(Date.now() / 1000);
 
       for (let i = 0; i < sorted.length; i++) {
@@ -32,11 +45,13 @@ export const PROVIDERS = {
 
         if (i < sorted.length - 1) {
           const nextItem = sorted[i + 1];
-          if (item.timestamp && len && nextItem.timestamp) {
+          if (item.timestamp && len && nextItem && nextItem.timestamp && endTs) {
             const gapSec = nextItem.timestamp - endTs;
             if (gapSec > 60) {
               const gapMin = Math.round(gapSec / 60);
               processed.push({
+                artist: "",
+                title: "",
                 isBreak: true,
                 gapSec,
                 gapMin,
@@ -65,13 +80,15 @@ export const PROVIDERS = {
           : "Przerwa / Serwis informacyjny";
 
         processed.push({
+          artist: "",
+          title: "",
           isBreak: true,
           isPredicted: true,
           label: breakLabel,
         });
       }
 
-      let activeTrack = null;
+      let activeTrack: TrackInfo | null = null;
       if (curEndTs && nowSec > curEndTs + 15 && !hasUpcoming) {
         activeTrack = {
           artist: station?.name || "Radio",
@@ -94,10 +111,10 @@ export const PROVIDERS = {
 
   eska: {
     name: "Eska / Radio Time Provider",
-    parse(data, station) {
+    parse(data: any, station?: Station | null): PlaylistResult | null {
       if (!data) return null;
 
-      let rawTracks = [];
+      let rawTracks: any[] = [];
       if (Array.isArray(data)) {
         rawTracks = data;
       } else if (data.current || data.songs || data.tracks || data.now) {
@@ -105,7 +122,7 @@ export const PROVIDERS = {
         const upcoming = data.upcoming || data.next || data.songs || data.tracks || [];
         if (cur) rawTracks.push({ ...cur, order: 0 });
         if (Array.isArray(upcoming)) {
-          upcoming.forEach((t, i) => {
+          upcoming.forEach((t: any, i: number) => {
             rawTracks.push({ ...t, order: i + 1 });
           });
         }
@@ -113,7 +130,7 @@ export const PROVIDERS = {
 
       if (rawTracks.length === 0) return null;
 
-      const processed = rawTracks.map((item, idx) => ({
+      const processed: TrackInfo[] = rawTracks.map((item, idx) => ({
         order: item.order ?? idx,
         artist: decodeEntities(item.artist || item.author || item.name || station?.name),
         title: decodeEntities(item.title || item.song || item.name || "Utwór"),
@@ -130,12 +147,12 @@ export const PROVIDERS = {
 
   generic: {
     name: "Generic Playlist Provider",
-    parse(data, station) {
+    parse(data: any, station?: Station | null): PlaylistResult | null {
       if (!data) return null;
       const list = Array.isArray(data) ? data : data.tracks || data.playlist || [data];
       if (list.length === 0) return null;
 
-      const processed = list.map((item, idx) => ({
+      const processed: TrackInfo[] = list.map((item: any, idx: number) => ({
         order: item.order ?? idx,
         artist: decodeEntities(item.artist || item.author || item.name || station?.name),
         title: decodeEntities(item.title || item.song || "Utwór"),
@@ -151,15 +168,15 @@ export const PROVIDERS = {
   },
 };
 
-export function getProvider(station) {
+export function getProvider(station?: Station | null): Provider {
   if (station?.provider && PROVIDERS[station.provider]) {
-    return PROVIDERS[station.provider];
+    return PROVIDERS[station.provider]!;
   }
   if (station?.playlistUrl?.includes("rmf")) {
-    return PROVIDERS.rmf;
+    return PROVIDERS.rmf!;
   }
   if (station?.playlistUrl?.includes("eska") || station?.playlistUrl?.includes("radioeska")) {
-    return PROVIDERS.eska;
+    return PROVIDERS.eska!;
   }
-  return PROVIDERS.generic;
+  return PROVIDERS.generic!;
 }

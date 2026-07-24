@@ -16,7 +16,6 @@
     "noUnusedParameters": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "esModuleInterop": false,
     "outDir": "dist"
   },
   "include": ["src/**/*.ts"],
