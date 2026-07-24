@@ -128,6 +128,18 @@ export function triggerFade(el: HTMLElement, newText: string) {
   el.classList.add("fade-in");
 }
 
+let slideTimer: number | undefined;
+
+export function triggerHistorySlideIn() {
+  if (slideTimer) window.clearTimeout(slideTimer);
+  els.historyPanel.classList.remove("slide-in");
+  void els.historyPanel.offsetWidth;
+  els.historyPanel.classList.add("slide-in");
+  slideTimer = window.setTimeout(() => {
+    els.historyPanel.classList.remove("slide-in");
+  }, 700);
+}
+
 export function updateNowPlayingTrack(track: TrackInfo | null) {
   if (!state.station) return;
 
@@ -198,13 +210,17 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
   `;
 }
 
-export function updateHistoryUI() {
+export function updateHistoryUI(animateSlideIn = false) {
+  const isPanelOpen = state.showHistory && els.historyPanel.classList.contains("open");
+  const prevHeight = isPanelOpen ? els.historyList.getBoundingClientRect().height : 0;
+
   if (!state.history || state.history.length === 0) {
     if (els.historyList.dataset.signature !== "empty") {
       els.historyEmpty.style.display = "block";
       els.historyList.innerHTML = "";
       els.historyList.dataset.signature = "empty";
     }
+    els.historyList.classList.remove("is-loading");
     return;
   }
 
@@ -315,10 +331,12 @@ export function updateHistoryUI() {
       let child = els.historyList.querySelector(`[data-key="${CSS.escape(item.key)}"]`) as HTMLElement | null;
       const vtName = `vt-${item.key.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
 
+      const delayStr = `${idx * 35}ms`;
       if (!child) {
         child = document.createElement("div");
         child.setAttribute("data-key", item.key);
         child.style.viewTransitionName = vtName;
+        child.style.animationDelay = delayStr;
         child.className = `pl-item ${item.statusCls}${item.t.isBreak ? " is-break" : ""}`;
         child.innerHTML = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext);
 
@@ -330,6 +348,7 @@ export function updateHistoryUI() {
         }
       } else {
         child.style.viewTransitionName = vtName;
+        child.style.animationDelay = delayStr;
 
         const newClass = `pl-item ${item.statusCls}${item.t.isBreak ? " is-break" : ""}`;
         if (child.className !== newClass) {
@@ -361,6 +380,29 @@ export function updateHistoryUI() {
     doc.startViewTransition(reconcile);
   } else {
     reconcile();
+  }
+
+  els.historyList.classList.remove("is-loading");
+
+  if (isPanelOpen && prevHeight > 0) {
+    const newHeight = els.historyList.getBoundingClientRect().height;
+    if (newHeight > 0 && Math.abs(prevHeight - newHeight) > 2) {
+      els.historyList.style.height = `${prevHeight}px`;
+      els.historyList.style.overflow = "hidden";
+      els.historyList.style.transition = "height 320ms cubic-bezier(0.2, 0, 0, 1)";
+      requestAnimationFrame(() => {
+        els.historyList.style.height = `${newHeight}px`;
+      });
+      setTimeout(() => {
+        els.historyList.style.height = "";
+        els.historyList.style.overflow = "";
+        els.historyList.style.transition = "";
+      }, 340);
+    }
+  }
+
+  if (animateSlideIn && state.showHistory) {
+    triggerHistorySlideIn();
   }
 }
 

@@ -1,7 +1,7 @@
 import type { Station } from "./data.js";
 import { getProvider, getRmfFactsTimeInfo } from "./providers.js";
 import { radioAudio, setTrackInterval, state, type TrackInfo, trackInterval } from "./state.js";
-import { updateHistoryUI, updateNowPlayingTrack } from "./ui.js";
+import { els, updateHistoryUI, updateNowPlayingTrack } from "./ui.js";
 
 async function fetchWithTimeout(url: string, timeoutMs = 3500): Promise<Response> {
   const controller = new AbortController();
@@ -122,17 +122,24 @@ function checkRealtimeTrackState() {
   }
 }
 
+let pendingStationSlideIn = false;
+
 async function refreshTrackInfo() {
   if (!state.playing || !state.station) return;
 
   if (state.station.playlistUrl) {
+    const targetId = state.station.id;
     const data = await fetchPlaylist(state.station);
+    if (state.station?.id !== targetId) return;
+
     if (data?.current) {
       state.liveTrack = data.current;
       state.history = data.all || [];
       checkRealtimeTrackState();
       updateNowPlayingTrack(state.liveTrack);
-      updateHistoryUI();
+      const doFullSlide = pendingStationSlideIn;
+      pendingStationSlideIn = false;
+      updateHistoryUI(doFullSlide);
     }
   }
 }
@@ -163,6 +170,8 @@ export function selectStation(s: Station, onUIUpdate: () => void) {
   delete s._apiFailed;
   state.playing = true;
   state.liveTrack = null;
+  pendingStationSlideIn = true;
+  els.historyList.classList.add("is-loading");
 
   if (s.stream) {
     radioAudio.src = s.stream;

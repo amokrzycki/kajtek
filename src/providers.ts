@@ -101,7 +101,9 @@ export const rmfProvider: Provider = {
             const factsInfo = isRmf ? getRmfFactsTimeInfo(endTs) : { isFacts: false, targetHourStr: "" };
             const label = factsInfo.isFacts
               ? `Serwis informacyjny / Fakty RMF FM (~${factsInfo.targetHourStr})`
-              : gapSec >= 120 ? `Przerwa / Reklamy` : `Wejście DJ / Dżingel`;
+              : gapSec >= 120
+                ? `Przerwa / Reklamy`
+                : `Wejście DJ / Dżingel`;
 
             processed.push({
               order: item.order ?? i,

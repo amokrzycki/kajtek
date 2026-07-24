@@ -2,7 +2,7 @@ import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.j
 import type { Station } from "./data.js";
 import { currentTrack, selectStation, togglePlay } from "./player.js";
 import { state } from "./state.js";
-import { els, initVU, renderStationList, updateUI } from "./ui.js";
+import { els, initVU, renderStationList, triggerHistorySlideIn, updateUI } from "./ui.js";
 
 function onSelect(s: Station) {
   selectStation(s, refresh);
@@ -24,6 +24,9 @@ function attachEvents() {
 
   els.historyToggleBtn.addEventListener("click", () => {
     state.showHistory = !state.showHistory;
+    if (state.showHistory) {
+      triggerHistorySlideIn();
+    }
     refresh();
   });
 
