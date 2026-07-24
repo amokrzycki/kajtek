@@ -1,5 +1,6 @@
 import { ALL_STATIONS, type Station, VU_COUNT } from "./data.js";
 import { ICONS } from "./icons.js";
+import { isIOS } from "./platform.js";
 import { state, type TrackInfo } from "./state.js";
 import { startVisualizer, stopVisualizer } from "./visualizer.js";
 
@@ -21,6 +22,7 @@ export const els = {
   historyPanel: document.getElementById("history-panel") as HTMLDivElement,
   historyEmpty: document.getElementById("history-empty") as HTMLDivElement,
   historyList: document.getElementById("history-list") as HTMLDivElement,
+  volumePanel: document.getElementById("volume-panel") as HTMLDivElement,
   muteBtn: document.getElementById("mute-btn") as HTMLButtonElement,
   volSlider: document.getElementById("vol-slider") as HTMLInputElement,
   volVal: document.getElementById("vol-val") as HTMLSpanElement,
@@ -28,6 +30,13 @@ export const els = {
   sleepCount: document.getElementById("sleep-count") as HTMLDivElement,
   stationListContainer: document.getElementById("station-list-container") as HTMLElement,
 };
+
+export function initVolumeControlUI() {
+  if (!isIOS()) return;
+  // Hide panel on iOS; volume slider ignored, hardware controls take over.
+  state.vol = 100;
+  els.volumePanel.classList.add("hidden");
+}
 
 export function initVU() {
   els.vuStrip.innerHTML = "";
