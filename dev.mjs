@@ -8,7 +8,10 @@ import { context } from "esbuild";
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
 
 const ctx = await context({
-  entryPoints: ["src/app.ts", "styles/index.css"],
+  entryPoints: [
+    { in: "src/app.ts", out: "app" },
+    { in: "styles/index.css", out: "style" },
+  ],
   bundle: true,
   sourcemap: true,
   outdir: "dist",
@@ -56,10 +59,13 @@ http
       return;
     }
 
-    let filePath = `.${req.url}`;
-    if (filePath === "./") filePath = "./index.html";
-    if (!fs.existsSync(filePath) && fs.existsSync(`./dist${req.url}`)) {
-      filePath = `./dist${req.url}`;
+    // ponytail: check dist/ first so compiled assets shadow raw root files
+    let filePath = req.url === "/" ? "./index.html" : `.${req.url}`;
+    if (req.url !== "/") {
+      const distPath = `./dist${req.url}`;
+      if (fs.existsSync(distPath) && !fs.statSync(distPath).isDirectory()) {
+        filePath = distPath;
+      }
     }
 
     fs.readFile(filePath, (err, data) => {
@@ -75,7 +81,12 @@ http
         ".css": "text/css",
         ".json": "application/json",
       };
-      res.writeHead(200, { "Content-Type": mimeMap[ext] || "text/plain" });
+      res.writeHead(200, {
+        "Content-Type": mimeMap[ext] || "text/plain",
+        "Cache-Control": "no-cache, no-store, must-revalidate",
+        Pragma: "no-cache",
+        Expires: "0",
+      });
       res.end(data);
     });
   })

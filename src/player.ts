@@ -266,7 +266,6 @@ export function selectStation(s: Station) {
   delete s._apiFailed;
   state.playing = true;
   state.liveTrack = null;
-  state.history = [];
   pendingStationSlideIn = true;
   failoverTimestamps = [];
   els.historyList.classList.add("is-loading");
