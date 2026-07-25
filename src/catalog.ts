@@ -22,11 +22,7 @@ export async function fetchRmfCatalog(): Promise<RmfCatalogCache> {
 
   for (const url of endpoints) {
     try {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), TIMERS.FETCH_TIMEOUT_MS);
-      const res = await fetch(url, { signal: controller.signal });
-      clearTimeout(timer);
-
+      const res = await fetch(url, { signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS) });
       if (!res.ok) continue;
 
       const data = await res.json();
