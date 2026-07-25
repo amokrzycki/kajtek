@@ -1,6 +1,7 @@
-import { isIOS } from "./platform.js";
-import { radioAudio, setSleepInterval, sleepInterval, state } from "./state.js";
+import { STORAGE_KEYS } from "./consts.js";
+import { notifyState, radioAudio, setSleepInterval, sleepInterval, state } from "./state.js";
 import { updateSleepUI } from "./ui.js";
+import { isIOS } from "./utils.js";
 
 export function applyAudioVolume(): void {
   // iOS ignores HTMLMediaElement.volume (uses hardware buttons);
@@ -8,22 +9,22 @@ export function applyAudioVolume(): void {
   radioAudio.volume = isIOS() ? 1 : state.vol / 100;
 }
 
-export function updateVolume(val: number, onUIUpdate: () => void): void {
+export function updateVolume(val: number): void {
   state.vol = val;
   if (state.muted && val > 0) state.muted = false;
   applyAudioVolume();
-  onUIUpdate();
+  notifyState();
 }
 
-export function toggleMute(onUIUpdate: () => void): void {
+export function toggleMute(): void {
   state.muted = !state.muted;
   applyAudioVolume();
-  onUIUpdate();
+  notifyState();
 }
 
-export function setSleepTimer(minutes: number, onUIUpdate: () => void): void {
+export function setSleepTimer(minutes: number): void {
   if (state.sleepMin === minutes) {
-    cancelSleepTimer(onUIUpdate);
+    cancelSleepTimer();
     return;
   }
 
@@ -36,8 +37,8 @@ export function setSleepTimer(minutes: number, onUIUpdate: () => void): void {
       if (state.sleepSec !== null && state.sleepSec <= 0) {
         state.playing = false;
         radioAudio.pause();
-        cancelSleepTimer(onUIUpdate);
-        onUIUpdate();
+        cancelSleepTimer();
+        notifyState();
       } else if (state.sleepSec !== null) {
         state.sleepSec--;
         updateSleepUI();
@@ -45,23 +46,23 @@ export function setSleepTimer(minutes: number, onUIUpdate: () => void): void {
     }, 1000),
   );
 
-  onUIUpdate();
+  notifyState();
 }
 
-export function cancelSleepTimer(onUIUpdate?: () => void): void {
+export function cancelSleepTimer(): void {
   state.sleepMin = null;
   state.sleepSec = null;
   if (sleepInterval) clearInterval(sleepInterval);
   setSleepInterval(null);
-  if (onUIUpdate) onUIUpdate();
+  notifyState();
 }
 
-export function toggleFav(id: string, onUIUpdate: () => void): void {
+export function toggleFav(id: string): void {
   if (state.favs.has(id)) {
     state.favs.delete(id);
   } else {
     state.favs.add(id);
   }
-  localStorage.setItem("kajtek_favs", JSON.stringify(Array.from(state.favs)));
-  onUIUpdate();
+  localStorage.setItem(STORAGE_KEYS.FAVS, JSON.stringify(Array.from(state.favs)));
+  notifyState();
 }

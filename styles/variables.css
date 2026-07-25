@@ -1,0 +1,86 @@
+@import url("https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,600;0,700;1,600&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap");
+
+:root {
+  --k-font-display: "Chakra Petch", sans-serif;
+  --k-font-body: "IBM Plex Mono", monospace;
+  --k-font-mono: "IBM Plex Mono", monospace;
+
+  --k-bg: #eeebe3;
+  --k-bg-sub: #e6e2d9;
+  --k-bg-panel: #e9e5dc;
+  --k-bg-raised: #f0ede5;
+  --k-bg-inset: #d2cdc3;
+  --k-bg-deep: #c4bfb4;
+  --k-text: #272320;
+  --k-text-2: #554e49;
+  --k-text-muted: #7a7570;
+  --k-text-faint: #aaa59f;
+  --k-accent: #be5224;
+  --k-accent-2: #d06838;
+  --k-accent-dim: rgba(190, 82, 36, 0.12);
+  --k-accent-ring: rgba(190, 82, 36, 0.35);
+  --k-green: #52b862;
+  --k-border: rgba(0, 0, 0, 0.08);
+  --k-border-2: rgba(0, 0, 0, 0.13);
+  --k-border-3: rgba(0, 0, 0, 0.21);
+  --k-hi: rgba(255, 255, 255, 0.72);
+  --k-sh-sm: 1px 2px 5px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.07);
+  --k-sh-md: 2px 4px 12px rgba(0, 0, 0, 0.13), 0 2px 4px rgba(0, 0, 0, 0.08);
+  --k-sh-inset: inset 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(0, 0, 0, 0.09);
+  --k-sh-btn: inset 0 1px 0 var(--k-hi), inset 0 -1px 0 rgba(0, 0, 0, 0.11), var(--k-sh-sm);
+  --k-glow: none;
+  --k-tr: 230ms ease;
+  --k-r: 11px;
+  --k-rb: 7px;
+  --k-rc: 9px;
+}
+
+.dark {
+  --k-bg: #1a1816;
+  --k-bg-sub: #1f1d1a;
+  --k-bg-panel: #242118;
+  --k-bg-raised: #2c2924;
+  --k-bg-inset: #131210;
+  --k-bg-deep: #0c0b09;
+  --k-text: #f0eae1;
+  --k-text-2: #cdc5ba;
+  --k-text-muted: #a39b91;
+  --k-text-faint: #787067;
+  --k-accent: #e57442;
+  --k-accent-2: #f28654;
+  --k-accent-dim: rgba(229, 116, 66, 0.18);
+  --k-accent-ring: rgba(229, 116, 66, 0.45);
+  --k-border: rgba(255, 255, 255, 0.08);
+  --k-border-2: rgba(255, 255, 255, 0.14);
+  --k-border-3: rgba(255, 255, 255, 0.22);
+  --k-hi: rgba(255, 255, 255, 0.07);
+  --k-sh-sm: 1px 2px 6px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.28);
+  --k-sh-md: 2px 5px 16px rgba(0, 0, 0, 0.55), 0 2px 5px rgba(0, 0, 0, 0.35);
+  --k-sh-inset: inset 0 1px 4px rgba(0, 0, 0, 0.55), inset 0 1px 2px rgba(0, 0, 0, 0.32);
+  --k-sh-btn: inset 0 1px 0 var(--k-hi), inset 0 -1px 0 rgba(0, 0, 0, 0.4), var(--k-sh-sm);
+  --k-glow: 0 0 16px rgba(229, 116, 66, 0.4);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--k-bg-inset) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--k-bg-inset);
+    border-radius: 4px;
+  }
+}

@@ -1,55 +1,38 @@
 declare const APP_VERSION: string;
 
-import type { Station } from "./data.js";
-
-export interface TrackInfo {
-  artist: string;
-  title: string;
-  order?: number;
-  start?: string | null;
-  timestamp?: number;
-  endTimestamp?: number | null;
-  length?: number;
-  isBreak?: boolean;
-  isPredicted?: boolean;
-  gapSec?: number;
-  gapMin?: number;
-  label?: string;
-  isLiveBreak?: boolean;
-  coverUrl?: string;
-}
-
-export interface AppState {
-  dark: boolean;
-  station: Station | null;
-  playing: boolean;
-  vol: number;
-  muted: boolean;
-  favs: Set<string>;
-  sleepMin: number | null;
-  sleepSec: number | null;
-  liveTrack: TrackInfo | null;
-  history: TrackInfo[];
-  showHistory: boolean;
-  version: string;
-}
+import { DEFAULT_VERSION, STORAGE_KEYS } from "./consts.js";
+import type { AppState, TrackInfo } from "./types.js";
 
 export const state: AppState = {
-  dark: localStorage.getItem("kajtek_theme")
-    ? localStorage.getItem("kajtek_theme") === "dark"
+  dark: localStorage.getItem(STORAGE_KEYS.THEME)
+    ? localStorage.getItem(STORAGE_KEYS.THEME) === "dark"
     : window.matchMedia("(prefers-color-scheme: dark)").matches,
   station: null,
   playing: false,
   vol: 10,
   muted: false,
-  favs: new Set<string>(JSON.parse(localStorage.getItem("kajtek_favs") || "[]")),
+  favs: new Set<string>(JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVS) || "[]")),
   sleepMin: null,
   sleepSec: null,
   liveTrack: null,
   history: [],
   showHistory: false,
-  version: typeof APP_VERSION !== "undefined" ? APP_VERSION : "0.3",
+  version: typeof APP_VERSION !== "undefined" ? APP_VERSION : DEFAULT_VERSION,
 };
+
+type StateListener = (state: AppState) => void;
+const listeners = new Set<StateListener>();
+
+export function subscribeState(fn: StateListener): () => void {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+export function notifyState(): void {
+  listeners.forEach((fn) => {
+    fn(state);
+  });
+}
 
 export const radioAudio = new Audio();
 radioAudio.crossOrigin = "anonymous";
@@ -63,3 +46,5 @@ export function setSleepInterval(id: ReturnType<typeof setInterval> | number | n
 export function setTrackInterval(id: ReturnType<typeof setInterval> | number | null) {
   trackInterval = id;
 }
+
+export type { AppState, TrackInfo };

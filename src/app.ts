@@ -1,14 +1,14 @@
 import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
-import type { Station } from "./data.js";
 import { currentTrack, selectStation, togglePlay } from "./player.js";
-import { state } from "./state.js";
-import { els, initVolumeControlUI, initVU, renderStationList, triggerHistorySlideIn, updateUI } from "./ui.js";
+import { notifyState, state, subscribeState } from "./state.js";
+import type { Station } from "./types.js";
+import { els, initVolumeControlUI, initVU, triggerHistorySlideIn, updateUI } from "./ui.js";
 
 function onSelect(s: Station) {
-  selectStation(s, refresh);
+  selectStation(s);
 }
 function onToggleFav(id: string) {
-  toggleFav(id, refresh);
+  toggleFav(id);
 }
 function refresh() {
   updateUI(currentTrack(), onSelect, onToggleFav);
@@ -24,27 +24,25 @@ function setVersion() {
 function attachEvents() {
   els.darkToggle.addEventListener("click", () => {
     state.dark = !state.dark;
-    refresh();
+    notifyState();
   });
 
-  els.playBtn.addEventListener("click", () => togglePlay(refresh));
+  els.playBtn.addEventListener("click", () => togglePlay());
 
   els.historyToggleBtn.addEventListener("click", () => {
     state.showHistory = !state.showHistory;
     if (state.showHistory) {
       triggerHistorySlideIn();
     }
-    refresh();
+    notifyState();
   });
 
-  els.muteBtn.addEventListener("click", () => toggleMute(refresh));
+  els.muteBtn.addEventListener("click", () => toggleMute());
 
-  els.volSlider.addEventListener("input", (e: Event) =>
-    updateVolume(Number((e.target as HTMLInputElement).value), refresh),
-  );
+  els.volSlider.addEventListener("input", (e: Event) => updateVolume(Number((e.target as HTMLInputElement).value)));
 
   els.sleepKeys.forEach((btn) => {
-    btn.addEventListener("click", () => setSleepTimer(Number(btn.getAttribute("data-min")), refresh));
+    btn.addEventListener("click", () => setSleepTimer(Number(btn.getAttribute("data-min"))));
   });
 }
 
@@ -53,7 +51,7 @@ function init() {
   initVU();
   initVolumeControlUI();
   attachEvents();
-  renderStationList(onSelect, onToggleFav);
+  subscribeState(refresh);
   refresh();
 }
 

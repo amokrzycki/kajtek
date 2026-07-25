@@ -1,10 +1,11 @@
+import { getFactsLabel, MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
-import type { Station } from "./data.js";
 import { getProvider, getRmfFactsTimeInfo } from "./providers.js";
-import { radioAudio, setTrackInterval, state, type TrackInfo, trackInterval } from "./state.js";
+import { notifyState, radioAudio, setTrackInterval, state, trackInterval } from "./state.js";
+import type { Station, TrackInfo } from "./types.js";
 import { els, updateAlbumArt, updateHistoryUI, updateNowPlayingTrack } from "./ui.js";
 
-async function fetchWithTimeout(url: string, timeoutMs = 3500): Promise<Response> {
+async function fetchWithTimeout(url: string, timeoutMs = TIMERS.FETCH_TIMEOUT_MS): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
@@ -34,21 +35,15 @@ async function parseJsonFromRes(res: Response): Promise<unknown> {
 }
 
 export async function fetchPlaylist(station: Station) {
-  if (!station?.playlistUrl || (station._consecutiveFailures || 0) > 5) return null;
+  if (!station?.playlistUrl || (station._consecutiveFailures || 0) > MAX_CONSECUTIVE_FAILURES) return null;
 
   const provider = getProvider(station);
   const target = station.playlistUrl;
   const urls = [target];
-  if (target.startsWith("http")) {
-    urls.push(
-      `https://corsproxy.io/?${encodeURIComponent(target)}`,
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`,
-    );
-  }
 
   for (const url of urls) {
     try {
-      const res = await fetchWithTimeout(url, 3500);
+      const res = await fetchWithTimeout(url, TIMERS.FETCH_TIMEOUT_MS);
       const data = await parseJsonFromRes(res);
 
       if (data) {
@@ -81,12 +76,9 @@ function checkRealtimeTrackState() {
       const isRmf = state.station.id === "rmf";
       const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
       let label = activeItem.label || "Przerwa / Reklamy";
+
       if (factsInfo.isFacts) {
-        label = `Serwis informacyjny / Fakty RMF FM (~${factsInfo.targetHourStr})`;
-      } else if (activeItem.gapSec && activeItem.gapSec < 120) {
-        label = `Wejście DJ / Dżingel`;
-      } else {
-        label = `Przerwa / Reklamy`;
+        label = getFactsLabel(factsInfo.targetHourStr);
       }
 
       evaluated = {
@@ -108,7 +100,7 @@ function checkRealtimeTrackState() {
       const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
       let label = "Przerwa / Reklamy";
       if (factsInfo.isFacts) {
-        label = `Serwis informacyjny / Fakty RMF FM (~${factsInfo.targetHourStr})`;
+        label = getFactsLabel(factsInfo.targetHourStr);
       }
       evaluated = {
         artist: state.station.name,
@@ -159,7 +151,7 @@ function startTrackRotation() {
     setInterval(() => {
       checkRealtimeTrackState();
       refreshTrackInfo();
-    }, 5000),
+    }, TIMERS.TRACK_POLL_MS),
   );
 }
 
@@ -167,7 +159,7 @@ export function currentTrack(): TrackInfo | null {
   return state.liveTrack;
 }
 
-export function selectStation(s: Station, onUIUpdate: () => void) {
+export function selectStation(s: Station) {
   state.station = s;
   delete s._consecutiveFailures;
   delete s._apiFailed;
@@ -185,10 +177,10 @@ export function selectStation(s: Station, onUIUpdate: () => void) {
   }
 
   startTrackRotation();
-  onUIUpdate();
+  notifyState();
 }
 
-export function togglePlay(onUIUpdate: () => void) {
+export function togglePlay() {
   if (!state.station) return;
   state.playing = !state.playing;
 
@@ -203,5 +195,5 @@ export function togglePlay(onUIUpdate: () => void) {
     stopTrackRotation();
   }
 
-  onUIUpdate();
+  notifyState();
 }

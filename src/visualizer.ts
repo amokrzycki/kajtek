@@ -1,4 +1,4 @@
-import { VU_COUNT } from "./data.js";
+import { VU_COUNT } from "./consts.js";
 import { radioAudio, state } from "./state.js";
 import { els } from "./ui.js";
 
