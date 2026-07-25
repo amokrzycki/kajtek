@@ -17,6 +17,7 @@ export const INIT_STATIONS: Station[] = [
     provider: "rmf",
     stream: "https://rs202-krk.rmfstream.pl/rmf_fm",
     apiBaseUrl: "/api/rmf/stations/5",
+    coverUrl: "https://static.rmf.pl/portal/stations/covers/rmf-fm/20240404114958_rmf-fm_600.jpg",
   },
   {
     id: "rmf-maxxx",
@@ -26,6 +27,7 @@ export const INIT_STATIONS: Station[] = [
     provider: "rmf",
     stream: "https://rs202-krk.rmfstream.pl/rmf_maxxx",
     apiBaseUrl: "/api/rmf/stations/6",
+    coverUrl: "https://static.rmf.pl/portal/stations/covers/rmf-maxx/20240404115440_rmf-maxx_600.jpg",
   },
   {
     id: "rmf-classic",
@@ -35,6 +37,7 @@ export const INIT_STATIONS: Station[] = [
     provider: "rmf",
     stream: "https://rs202-krk.rmfstream.pl/RMFCLASSIC48",
     apiBaseUrl: "/api/rmf/stations/7",
+    coverUrl: "https://static.rmf.pl/portal/stations/covers/rmf-classic/20260130151605_rmf-classic_600.jpg",
   },
 ];
 

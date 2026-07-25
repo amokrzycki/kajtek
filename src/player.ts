@@ -104,7 +104,13 @@ async function ensureStationMetadata(station: Station) {
       const res = await fetchWithTimeout(stationBaseUrl, TIMERS.FETCH_TIMEOUT_MS);
       const data = (await parseJsonFromRes(res)) as { img?: unknown } | null;
       if (typeof data?.img === "string" && data.img.trim().length > 0) {
-        station.coverUrl = data.img.trim();
+        let imgUrl = data.img.trim();
+        if (imgUrl.startsWith("//")) {
+          imgUrl = `https:${imgUrl}`;
+        } else if (imgUrl.startsWith("/")) {
+          imgUrl = `https://static.rmf.pl${imgUrl}`;
+        }
+        station.coverUrl = imgUrl;
       }
     } catch (_) {
       // Ignore errors, coverUrl remains undefined
@@ -145,7 +151,9 @@ export async function fetchPlaylist(station: Station) {
 }
 
 function checkRealtimeTrackState() {
-  if (!state.playing || !state.station || !state.history || state.history.length === 0) return;
+  if (!state.playing || !state.station?.apiBaseUrl || !state.history || state.history.length === 0) {
+    return;
+  }
 
   const nowSec = Math.floor(Date.now() / 1000);
   const activeItem = state.history.find(
@@ -219,6 +227,14 @@ async function refreshTrackInfo() {
       pendingStationSlideIn = false;
       updateHistoryUI(doFullSlide);
     }
+  } else {
+    state.liveTrack = null;
+    state.history = [];
+    updateNowPlayingTrack(null);
+    updateAlbumArt(resolveAlbumCoverUrl(null, state.station));
+    const doFullSlide = pendingStationSlideIn;
+    pendingStationSlideIn = false;
+    updateHistoryUI(doFullSlide);
   }
 }
 
@@ -230,12 +246,14 @@ function stopTrackRotation() {
 function startTrackRotation() {
   stopTrackRotation();
   refreshTrackInfo();
-  setTrackInterval(
-    setInterval(() => {
-      checkRealtimeTrackState();
-      refreshTrackInfo();
-    }, TIMERS.TRACK_POLL_MS),
-  );
+  if (state.station?.apiBaseUrl) {
+    setTrackInterval(
+      setInterval(() => {
+        checkRealtimeTrackState();
+        refreshTrackInfo();
+      }, TIMERS.TRACK_POLL_MS),
+    );
+  }
 }
 
 export function currentTrack(): TrackInfo | null {
@@ -248,6 +266,7 @@ export function selectStation(s: Station) {
   delete s._apiFailed;
   state.playing = true;
   state.liveTrack = null;
+  state.history = [];
   pendingStationSlideIn = true;
   failoverTimestamps = [];
   els.historyList.classList.add("is-loading");

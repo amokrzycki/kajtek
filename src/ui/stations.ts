@@ -56,11 +56,16 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
         const isSelected = state.station && state.station.id === s.id;
         const isFav = state.favs.has(s.id);
 
+        const logoHtml = s.coverUrl
+          ? `<img src="${s.coverUrl}" alt="" class="sc-thumb" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><div class="sc-thumb-placeholder" style="display:none;">${s.name.charAt(0)}</div>`
+          : `<div class="sc-thumb-placeholder">${s.name.charAt(0)}</div>`;
+
         const card = document.createElement("div");
         card.className = `station-card${isSelected ? " active" : ""}`;
         card.setAttribute("role", "button");
         card.setAttribute("tabindex", "0");
         card.innerHTML = `
+          ${logoHtml}
           <div class="sc-main">
             <div class="sc-name">${isSelected ? '<span class="sc-led-dot" aria-hidden="true"></span>' : ""}${s.name}</div>
             <div class="sc-meta">

@@ -46,7 +46,23 @@ export async function fetchRmfCatalog(): Promise<RmfCatalogCache> {
             if (typeof item.mountpoint_mp3 === "string") st.mountpoint_mp3 = item.mountpoint_mp3;
             if (typeof item.mountpoint_aac === "string") st.mountpoint_aac = item.mountpoint_aac;
             if (typeof item.description === "string") st.description = item.description;
-            if (typeof item.img === "string" && item.img.startsWith("http")) st.img = item.img;
+
+            const rawImg =
+              typeof item.img === "string"
+                ? item.img.trim()
+                : typeof item.coverUrl === "string"
+                  ? item.coverUrl.trim()
+                  : null;
+            if (rawImg && rawImg.length > 0) {
+              if (rawImg.startsWith("//")) {
+                st.img = `https:${rawImg}`;
+              } else if (rawImg.startsWith("/")) {
+                st.img = `https://static.rmf.pl${rawImg}`;
+              } else {
+                st.img = rawImg;
+              }
+            }
+
             if (typeof item.search === "string") st.search = item.search;
             if (typeof item.in_premium === "number") st.in_premium = item.in_premium;
             if (Array.isArray(item.station_category)) st.station_category = item.station_category;

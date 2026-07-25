@@ -37,6 +37,7 @@ export interface RawRmfStation {
   mountpoint_aac?: string;
   description?: string;
   img?: string;
+  coverUrl?: string;
   search?: string;
   in_premium?: number;
   station_category?: Array<{ name: string; slug: string }>;

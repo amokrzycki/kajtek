@@ -76,8 +76,8 @@
   box-shadow: var(--k-sh-sm);
   padding: 0.75rem 0.75rem 0.75rem 0.65rem;
   display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.55rem;
   cursor: pointer;
   user-select: none;
   outline: none;
@@ -144,6 +144,28 @@
     opacity: 0.5;
     box-shadow: 0 0 2px var(--k-accent);
   }
+}
+
+.sc-thumb {
+  width: 34px;
+  height: 34px;
+  border-radius: 5px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.sc-thumb-placeholder {
+  width: 34px;
+  height: 34px;
+  border-radius: 5px;
+  background: var(--k-bg-inset);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: var(--k-text-muted);
+  flex-shrink: 0;
 }
 
 .sc-main {

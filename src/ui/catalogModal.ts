@@ -278,7 +278,7 @@ function renderModalBody(): void {
     row.className = `k-catalog-row${enabled ? " enabled" : ""}`;
 
     const logoHtml = station.coverUrl
-      ? `<img src="${station.coverUrl}" alt="" class="catalog-thumb" />`
+      ? `<img src="${station.coverUrl}" alt="" class="catalog-thumb" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><div class="catalog-thumb-placeholder" style="display:none;">${station.name.charAt(0)}</div>`
       : `<div class="catalog-thumb-placeholder">${station.name.charAt(0)}</div>`;
 
     row.innerHTML = `
