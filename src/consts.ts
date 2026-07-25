@@ -8,12 +8,11 @@ export const STORAGE_KEYS = {
   CUSTOM_STATIONS: "kajtek_custom_stations",
 } as const;
 
-export const ALL_STATIONS: Station[] = [
+export const INIT_STATIONS: Station[] = [
   {
     id: "rmf",
     name: "RMF FM",
-    freq: "96.2",
-    genre: "Pop / Hity",
+    short: "Najlepsza muzyka",
     cat: "national",
     provider: "rmf",
     stream: "https://rs202-krk.rmfstream.pl/rmf_fm",
@@ -22,8 +21,7 @@ export const ALL_STATIONS: Station[] = [
   {
     id: "rmf-maxxx",
     name: "RMF MAXX",
-    freq: "99.8",
-    genre: "Pop / Hity",
+    short: "RMF MAXX. Hity #naMAXXa",
     cat: "national",
     provider: "rmf",
     stream: "https://rs202-krk.rmfstream.pl/rmf_maxxx",
@@ -32,8 +30,7 @@ export const ALL_STATIONS: Station[] = [
   {
     id: "rmf-classic",
     name: "RMF CLASSIC",
-    freq: "101.4",
-    genre: "Classic / Jazz",
+    short: "RMF Classic. Muzyka z klasą",
     cat: "national",
     provider: "rmf",
     stream: "https://rs202-krk.rmfstream.pl/RMFCLASSIC48",

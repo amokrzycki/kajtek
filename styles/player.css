@@ -235,14 +235,14 @@
   justify-content: center;
 }
 
-.np-freq-row {
+.np-short-row {
   display: flex;
   align-items: center;
   gap: 0.6rem;
   margin-bottom: 0.35rem;
 }
 
-.np-freq-val {
+.np-short-val {
   font-family: var(--k-font-display);
   font-weight: 700;
   font-size: 0.75rem;

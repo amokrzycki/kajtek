@@ -45,7 +45,8 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
     if (sec.list.length === 0) {
       const empty = document.createElement("div");
       empty.className = "section-empty";
-      empty.textContent = sec.key === "fav" ? "Brak ulubionych — kliknij ★ przy dowolnej stacji" : "Brak stacji — dodaj z katalogu";
+      empty.textContent =
+        sec.key === "fav" ? "Brak ulubionych — kliknij ★ przy dowolnej stacji" : "Brak stacji — dodaj z katalogu";
       secDiv.appendChild(empty);
     } else {
       const grid = document.createElement("div");
@@ -63,8 +64,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
           <div class="sc-main">
             <div class="sc-name">${isSelected ? '<span class="sc-led-dot" aria-hidden="true"></span>' : ""}${s.name}</div>
             <div class="sc-meta">
-              <span class="sc-freq">${s.freq} FM</span>
-              <span class="sc-genre">${s.genre}</span>
+              <span class="sc-short">${s.short}</span>
             </div>
           </div>
           <button class="sc-star${isFav ? " on" : ""}" aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">

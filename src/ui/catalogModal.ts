@@ -18,15 +18,20 @@ let searchQuery = "";
 let isFetching = false;
 let errorMessage: string | null = null;
 let showCustomForm = false;
+let previousActiveElement: HTMLElement | null = null;
 
 export function openCatalogModal(): void {
+  previousActiveElement = document.activeElement as HTMLElement | null;
+
   if (!modalEl) {
     createModalElements();
   }
   if (modalEl) {
-    modalEl.style.display = "flex";
-    modalEl.setAttribute("aria-hidden", "false");
+    modalEl.removeAttribute("aria-hidden");
     document.body.style.overflow = "hidden";
+    requestAnimationFrame(() => {
+      modalEl?.classList.add("is-open");
+    });
   }
 
   // Load catalog cache or fetch if missing
@@ -39,8 +44,16 @@ export function openCatalogModal(): void {
 }
 
 export function closeCatalogModal(): void {
-  if (modalEl) {
-    modalEl.style.display = "none";
+  if (modalEl?.classList.contains("is-open")) {
+    if (document.activeElement && modalEl.contains(document.activeElement)) {
+      (document.activeElement as HTMLElement).blur();
+    }
+    if (previousActiveElement && typeof previousActiveElement.focus === "function") {
+      previousActiveElement.focus();
+      previousActiveElement = null;
+    }
+
+    modalEl.classList.remove("is-open");
     modalEl.setAttribute("aria-hidden", "true");
     document.body.style.overflow = "";
   }
@@ -50,7 +63,6 @@ function createModalElements(): void {
   modalEl = document.createElement("div");
   modalEl.id = "catalog-modal-overlay";
   modalEl.className = "k-modal-overlay";
-  modalEl.style.display = "none";
 
   modalEl.innerHTML = `
     <div class="k-modal" role="dialog" aria-modal="true" aria-labelledby="catalog-modal-title">
@@ -98,6 +110,12 @@ function createModalElements(): void {
 
   modalEl.addEventListener("click", (e) => {
     if (e.target === modalEl) closeCatalogModal();
+  });
+
+  window.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && modalEl && modalEl.classList.contains("is-open")) {
+      closeCatalogModal();
+    }
   });
 
   const closeBtn = modalEl.querySelector("#catalog-modal-close");
@@ -213,8 +231,7 @@ function renderModalBody(): void {
   const filtered = allStations.filter((s) => {
     if (!q) return true;
     if (s.name.toLowerCase().includes(q)) return true;
-    if (s.genre.toLowerCase().includes(q)) return true;
-    if (s.freq.toLowerCase().includes(q)) return true;
+    if (s.short.toLowerCase().includes(q)) return true;
 
     if (cache?.stations) {
       const raw = cache.stations.find((r) => String(r.id) === s.id);
@@ -272,7 +289,7 @@ function renderModalBody(): void {
             ${station.name}
             ${isCustom ? '<span class="badge-custom">custom</span>' : ""}
           </div>
-          <div class="catalog-sub">${station.freq}</div>
+          <div class="catalog-sub">${station.short}</div>
         </div>
       </div>
 

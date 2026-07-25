@@ -1,8 +1,7 @@
 export interface Station {
   id: string;
   name: string;
-  freq: string;
-  genre: string;
+  short: string;
   cat: string;
   provider: string;
   stream: string;
@@ -89,4 +88,3 @@ export interface Provider {
   name: string;
   parse(data: unknown, station?: Station | null): PlaylistResult | null;
 }
-

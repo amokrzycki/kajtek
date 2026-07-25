@@ -62,4 +62,3 @@ export function toggleFav(id: string): void {
   setStationFavorite(id, !isFav);
   notifyState();
 }
-

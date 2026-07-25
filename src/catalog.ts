@@ -1,4 +1,4 @@
-import { ALL_STATIONS, STORAGE_KEYS, TIMERS } from "./consts.js";
+import { INIT_STATIONS, STORAGE_KEYS, TIMERS } from "./consts.js";
 import { state } from "./state.js";
 import type { CustomStation, RawRmfStation, RmfCatalogCache, Station, StationPref } from "./types.js";
 
@@ -75,9 +75,8 @@ export function getCustomStations(): CustomStation[] {
     if (!raw) return [];
     const parsed = JSON.parse(raw);
     if (Array.isArray(parsed)) {
-      return parsed.filter(
-        (c): c is CustomStation =>
-          Boolean(c && typeof c.id === "string" && typeof c.name === "string" && typeof c.stream === "string"),
+      return parsed.filter((c): c is CustomStation =>
+        Boolean(c && typeof c.id === "string" && typeof c.name === "string" && typeof c.stream === "string"),
       );
     }
   } catch (_) {
@@ -147,7 +146,7 @@ export function isStationEnabled(id: string): boolean {
   if (prefs[id] !== undefined) {
     return prefs[id].enabled;
   }
-  if (ALL_STATIONS.some((s) => s.id === id)) {
+  if (INIT_STATIONS.some((s) => s.id === id)) {
     return true;
   }
   if (getCustomStations().some((s) => s.id === id)) {
@@ -192,8 +191,7 @@ export function getAllKnownStations(): Station[] {
     (c): Station => ({
       id: c.id,
       name: c.name,
-      freq: "CUSTOM",
-      genre: "Własny stream",
+      short: "Własny stream",
       cat: "custom",
       provider: "generic",
       stream: c.stream,
@@ -205,8 +203,8 @@ export function getAllKnownStations(): Station[] {
 
   if (catalog?.stations) {
     const existingIds = new Set([
-      ...ALL_STATIONS.map((s) => s.id),
-      ...ALL_STATIONS.map((s) => s.apiBaseUrl?.split("/").pop()),
+      ...INIT_STATIONS.map((s) => s.id),
+      ...INIT_STATIONS.map((s) => s.apiBaseUrl?.split("/").pop()),
       ...customStations.map((s) => s.id),
     ]);
 
@@ -218,8 +216,7 @@ export function getAllKnownStations(): Station[] {
       const st: Station = {
         id,
         name: raw.name,
-        freq: raw.short || "RMF",
-        genre: raw.short || "Pop",
+        short: raw.short || raw.description || "RMF Radio",
         cat: raw.station_category?.[0]?.name || "national",
         provider: "rmf",
         stream: raw.mountpoint_mp3 ? `https://rs202-krk.rmfstream.pl/${raw.mountpoint_mp3}` : "",
@@ -230,7 +227,7 @@ export function getAllKnownStations(): Station[] {
     });
   }
 
-  return [...ALL_STATIONS, ...customStations, ...catalogStations];
+  return [...INIT_STATIONS, ...customStations, ...catalogStations];
 }
 
 export function getEnabledStations(): Station[] {
