@@ -170,7 +170,7 @@ function checkRealtimeTrackState() {
 
       evaluated = {
         artist: state.station.name,
-        title: `📻 ${label}`,
+        title: label,
         isLiveBreak: true,
       };
     } else {
@@ -191,7 +191,7 @@ function checkRealtimeTrackState() {
       }
       evaluated = {
         artist: state.station.name,
-        title: `📻 ${label}`,
+        title: label,
         isLiveBreak: true,
       };
     }

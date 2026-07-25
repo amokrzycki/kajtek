@@ -140,7 +140,7 @@ export const rmfProvider: Provider = {
 
         activeTrack = {
           artist: station?.name || "Radio",
-          title: `📻 ${label}`,
+          title: label,
           isLiveBreak: true,
         };
       } else {
@@ -153,7 +153,7 @@ export const rmfProvider: Provider = {
     } else if (curEndTs && nowSec >= curEndTs) {
       const isRmf = station?.id === "rmf";
       const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
-      const breakTitle = factsInfo.isFacts ? `📻 ${getFactsLabel(factsInfo.targetHourStr)}` : "📻 Przerwa / Reklamy";
+      const breakTitle = factsInfo.isFacts ? getFactsLabel(factsInfo.targetHourStr) : "Przerwa / Reklamy";
       activeTrack = {
         artist: station?.name || "Radio",
         title: breakTitle,

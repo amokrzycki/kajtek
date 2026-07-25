@@ -219,6 +219,10 @@
 .btn-catalog-trigger {
   width: 100%;
   padding: 0.65rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
   background: var(--k-bg-panel);
   border: 1px dashed var(--k-border-2);
   border-radius: var(--k-rc);
@@ -344,8 +348,11 @@
 .search-icon {
   position: absolute;
   left: 8px;
-  font-size: 0.8rem;
-  opacity: 0.6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--k-text-muted);
+  pointer-events: none;
 }
 
 .k-input {
@@ -529,25 +536,88 @@
   flex-shrink: 0;
 }
 
-.catalog-toggle-wrap {
-  display: flex;
+.catalog-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+.catalog-toggle-switch {
+  display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
-  font-size: 0.72rem;
-  color: var(--k-text-muted);
+  width: 32px;
+  height: 18px;
+  margin: 0;
+  padding: 0 2px;
+  background: var(--k-bg-inset);
+  border: 1px solid var(--k-border-2);
+  border-radius: 10px;
+  box-shadow: var(--k-sh-inset);
+  flex-shrink: 0;
   cursor: pointer;
   user-select: none;
+  transition:
+    background var(--k-tr),
+    border-color var(--k-tr);
+
+  &:hover {
+    border-color: var(--k-border-3);
+  }
+
+  &::before {
+    content: "";
+    display: block;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--k-bg-raised);
+    border: 1px solid var(--k-border-3);
+    box-shadow: var(--k-sh-btn);
+    transition:
+      transform var(--k-tr),
+      background var(--k-tr),
+      box-shadow var(--k-tr);
+  }
+
+  &:has(.catalog-checkbox:checked) {
+    background: var(--k-accent-dim);
+    border-color: var(--k-accent);
+
+    &::before {
+      transform: translateX(14px);
+      background: var(--k-accent);
+      border-color: var(--k-accent-2);
+      box-shadow: 0 0 3px var(--k-accent-ring);
+    }
+  }
+
+  &:has(.catalog-checkbox:focus-visible) {
+    box-shadow:
+      var(--k-sh-inset),
+      0 0 0 2px var(--k-accent-ring);
+  }
 }
 
 .btn-delete-custom {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 0.85rem;
-  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--k-text-muted);
+  padding: 0.25rem;
+  border-radius: var(--k-rb);
+  transition:
+    color var(--k-tr),
+    background var(--k-tr);
 
   &:hover {
-    opacity: 1;
+    color: #e54d42;
+    background: rgba(229, 77, 66, 0.12);
   }
 }
 

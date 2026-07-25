@@ -18,7 +18,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
   topBar.className = "station-list-toolbar";
   topBar.innerHTML = `
     <button type="button" id="open-catalog-btn" class="btn-catalog-trigger">
-      📻 Dostosuj listę stacji / Katalog
+      ${ICONS.radio} Dostosuj listę stacji / Katalog
     </button>
   `;
   els.stationListContainer.appendChild(topBar);

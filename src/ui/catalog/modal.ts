@@ -76,7 +76,7 @@ function createModalElements(): void {
 
       <div class="k-modal-toolbar">
         <div class="search-input-wrap">
-          <span class="search-icon">🔍</span>
+          <span class="search-icon">${ICONS.search}</span>
           <input type="search" id="catalog-search-input" class="k-input catalog-search" placeholder="Szukaj stacji (nazwa, gatunek, tag)..." autocomplete="off" />
         </div>
         <div class="k-modal-actions">
@@ -290,7 +290,7 @@ function renderModalBody(): void {
         <div class="catalog-details">
           <div class="catalog-name">
             ${station.name}
-            ${isCustom ? '<span class="badge-custom">custom</span>' : ""}
+            ${isCustom ? '<span class="badge-custom">Własna</span>' : ""}
           </div>
           <div class="catalog-sub">${station.short}</div>
         </div>
@@ -299,12 +299,11 @@ function renderModalBody(): void {
       <div class="catalog-col-actions">
         ${
           isCustom
-            ? `<button type="button" class="btn-delete-custom" title="Usuń własną stację" aria-label="Usuń">🗑️</button>`
+            ? `<button type="button" class="btn-delete-custom" title="Usuń własną stację" aria-label="Usuń">${ICONS.trash}</button>`
             : ""
         }
-        <label class="catalog-toggle-wrap">
-          <input type="checkbox" class="catalog-checkbox" ${enabled ? "checked" : ""} />
-          <span class="catalog-toggle-label">Lista</span>
+        <label class="catalog-toggle-switch" title="${enabled ? "Wyłącz stację" : "Włącz stację"}">
+          <input type="checkbox" class="catalog-checkbox" ${enabled ? "checked" : ""} aria-label="Włącz stację" />
         </label>
         <button type="button" class="sc-star catalog-star ${favorite ? "on" : ""}" ${!enabled ? "disabled title='Włącz stację, aby dodać do ulubionych'" : ""}>
           ${ICONS.star(favorite)}
@@ -313,14 +312,21 @@ function renderModalBody(): void {
     `;
 
     const checkbox = row.querySelector<HTMLInputElement>(".catalog-checkbox");
+    const starBtn = row.querySelector<HTMLButtonElement>(".catalog-star");
+    const toggleSwitch = row.querySelector<HTMLLabelElement>(".catalog-toggle-switch");
+
     checkbox?.addEventListener("change", (e) => {
       const isChecked = (e.target as HTMLInputElement).checked;
       setStationEnabled(station.id, isChecked);
       notifyState();
-      renderModalBody();
+      if (toggleSwitch) {
+        toggleSwitch.title = isChecked ? "Wyłącz stację" : "Włącz stację";
+      }
+      if (starBtn) {
+        starBtn.disabled = !isChecked;
+        starBtn.title = !isChecked ? "Włącz stację, aby dodać do ulubionych" : "";
+      }
     });
-
-    const starBtn = row.querySelector<HTMLButtonElement>(".catalog-star");
     starBtn?.addEventListener("click", () => {
       if (!enabled) return;
       setStationFavorite(station.id, !favorite);
