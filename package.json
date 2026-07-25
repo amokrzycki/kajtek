@@ -1,5 +1,5 @@
 {
-  "version": "0.3",
+  "version": "0.4",
   "scripts": {
     "dev": "node dev.mjs",
     "check": "tsc --noEmit",
@@ -10,6 +10,7 @@
     "build:assets": "cp index.html dist/"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.4",
     "esbuild": "0.28.1",
     "typescript": "7.0.2"
   },
