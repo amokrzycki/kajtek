@@ -1,8 +1,7 @@
 export interface Station {
   id: string;
   name: string;
-  freq: string;
-  genre: string;
+  short: string;
   cat: string;
   provider: string;
   stream: string;
@@ -14,6 +13,61 @@ export interface Station {
   _coverFetched?: boolean;
   _consecutiveFailures?: number;
   _apiFailed?: boolean;
+}
+
+export type StationPref = {
+  id: string;
+  enabled: boolean;
+  favorite: boolean;
+};
+
+export type CustomStation = {
+  id: string;
+  name: string;
+  stream: string;
+};
+
+export interface RawRmfStation {
+  id: number | string;
+  name: string;
+  idname?: string;
+  slug?: string;
+  short?: string;
+  mountpoint_mp3?: string;
+  mountpoint_aac?: string;
+  description?: string;
+  img?: string;
+  coverUrl?: string;
+  search?: string;
+  in_premium?: number;
+  station_category?: Array<{ name: string; slug: string }>;
+}
+
+export interface RmfCatalogCache {
+  fetchedAt: number;
+  stations: RawRmfStation[];
+}
+
+export interface RawTrack {
+  order?: number;
+  lenght?: string | number;
+  length?: string | number;
+  timestamp?: number;
+  author?: string;
+  artist?: string;
+  title?: string;
+  start?: string;
+  startTime?: string;
+  name?: string;
+  song?: string;
+  coverUrl?: string;
+  current?: RawTrack;
+  now?: RawTrack;
+  upcoming?: RawTrack[];
+  next?: RawTrack[];
+  songs?: RawTrack[];
+  tracks?: RawTrack[];
+  playlist?: RawTrack[];
 }
 
 export interface TrackInfo {

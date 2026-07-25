@@ -1,5 +1,6 @@
 import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
 import { currentTrack, selectStation, togglePlay } from "./player.js";
+import { genericProvider, getProvider } from "./providers.js";
 import { notifyState, state, subscribeState } from "./state.js";
 import type { Station } from "./types.js";
 import { els, initVolumeControlUI, initVU, triggerHistorySlideIn, updateUI } from "./ui.js";
@@ -30,6 +31,9 @@ function attachEvents() {
   els.playBtn.addEventListener("click", () => togglePlay());
 
   els.historyToggleBtn.addEventListener("click", () => {
+    if (state.station && getProvider(state.station) === genericProvider) {
+      return;
+    }
     state.showHistory = !state.showHistory;
     if (state.showHistory) {
       triggerHistorySlideIn();

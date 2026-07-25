@@ -1,9 +1,11 @@
 import { STORAGE_KEYS } from "./consts.js";
+import { isVolAnimating } from "./controls.js";
 import { ICONS } from "./icons.js";
+import { genericProvider, getProvider } from "./providers.js";
 import { state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import { els, initVolumeControlUI, initVU } from "./ui/elements.js";
-import { triggerHistorySlideIn, updateHistoryUI } from "./ui/history.js";
+import { setHistoryLoadingState, triggerHistorySlideIn, updateHistoryUI } from "./ui/history.js";
 import { renderStationList } from "./ui/stations.js";
 import { triggerFade } from "./utils.js";
 import { startVisualizer, stopVisualizer } from "./visualizer.js";
@@ -14,7 +16,16 @@ const ART_V: Record<string, string> = {
   "rmf-classic": "2",
 };
 
-export { els, initVolumeControlUI, initVU, renderStationList, triggerFade, triggerHistorySlideIn, updateHistoryUI };
+export {
+  els,
+  initVolumeControlUI,
+  initVU,
+  renderStationList,
+  setHistoryLoadingState,
+  triggerFade,
+  triggerHistorySlideIn,
+  updateHistoryUI,
+};
 
 export function updateSleepUI(): void {
   if (state.sleepMin !== null && state.sleepSec !== null) {
@@ -41,7 +52,7 @@ export function updateNowPlayingTrack(track: TrackInfo | null): void {
   els.npTrackWrap.classList.add("visible");
 
   const artistText = track?.artist || state.station.name;
-  const titleText = track?.title || "Audycja na żywo";
+  const titleText = track?.title || (state.station.apiBaseUrl ? "Audycja na żywo" : "brak informacji o utworze");
 
   triggerFade(els.npArtist, artistText);
   triggerFade(els.npTitle, titleText);
@@ -121,8 +132,8 @@ export function updateUI(
   els.playBtn.innerHTML = state.playing ? ICONS.pause : ICONS.play;
 
   if (state.station) {
-    const freqText = `${state.station.freq} FM`;
-    triggerFade(els.npFreq, freqText);
+    const shortText = state.station.short;
+    triggerFade(els.npShort, shortText);
     if (els.npStation.textContent !== state.station.name) {
       els.npStation.classList.remove("empty");
     }
@@ -137,7 +148,7 @@ export function updateUI(
     if (label) label.textContent = state.station.name;
     updateAlbumArt(resolveAlbumCoverUrl(currentTrack, state.station));
   } else {
-    els.npFreq.textContent = "— FM";
+    els.npShort.textContent = "—";
     els.npStation.textContent = "wybierz stację";
     els.npStation.classList.add("empty");
     els.npTrackWrap.classList.remove("visible");
@@ -149,15 +160,24 @@ export function updateUI(
     if (label) label.textContent = "— —";
   }
 
-  els.muteBtn.classList.toggle("muted", state.muted);
-  els.muteBtn.innerHTML = ICONS.vol(state.muted, state.vol);
-  const dispVol = state.muted ? 0 : state.vol;
-  els.volSlider.value = String(dispVol);
-  els.volSlider.style.setProperty("--vol", `${dispVol}%`);
-  els.volVal.textContent = state.muted ? "—" : String(state.vol);
+  if (!isVolAnimating()) {
+    els.muteBtn.classList.toggle("muted", state.muted);
+    els.muteBtn.innerHTML = ICONS.vol(state.muted, state.vol);
+    const dispVol = state.muted ? 0 : state.vol;
+    els.volSlider.value = String(dispVol);
+    els.volSlider.style.setProperty("--vol", `${dispVol}%`);
+    els.volVal.textContent = state.muted ? "—" : String(state.vol);
+  }
 
   updateSleepUI();
 
+  const isGeneric = Boolean(state.station && getProvider(state.station) === genericProvider);
+  if (isGeneric && state.showHistory) {
+    state.showHistory = false;
+  }
+
+  els.historyToggleBtn.disabled = isGeneric;
+  els.historyToggleBtn.classList.toggle("disabled", isGeneric);
   els.historyToggleBtn.setAttribute("aria-expanded", String(state.showHistory));
   els.historyArrow.textContent = state.showHistory ? "▲" : "▼";
   els.historyPanel.classList.toggle("open", state.showHistory);

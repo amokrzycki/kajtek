@@ -1,18 +1,50 @@
-import { ALL_STATIONS } from "../consts.js";
-import { ICONS } from "../icons.js";
-import { state } from "../state.js";
-import type { Station } from "../types.js";
+import { getEnabledStations } from "@/catalog.js";
+import { ICONS } from "@/icons.js";
+import { state } from "@/state.js";
+import type { Station } from "@/types.js";
+import { openCatalogModal } from "./catalog/modal.js";
 import { els } from "./elements.js";
 
 export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (id: string) => void): void {
+  // FIRST: Record positions of existing cards before DOM update
+  const firstPositions = new Map<string, DOMRect>();
+  const oldCards = els.stationListContainer.querySelectorAll<HTMLElement>(".station-card[data-id]");
+  oldCards.forEach((card) => {
+    const id = card.dataset.id;
+    if (id) {
+      firstPositions.set(id, card.getBoundingClientRect());
+    }
+  });
+
   els.stationListContainer.innerHTML = "";
 
+  const enabledStations = getEnabledStations();
+
+  const favList = enabledStations.filter((s) => state.favs.has(s.id));
+  const otherList = enabledStations.filter((s) => !state.favs.has(s.id));
+
+  // Top control bar for catalog popup modal
+  const topBar = document.createElement("div");
+  topBar.className = "station-list-toolbar";
+  topBar.innerHTML = `
+    <button type="button" id="open-catalog-btn" class="btn-catalog-trigger">
+      ${ICONS.radio} Dostosuj listę stacji / Katalog
+    </button>
+  `;
+  els.stationListContainer.appendChild(topBar);
+
+  topBar.querySelector("#open-catalog-btn")?.addEventListener("click", () => openCatalogModal());
+
   const sections = [
-    { label: "Ulubione", key: "fav", list: ALL_STATIONS.filter((s) => state.favs.has(s.id)) },
-    { label: "Ogólnopolskie", key: "national", list: ALL_STATIONS.filter((s) => s.cat === "national") },
+    { label: "Ulubione", key: "fav", list: favList },
+    { label: "Stacje radiowe", key: "all", list: otherList },
   ];
 
   sections.forEach((sec) => {
+    if (sec.key === "all" && favList.length > 0 && sec.list.length === 0) {
+      return; // Skip empty section if all enabled stations are favorites
+    }
+
     const secDiv = document.createElement("div");
 
     const header = document.createElement("div");
@@ -23,7 +55,8 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
     if (sec.list.length === 0) {
       const empty = document.createElement("div");
       empty.className = "section-empty";
-      empty.textContent = sec.key === "fav" ? "Brak ulubionych — kliknij ★ przy dowolnej stacji" : "Brak stacji";
+      empty.textContent =
+        sec.key === "fav" ? "Brak ulubionych — kliknij ★ przy dowolnej stacji" : "Brak stacji — dodaj z katalogu";
       secDiv.appendChild(empty);
     } else {
       const grid = document.createElement("div");
@@ -33,16 +66,21 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
         const isSelected = state.station && state.station.id === s.id;
         const isFav = state.favs.has(s.id);
 
+        const logoHtml = s.coverUrl
+          ? `<img src="${s.coverUrl}" alt="" class="sc-thumb" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><div class="sc-thumb-placeholder" style="display:none;">${s.name.charAt(0)}</div>`
+          : `<div class="sc-thumb-placeholder">${s.name.charAt(0)}</div>`;
+
         const card = document.createElement("div");
         card.className = `station-card${isSelected ? " active" : ""}`;
+        card.dataset.id = s.id;
         card.setAttribute("role", "button");
         card.setAttribute("tabindex", "0");
         card.innerHTML = `
+          ${logoHtml}
           <div class="sc-main">
             <div class="sc-name">${isSelected ? '<span class="sc-led-dot" aria-hidden="true"></span>' : ""}${s.name}</div>
             <div class="sc-meta">
-              <span class="sc-freq">${s.freq} FM</span>
-              <span class="sc-genre">${s.genre}</span>
+              <span class="sc-short">${s.short}</span>
             </div>
           </div>
           <button class="sc-star${isFav ? " on" : ""}" aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">
@@ -70,4 +108,38 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
 
     els.stationListContainer.appendChild(secDiv);
   });
+
+  // LAST, INVERT, PLAY: Animate cards smoothly from old position to new position
+  if (firstPositions.size > 0) {
+    requestAnimationFrame(() => {
+      const newCards = els.stationListContainer.querySelectorAll<HTMLElement>(".station-card[data-id]");
+      newCards.forEach((card) => {
+        const id = card.dataset.id;
+        if (!id) return;
+
+        const firstRect = firstPositions.get(id);
+        if (firstRect) {
+          const lastRect = card.getBoundingClientRect();
+          const deltaX = firstRect.left - lastRect.left;
+          const deltaY = firstRect.top - lastRect.top;
+
+          if (deltaX !== 0 || deltaY !== 0) {
+            card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+            card.style.transition = "none";
+            card.style.zIndex = "10";
+
+            requestAnimationFrame(() => {
+              card.style.transition = "transform 380ms cubic-bezier(0.2, 0.8, 0.25, 1)";
+              card.style.transform = "";
+
+              setTimeout(() => {
+                card.style.transition = "";
+                card.style.zIndex = "";
+              }, 380);
+            });
+          }
+        }
+      });
+    });
+  }
 }

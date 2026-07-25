@@ -3,38 +3,47 @@ import type { Station } from "./types";
 export const STORAGE_KEYS = {
   THEME: "kajtek_theme",
   FAVS: "kajtek_favs",
+  STATION_PREFS: "kajtek_station_prefs",
+  RMF_CATALOG_CACHE: "kajtek_rmf_catalog",
+  CUSTOM_STATIONS: "kajtek_custom_stations",
 } as const;
 
-export const ALL_STATIONS: Station[] = [
+export const API_ENDPOINTS = {
+  RMF_CATALOG_LOCAL: "/api/rmf/stations",
+  RMF_CATALOG_REMOTE: "https://api.rmfon.pl/stations",
+  RMF_STATIC_BASE: "https://static.rmf.pl",
+} as const;
+
+export const INIT_STATIONS: Station[] = [
   {
     id: "rmf",
     name: "RMF FM",
-    freq: "96.2",
-    genre: "Pop / Hity",
+    short: "Najlepsza muzyka",
     cat: "national",
     provider: "rmf",
     stream: "https://rs202-krk.rmfstream.pl/rmf_fm",
     apiBaseUrl: "/api/rmf/stations/5",
+    coverUrl: "https://static.rmf.pl/portal/stations/covers/rmf-fm/20240404114958_rmf-fm_600.jpg",
   },
   {
     id: "rmf-maxxx",
     name: "RMF MAXX",
-    freq: "99.8",
-    genre: "Pop / Hity",
+    short: "RMF MAXX. Hity #naMAXXa",
     cat: "national",
     provider: "rmf",
     stream: "https://rs202-krk.rmfstream.pl/rmf_maxxx",
     apiBaseUrl: "/api/rmf/stations/6",
+    coverUrl: "https://static.rmf.pl/portal/stations/covers/rmf-maxx/20240404115440_rmf-maxx_600.jpg",
   },
   {
     id: "rmf-classic",
     name: "RMF CLASSIC",
-    freq: "101.4",
-    genre: "Classic / Jazz",
+    short: "RMF Classic. Muzyka z klasą",
     cat: "national",
     provider: "rmf",
     stream: "https://rs202-krk.rmfstream.pl/RMFCLASSIC48",
     apiBaseUrl: "/api/rmf/stations/7",
+    coverUrl: "https://static.rmf.pl/portal/stations/covers/rmf-classic/20260130151605_rmf-classic_600.jpg",
   },
 ];
 

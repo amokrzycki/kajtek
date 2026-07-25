@@ -1,9 +1,15 @@
 import { getFactsLabel, MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
-import { getProvider, getRmfFactsTimeInfo } from "./providers.js";
+import { genericProvider, getProvider, getRmfFactsTimeInfo } from "./providers.js";
 import { notifyState, radioAudio, setTrackInterval, state, trackInterval } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
-import { els, resolveAlbumCoverUrl, updateAlbumArt, updateHistoryUI, updateNowPlayingTrack } from "./ui.js";
+import {
+  resolveAlbumCoverUrl,
+  setHistoryLoadingState,
+  updateAlbumArt,
+  updateHistoryUI,
+  updateNowPlayingTrack,
+} from "./ui.js";
 
 let failoverTimestamps: number[] = [];
 
@@ -46,16 +52,7 @@ radioAudio.addEventListener("error", handleAudioFailover);
 radioAudio.addEventListener("stalled", handleAudioFailover);
 
 async function fetchWithTimeout(url: string, timeoutMs = TIMERS.FETCH_TIMEOUT_MS): Promise<Response> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeoutMs);
-  try {
-    const res = await fetch(url, { signal: controller.signal });
-    clearTimeout(timer);
-    return res;
-  } catch (err) {
-    clearTimeout(timer);
-    throw err;
-  }
+  return fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
 }
 
 async function parseJsonFromRes(res: Response): Promise<unknown> {
@@ -104,7 +101,13 @@ async function ensureStationMetadata(station: Station) {
       const res = await fetchWithTimeout(stationBaseUrl, TIMERS.FETCH_TIMEOUT_MS);
       const data = (await parseJsonFromRes(res)) as { img?: unknown } | null;
       if (typeof data?.img === "string" && data.img.trim().length > 0) {
-        station.coverUrl = data.img.trim();
+        let imgUrl = data.img.trim();
+        if (imgUrl.startsWith("//")) {
+          imgUrl = `https:${imgUrl}`;
+        } else if (imgUrl.startsWith("/")) {
+          imgUrl = `https://static.rmf.pl${imgUrl}`;
+        }
+        station.coverUrl = imgUrl;
       }
     } catch (_) {
       // Ignore errors, coverUrl remains undefined
@@ -145,7 +148,9 @@ export async function fetchPlaylist(station: Station) {
 }
 
 function checkRealtimeTrackState() {
-  if (!state.playing || !state.station || !state.history || state.history.length === 0) return;
+  if (!state.playing || !state.station?.apiBaseUrl || !state.history || state.history.length === 0) {
+    return;
+  }
 
   const nowSec = Math.floor(Date.now() / 1000);
   const activeItem = state.history.find(
@@ -165,7 +170,7 @@ function checkRealtimeTrackState() {
 
       evaluated = {
         artist: state.station.name,
-        title: `📻 ${label}`,
+        title: label,
         isLiveBreak: true,
       };
     } else {
@@ -186,7 +191,7 @@ function checkRealtimeTrackState() {
       }
       evaluated = {
         artist: state.station.name,
-        title: `📻 ${label}`,
+        title: label,
         isLiveBreak: true,
       };
     }
@@ -219,6 +224,14 @@ async function refreshTrackInfo() {
       pendingStationSlideIn = false;
       updateHistoryUI(doFullSlide);
     }
+  } else {
+    state.liveTrack = null;
+    state.history = [];
+    updateNowPlayingTrack(null);
+    updateAlbumArt(resolveAlbumCoverUrl(null, state.station));
+    const doFullSlide = pendingStationSlideIn;
+    pendingStationSlideIn = false;
+    updateHistoryUI(doFullSlide);
   }
 }
 
@@ -230,12 +243,14 @@ function stopTrackRotation() {
 function startTrackRotation() {
   stopTrackRotation();
   refreshTrackInfo();
-  setTrackInterval(
-    setInterval(() => {
-      checkRealtimeTrackState();
-      refreshTrackInfo();
-    }, TIMERS.TRACK_POLL_MS),
-  );
+  if (state.station?.apiBaseUrl) {
+    setTrackInterval(
+      setInterval(() => {
+        checkRealtimeTrackState();
+        refreshTrackInfo();
+      }, TIMERS.TRACK_POLL_MS),
+    );
+  }
 }
 
 export function currentTrack(): TrackInfo | null {
@@ -244,13 +259,16 @@ export function currentTrack(): TrackInfo | null {
 
 export function selectStation(s: Station) {
   state.station = s;
+  if (getProvider(s) === genericProvider) {
+    state.showHistory = false;
+  }
   delete s._consecutiveFailures;
   delete s._apiFailed;
   state.playing = true;
   state.liveTrack = null;
   pendingStationSlideIn = true;
   failoverTimestamps = [];
-  els.historyList.classList.add("is-loading");
+  setHistoryLoadingState(true);
 
   ensureStationMetadata(s);
 
