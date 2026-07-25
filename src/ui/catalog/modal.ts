@@ -89,15 +89,17 @@ function createModalElements(): void {
         </div>
       </div>
 
-      <div id="catalog-custom-form-wrap" class="k-custom-form-wrap" style="display: none;">
-        <form id="catalog-custom-form" class="k-custom-form">
-          <div class="k-form-row">
-            <input type="text" id="custom-name-input" class="k-input" placeholder="Nazwa stacji (np. Radio Rzeszów)" required />
-            <input type="url" id="custom-url-input" class="k-input" placeholder="URL streamu (http:// lub https://)" required />
-            <button type="submit" class="btn-primary">Dodaj</button>
-          </div>
-          <div id="custom-form-error" class="k-form-error" style="display: none;"></div>
-        </form>
+      <div id="catalog-custom-form-wrap" class="k-custom-form-wrap">
+        <div class="k-custom-form-inner">
+          <form id="catalog-custom-form" class="k-custom-form">
+            <div class="k-form-row">
+              <input type="text" id="custom-name-input" class="k-input" placeholder="Nazwa stacji (np. Radio Rzeszów)" required />
+              <input type="url" id="custom-url-input" class="k-input" placeholder="URL streamu (http:// lub https://)" required />
+              <button type="submit" class="btn-primary">Dodaj</button>
+            </div>
+            <div id="custom-form-error" class="k-form-error" style="display: none;"></div>
+          </form>
+        </div>
       </div>
 
       <div id="catalog-error-banner" class="k-modal-error" style="display: none;"></div>
@@ -134,7 +136,7 @@ function createModalElements(): void {
   customToggleBtn?.addEventListener("click", () => {
     showCustomForm = !showCustomForm;
     const formWrap = modalEl?.querySelector<HTMLElement>("#catalog-custom-form-wrap");
-    if (formWrap) formWrap.style.display = showCustomForm ? "block" : "none";
+    formWrap?.classList.toggle("is-open", showCustomForm);
   });
 
   const customForm = modalEl.querySelector<HTMLFormElement>("#catalog-custom-form");
@@ -160,10 +162,8 @@ function createModalElements(): void {
         nameEl.value = "";
         urlEl.value = "";
         showCustomForm = false;
-        if (modalEl) {
-          const formWrap = modalEl.querySelector<HTMLElement>("#catalog-custom-form-wrap");
-          if (formWrap) formWrap.style.display = "none";
-        }
+        const formWrap = modalEl?.querySelector<HTMLElement>("#catalog-custom-form-wrap");
+        formWrap?.classList.remove("is-open");
         renderModalBody();
       },
     );
