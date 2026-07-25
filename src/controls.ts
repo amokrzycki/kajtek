@@ -1,9 +1,10 @@
-import { isIOS } from "./platform.js";
+import { STORAGE_KEYS } from "./consts.js";
 import { radioAudio, setSleepInterval, sleepInterval, state } from "./state.js";
 import { updateSleepUI } from "./ui.js";
+import { isIOS } from "./utils.js";
 
 export function applyAudioVolume(): void {
-  // iOS ignores HTMLMediaElement.volume (uses hardware buttons);
+  // iOS ignores HTMLMediaElement.volume (uses hardware buttons)
   radioAudio.muted = state.muted;
   radioAudio.volume = isIOS() ? 1 : state.vol / 100;
 }
@@ -62,6 +63,6 @@ export function toggleFav(id: string, onUIUpdate: () => void): void {
   } else {
     state.favs.add(id);
   }
-  localStorage.setItem("kajtek_favs", JSON.stringify(Array.from(state.favs)));
+  localStorage.setItem(STORAGE_KEYS.FAVS, JSON.stringify(Array.from(state.favs)));
   onUIUpdate();
 }

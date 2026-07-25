@@ -1,15 +1,9 @@
-export interface Station {
-  id: string;
-  name: string;
-  freq: string;
-  genre: string;
-  cat: string;
-  provider: string;
-  stream: string;
-  playlistUrl?: string;
-  _consecutiveFailures?: number;
-  _apiFailed?: boolean;
-}
+import type { Station } from "./types";
+
+export const STORAGE_KEYS = {
+  THEME: "kajtek_theme",
+  FAVS: "kajtek_favs",
+} as const;
 
 export const ALL_STATIONS: Station[] = [
   {
@@ -44,5 +38,15 @@ export const ALL_STATIONS: Station[] = [
   },
 ];
 
-export const DEFAULT_FAVS: string[] = ["rmf"];
+export const TIMERS = {
+  FETCH_TIMEOUT_MS: 3500,
+  TRACK_POLL_MS: 5000,
+  SLEEP_STEP_MS: 1000,
+  HISTORY_SLIDE_MS: 700,
+} as const;
+
 export const VU_COUNT = 18;
+export const MAX_CONSECUTIVE_FAILURES = 5;
+export const DEFAULT_VERSION = "0.3";
+
+export const getFactsLabel = (targetHourStr: string) => `Serwis informacyjny / Fakty RMF FM (~${targetHourStr})`;
