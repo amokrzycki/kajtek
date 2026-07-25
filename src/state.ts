@@ -1,4 +1,4 @@
-import packageJson from "../package.json";
+declare const APP_VERSION: string;
 import type { Station } from "./data.js";
 
 export interface TrackInfo {
@@ -47,7 +47,7 @@ export const state: AppState = {
   liveTrack: null,
   history: [],
   showHistory: false,
-  version: packageJson.version,
+  version: typeof APP_VERSION !== "undefined" ? APP_VERSION : "0.3",
 };
 
 export const radioAudio = new Audio();
