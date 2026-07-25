@@ -1,18 +1,40 @@
-import { ALL_STATIONS } from "../consts.js";
+import { getEnabledStations } from "../catalog.js";
 import { ICONS } from "../icons.js";
 import { state } from "../state.js";
 import type { Station } from "../types.js";
+import { openCatalogModal } from "./catalogModal.js";
 import { els } from "./elements.js";
 
 export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (id: string) => void): void {
   els.stationListContainer.innerHTML = "";
 
+  const enabledStations = getEnabledStations();
+
+  const favList = enabledStations.filter((s) => state.favs.has(s.id));
+  const otherList = enabledStations.filter((s) => !state.favs.has(s.id));
+
+  // Top control bar for catalog popup modal
+  const topBar = document.createElement("div");
+  topBar.className = "station-list-toolbar";
+  topBar.innerHTML = `
+    <button type="button" id="open-catalog-btn" class="btn-catalog-trigger">
+      📻 Dostosuj listę stacji / Katalog
+    </button>
+  `;
+  els.stationListContainer.appendChild(topBar);
+
+  topBar.querySelector("#open-catalog-btn")?.addEventListener("click", () => openCatalogModal());
+
   const sections = [
-    { label: "Ulubione", key: "fav", list: ALL_STATIONS.filter((s) => state.favs.has(s.id)) },
-    { label: "Ogólnopolskie", key: "national", list: ALL_STATIONS.filter((s) => s.cat === "national") },
+    { label: "Ulubione", key: "fav", list: favList },
+    { label: "Stacje radiowe", key: "all", list: otherList },
   ];
 
   sections.forEach((sec) => {
+    if (sec.key === "all" && favList.length > 0 && sec.list.length === 0) {
+      return; // Skip empty section if all enabled stations are favorites
+    }
+
     const secDiv = document.createElement("div");
 
     const header = document.createElement("div");
@@ -23,7 +45,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
     if (sec.list.length === 0) {
       const empty = document.createElement("div");
       empty.className = "section-empty";
-      empty.textContent = sec.key === "fav" ? "Brak ulubionych — kliknij ★ przy dowolnej stacji" : "Brak stacji";
+      empty.textContent = sec.key === "fav" ? "Brak ulubionych — kliknij ★ przy dowolnej stacji" : "Brak stacji — dodaj z katalogu";
       secDiv.appendChild(empty);
     } else {
       const grid = document.createElement("div");

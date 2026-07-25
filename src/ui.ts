@@ -41,7 +41,7 @@ export function updateNowPlayingTrack(track: TrackInfo | null): void {
   els.npTrackWrap.classList.add("visible");
 
   const artistText = track?.artist || state.station.name;
-  const titleText = track?.title || "Audycja na żywo";
+  const titleText = track?.title || (state.station.apiBaseUrl ? "Audycja na żywo" : "brak informacji o utworze");
 
   triggerFade(els.npArtist, artistText);
   triggerFade(els.npTitle, titleText);

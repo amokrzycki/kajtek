@@ -1,4 +1,4 @@
-import { STORAGE_KEYS } from "./consts.js";
+import { setStationFavorite } from "./catalog.js";
 import { notifyState, radioAudio, setSleepInterval, sleepInterval, state } from "./state.js";
 import { updateSleepUI } from "./ui.js";
 import { isIOS } from "./utils.js";
@@ -58,11 +58,8 @@ export function cancelSleepTimer(): void {
 }
 
 export function toggleFav(id: string): void {
-  if (state.favs.has(id)) {
-    state.favs.delete(id);
-  } else {
-    state.favs.add(id);
-  }
-  localStorage.setItem(STORAGE_KEYS.FAVS, JSON.stringify(Array.from(state.favs)));
+  const isFav = state.favs.has(id);
+  setStationFavorite(id, !isFav);
   notifyState();
 }
+

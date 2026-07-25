@@ -16,6 +16,38 @@ export interface Station {
   _apiFailed?: boolean;
 }
 
+export type StationPref = {
+  id: string;
+  enabled: boolean;
+  favorite: boolean;
+};
+
+export type CustomStation = {
+  id: string;
+  name: string;
+  stream: string;
+};
+
+export interface RawRmfStation {
+  id: number | string;
+  name: string;
+  idname?: string;
+  slug?: string;
+  short?: string;
+  mountpoint_mp3?: string;
+  mountpoint_aac?: string;
+  description?: string;
+  img?: string;
+  search?: string;
+  in_premium?: number;
+  station_category?: Array<{ name: string; slug: string }>;
+}
+
+export interface RmfCatalogCache {
+  fetchedAt: number;
+  stations: RawRmfStation[];
+}
+
 export interface TrackInfo {
   artist: string;
   title: string;
@@ -57,3 +89,4 @@ export interface Provider {
   name: string;
   parse(data: unknown, station?: Station | null): PlaylistResult | null;
 }
+
