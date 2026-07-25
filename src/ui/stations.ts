@@ -6,6 +6,16 @@ import { openCatalogModal } from "./catalog/modal.js";
 import { els } from "./elements.js";
 
 export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (id: string) => void): void {
+  // FIRST: Record positions of existing cards before DOM update
+  const firstPositions = new Map<string, DOMRect>();
+  const oldCards = els.stationListContainer.querySelectorAll<HTMLElement>(".station-card[data-id]");
+  oldCards.forEach((card) => {
+    const id = card.dataset.id;
+    if (id) {
+      firstPositions.set(id, card.getBoundingClientRect());
+    }
+  });
+
   els.stationListContainer.innerHTML = "";
 
   const enabledStations = getEnabledStations();
@@ -62,6 +72,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
 
         const card = document.createElement("div");
         card.className = `station-card${isSelected ? " active" : ""}`;
+        card.dataset.id = s.id;
         card.setAttribute("role", "button");
         card.setAttribute("tabindex", "0");
         card.innerHTML = `
@@ -97,4 +108,38 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
 
     els.stationListContainer.appendChild(secDiv);
   });
+
+  // LAST, INVERT, PLAY: Animate cards smoothly from old position to new position
+  if (firstPositions.size > 0) {
+    requestAnimationFrame(() => {
+      const newCards = els.stationListContainer.querySelectorAll<HTMLElement>(".station-card[data-id]");
+      newCards.forEach((card) => {
+        const id = card.dataset.id;
+        if (!id) return;
+
+        const firstRect = firstPositions.get(id);
+        if (firstRect) {
+          const lastRect = card.getBoundingClientRect();
+          const deltaX = firstRect.left - lastRect.left;
+          const deltaY = firstRect.top - lastRect.top;
+
+          if (deltaX !== 0 || deltaY !== 0) {
+            card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+            card.style.transition = "none";
+            card.style.zIndex = "10";
+
+            requestAnimationFrame(() => {
+              card.style.transition = "transform 380ms cubic-bezier(0.2, 0.8, 0.25, 1)";
+              card.style.transform = "";
+
+              setTimeout(() => {
+                card.style.transition = "";
+                card.style.zIndex = "";
+              }, 380);
+            });
+          }
+        }
+      });
+    });
+  }
 }

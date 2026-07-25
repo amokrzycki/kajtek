@@ -115,11 +115,9 @@
       rgba(0, 0, 0, 0.08) 4px,
       rgba(0, 0, 0, 0.08) 5px
     );
-    transition: box-shadow 100ms ease;
-
-    &:active {
-      box-shadow: var(--k-sh-inset);
-    }
+    transition:
+      box-shadow 100ms ease,
+      transform 100ms ease;
   }
 
   &::-moz-range-thumb {
@@ -130,6 +128,28 @@
     border: 1px solid var(--k-border-3);
     box-shadow: var(--k-sh-btn);
     cursor: pointer;
+    background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 4px,
+      rgba(0, 0, 0, 0.08) 4px,
+      rgba(0, 0, 0, 0.08) 5px
+    );
+    transition:
+      box-shadow 100ms ease,
+      transform 100ms ease;
+  }
+
+  &:active::-webkit-slider-thumb,
+  &::-webkit-slider-thumb:active {
+    box-shadow: var(--k-sh-inset);
+    transform: scale(0.95);
+  }
+
+  &:active::-moz-range-thumb,
+  &::-moz-range-thumb:active {
+    box-shadow: var(--k-sh-inset);
+    transform: scale(0.95);
   }
 }
 

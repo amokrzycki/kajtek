@@ -328,10 +328,12 @@ function renderModalBody(): void {
       }
     });
     starBtn?.addEventListener("click", () => {
-      if (!enabled) return;
-      setStationFavorite(station.id, !favorite);
+      if (starBtn.disabled) return;
+      const nextFav = !starBtn.classList.contains("on");
+      setStationFavorite(station.id, nextFav);
       notifyState();
-      renderModalBody();
+      starBtn.classList.toggle("on", nextFav);
+      starBtn.innerHTML = ICONS.star(nextFav);
     });
 
     const deleteBtn = row.querySelector<HTMLButtonElement>(".btn-delete-custom");

@@ -1,4 +1,5 @@
 import { STORAGE_KEYS } from "./consts.js";
+import { isVolAnimating } from "./controls.js";
 import { ICONS } from "./icons.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { state } from "./state.js";
@@ -159,12 +160,14 @@ export function updateUI(
     if (label) label.textContent = "— —";
   }
 
-  els.muteBtn.classList.toggle("muted", state.muted);
-  els.muteBtn.innerHTML = ICONS.vol(state.muted, state.vol);
-  const dispVol = state.muted ? 0 : state.vol;
-  els.volSlider.value = String(dispVol);
-  els.volSlider.style.setProperty("--vol", `${dispVol}%`);
-  els.volVal.textContent = state.muted ? "—" : String(state.vol);
+  if (!isVolAnimating()) {
+    els.muteBtn.classList.toggle("muted", state.muted);
+    els.muteBtn.innerHTML = ICONS.vol(state.muted, state.vol);
+    const dispVol = state.muted ? 0 : state.vol;
+    els.volSlider.value = String(dispVol);
+    els.volSlider.style.setProperty("--vol", `${dispVol}%`);
+    els.volVal.textContent = state.muted ? "—" : String(state.vol);
+  }
 
   updateSleepUI();
 

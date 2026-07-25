@@ -369,8 +369,9 @@
   transition:
     background var(--k-tr),
     color var(--k-tr),
-    box-shadow 100ms ease,
-    transform 100ms ease;
+    border-color var(--k-tr),
+    box-shadow var(--k-tr),
+    transform var(--k-tr);
   -webkit-tap-highlight-color: transparent;
 
   &:disabled {
@@ -380,6 +381,12 @@
 
   &:not(:disabled):hover {
     color: var(--k-accent);
+    background: var(--k-bg);
+    border-color: var(--k-accent);
+    box-shadow:
+      var(--k-sh-btn),
+      0 0 12px var(--k-accent-dim);
+    transform: scale(1.04);
   }
 
   &:not(:disabled):active {

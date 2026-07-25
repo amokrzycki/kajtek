@@ -197,17 +197,35 @@
   cursor: pointer;
   color: var(--k-text-faint);
   transition:
-    color 150ms ease,
-    transform 150ms ease;
+    color var(--k-tr),
+    transform 150ms cubic-bezier(0.175, 0.885, 0.32, 1.275),
+    filter var(--k-tr);
   -webkit-tap-highlight-color: transparent;
   line-height: 0;
 
   &.on {
     color: var(--k-accent);
+    filter: drop-shadow(0 0 3px var(--k-accent-ring));
   }
 
-  &:hover {
-    transform: scale(1.18);
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
+
+  &:not(:disabled):hover {
+    color: var(--k-accent);
+    transform: scale(1.22);
+  }
+
+  &:not(:disabled):active {
+    transform: scale(0.82);
+  }
+
+  svg {
+    transition:
+      fill var(--k-tr),
+      stroke var(--k-tr);
   }
 }
 
