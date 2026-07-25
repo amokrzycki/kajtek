@@ -81,12 +81,6 @@ function checkRealtimeTrackState() {
         label = getFactsLabel(factsInfo.targetHourStr);
       }
 
-      if (activeItem.gapSec && activeItem.gapSec < 120) {
-        label = "Wejście DJ / Dżingel";
-      } else {
-        label = "Przerwa / Reklamy";
-      }
-
       evaluated = {
         artist: state.station.name,
         title: `📻 ${label}`,

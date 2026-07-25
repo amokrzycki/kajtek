@@ -142,6 +142,7 @@ export function updateHistoryUI(animateSlideIn = false): void {
       t.title,
       t.start,
       t.isBreak,
+      t.gapSec,
       t.label,
       isCurrent,
       isNext,
@@ -185,12 +186,14 @@ export function updateHistoryUI(animateSlideIn = false): void {
       const vtName = `vt-${item.key.replace(/[^a-zA-Z0-9_-]/g, "_")}`;
 
       const delayStr = `${idx * 35}ms`;
+      const breakCls = item.t.isBreak ? " is-break" : "";
+
       if (!child) {
         child = document.createElement("div");
         child.setAttribute("data-key", item.key);
         child.style.viewTransitionName = vtName;
         child.style.animationDelay = delayStr;
-        child.className = `pl-item ${item.statusCls}${item.t.isBreak ? " is-break" : ""}`;
+        child.className = `pl-item ${item.statusCls}${breakCls}`;
         child.innerHTML = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext);
 
         const currentNodes = Array.from(els.historyList.children);
@@ -203,7 +206,7 @@ export function updateHistoryUI(animateSlideIn = false): void {
         child.style.viewTransitionName = vtName;
         child.style.animationDelay = delayStr;
 
-        const newClass = `pl-item ${item.statusCls}${item.t.isBreak ? " is-break" : ""}`;
+        const newClass = `pl-item ${item.statusCls}${breakCls}`;
         if (child.className !== newClass) {
           child.className = newClass;
         }
