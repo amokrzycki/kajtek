@@ -1,3 +1,4 @@
+import packageJson from "../package.json";
 import type { Station } from "./data.js";
 
 export interface TrackInfo {
@@ -14,6 +15,7 @@ export interface TrackInfo {
   gapMin?: number;
   label?: string;
   isLiveBreak?: boolean;
+  coverUrl?: string;
 }
 
 export interface AppState {
@@ -28,6 +30,7 @@ export interface AppState {
   liveTrack: TrackInfo | null;
   history: TrackInfo[];
   showHistory: boolean;
+  version: string;
 }
 
 export const state: AppState = {
@@ -44,6 +47,7 @@ export const state: AppState = {
   liveTrack: null,
   history: [],
   showHistory: false,
+  version: packageJson.version,
 };
 
 export const radioAudio = new Audio();

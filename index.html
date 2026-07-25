@@ -49,6 +49,10 @@
             <div id="reel-left" class="tape-reel" aria-hidden="true">
               <div class="reel-hub"></div>
             </div>
+            <div id="album-art" class="album-art" data-v="0" aria-hidden="true">
+              <span class="album-art-initial">?</span>
+              <div class="album-art-label">— —</div>
+            </div>
             <div class="np-info">
               <div class="np-freq-row">
                 <span id="np-freq" class="np-freq-val">— FM</span>
@@ -137,7 +141,10 @@
         <section id="station-list-container" class="station-list"></section>
       </main>
 
-      <footer class="kajtek-footer">KAJTEK · radio internetowe · inspirowany Unitrą PS-101 · 2026</footer>
+      <footer class="kajtek-footer">
+        <p>Inspirowany Unitrą PS-101 · 2026 · <span id="version"></span></p>
+        <p>Autor: Adrian Mokrzycki</p>
+      </footer>
     </div>
 
     <script type="module" src="app.js"></script>

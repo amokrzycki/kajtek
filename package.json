@@ -1,5 +1,5 @@
 {
-  "version": "0.1.1",
+  "version": "0.3",
   "scripts": {
     "dev": "node dev.mjs",
     "build": "npm run build:js && npm run build:assets",

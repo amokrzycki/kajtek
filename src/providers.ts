@@ -37,6 +37,7 @@ interface RawTrack {
   startTime?: string;
   name?: string;
   song?: string;
+  coverUrl?: string;
   current?: RawTrack;
   now?: RawTrack;
   upcoming?: RawTrack[];
@@ -78,6 +79,7 @@ export const rmfProvider: Provider = {
         start: item.start || null,
         endTimestamp: endTs,
         length: len,
+        coverUrl: item.coverUrl || "",
       };
       if (item.timestamp !== undefined) {
         track.timestamp = item.timestamp;
@@ -177,6 +179,7 @@ export const rmfProvider: Provider = {
         activeTrack = {
           artist: currentActive.artist,
           title: currentActive.title,
+          coverUrl: currentActive.coverUrl || "",
         };
       }
     } else if (curEndTs && nowSec >= curEndTs) {
@@ -194,6 +197,7 @@ export const rmfProvider: Provider = {
       activeTrack = {
         artist: decodeEntities(curItem.author || curItem.artist),
         title: decodeEntities(curItem.title),
+        coverUrl: curItem.coverUrl || "",
       };
     }
 

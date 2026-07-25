@@ -4,11 +4,18 @@ import { isIOS } from "./platform.js";
 import { state, type TrackInfo } from "./state.js";
 import { startVisualizer, stopVisualizer } from "./visualizer.js";
 
+const ART_V: Record<string, string> = {
+  rmf: "0",
+  "rmf-maxxx": "1",
+  "rmf-classic": "2",
+};
+
 export const els = {
   darkToggle: document.getElementById("dark-toggle") as HTMLButtonElement,
   vuStrip: document.getElementById("vu-strip") as HTMLDivElement,
   reelLeft: document.getElementById("reel-left") as HTMLDivElement,
   reelRight: document.getElementById("reel-right") as HTMLDivElement,
+  albumArt: document.getElementById("album-art") as HTMLDivElement,
   npFreq: document.getElementById("np-freq") as HTMLSpanElement,
   npLiveDot: document.getElementById("np-live-dot") as HTMLSpanElement,
   npStation: document.getElementById("np-station") as HTMLDivElement,
@@ -164,6 +171,47 @@ export function updateNowPlayingTrack(track: TrackInfo | null) {
 
   triggerFade(els.npArtist, artistText);
   triggerFade(els.npTitle, titleText);
+}
+
+export function updateAlbumArt(coverUrl: string | undefined) {
+  const art = els.albumArt;
+  let img = art.querySelector<HTMLImageElement>(".album-art-img");
+  const initial = art.querySelector<HTMLElement>(".album-art-initial");
+  const label = art.querySelector<HTMLElement>(".album-art-label");
+
+  if (coverUrl) {
+    if (!img) {
+      img = document.createElement("img");
+      img.className = "album-art-img";
+      img.alt = "";
+      img.setAttribute("aria-hidden", "true");
+      art.prepend(img);
+    }
+    if (img.dataset.src !== coverUrl) {
+      img.dataset.src = coverUrl;
+      img.style.opacity = "0";
+      img.onload = () => {
+        if (!img) return;
+        img.style.opacity = "1";
+      };
+      img.onerror = () => {
+        if (!img) return;
+        img.style.display = "none";
+      };
+      img.style.display = "";
+      img.src = coverUrl;
+    }
+    if (initial) initial.style.opacity = "0";
+    if (label) label.style.opacity = "0";
+  } else {
+    if (img) {
+      img.style.display = "none";
+      img.src = "";
+      img.dataset.src = "";
+    }
+    if (initial) initial.style.opacity = "";
+    if (label) label.style.opacity = "";
+  }
 }
 
 function formatDuration(sec?: number): string {
@@ -446,12 +494,26 @@ export function updateUI(
     triggerFade(els.npStation, state.station.name);
     els.npLiveDot.classList.toggle("on", state.playing);
     updateNowPlayingTrack(currentTrack);
+    // album art
+    const v = ART_V[state.station.id] ?? "0";
+    els.albumArt.dataset.v = v;
+    const initial = els.albumArt.querySelector(".album-art-initial");
+    const label = els.albumArt.querySelector(".album-art-label");
+    if (initial) initial.textContent = state.station.name.charAt(0);
+    if (label) label.textContent = state.station.name;
+    updateAlbumArt(currentTrack?.coverUrl);
   } else {
     els.npFreq.textContent = "— FM";
     els.npStation.textContent = "wybierz stację";
     els.npStation.classList.add("empty");
     els.npTrackWrap.classList.remove("visible");
     els.npLiveDot.classList.remove("on");
+    // album art reset
+    els.albumArt.dataset.v = "0";
+    const initial = els.albumArt.querySelector(".album-art-initial");
+    const label = els.albumArt.querySelector(".album-art-label");
+    if (initial) initial.textContent = "?";
+    if (label) label.textContent = "— —";
   }
 
   els.muteBtn.classList.toggle("muted", state.muted);
