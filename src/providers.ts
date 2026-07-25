@@ -1,5 +1,5 @@
 import { getFactsLabel } from "./consts.js";
-import type { PlaylistResult, Provider, Station, TrackInfo } from "./types.js";
+import type { PlaylistResult, Provider, RawTrack, Station, TrackInfo } from "./types.js";
 import { decodeEntities } from "./utils.js";
 
 export function getRmfFactsTimeInfo(timestamp: number): { isFacts: boolean; targetHourStr: string } {
@@ -18,30 +18,6 @@ export function getRmfFactsTimeInfo(timestamp: number): { isFacts: boolean; targ
 
   return { isFacts, targetHourStr };
 }
-
-interface RawTrack {
-  order?: number;
-  lenght?: string | number;
-  length?: string | number;
-  timestamp?: number;
-  author?: string;
-  artist?: string;
-  title?: string;
-  start?: string;
-  startTime?: string;
-  name?: string;
-  song?: string;
-  coverUrl?: string;
-  current?: RawTrack;
-  now?: RawTrack;
-  upcoming?: RawTrack[];
-  next?: RawTrack[];
-  songs?: RawTrack[];
-  tracks?: RawTrack[];
-  playlist?: RawTrack[];
-}
-
-export type { PlaylistResult, Provider };
 
 export const rmfProvider: Provider = {
   name: "RMF Network Provider",

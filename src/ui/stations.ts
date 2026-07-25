@@ -1,8 +1,8 @@
-import { getEnabledStations } from "../catalog.js";
-import { ICONS } from "../icons.js";
-import { state } from "../state.js";
-import type { Station } from "../types.js";
-import { openCatalogModal } from "./catalogModal.js";
+import { getEnabledStations } from "@/catalog.js";
+import { ICONS } from "@/icons.js";
+import { state } from "@/state.js";
+import type { Station } from "@/types.js";
+import { openCatalogModal } from "./catalog/modal.js";
 import { els } from "./elements.js";
 
 export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (id: string) => void): void {

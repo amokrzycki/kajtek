@@ -3,7 +3,7 @@ import { ICONS } from "./icons.js";
 import { state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import { els, initVolumeControlUI, initVU } from "./ui/elements.js";
-import { triggerHistorySlideIn, updateHistoryUI } from "./ui/history.js";
+import { setHistoryLoadingState, triggerHistorySlideIn, updateHistoryUI } from "./ui/history.js";
 import { renderStationList } from "./ui/stations.js";
 import { triggerFade } from "./utils.js";
 import { startVisualizer, stopVisualizer } from "./visualizer.js";
@@ -14,7 +14,16 @@ const ART_V: Record<string, string> = {
   "rmf-classic": "2",
 };
 
-export { els, initVolumeControlUI, initVU, renderStationList, triggerFade, triggerHistorySlideIn, updateHistoryUI };
+export {
+  els,
+  initVolumeControlUI,
+  initVU,
+  renderStationList,
+  setHistoryLoadingState,
+  triggerFade,
+  triggerHistorySlideIn,
+  updateHistoryUI,
+};
 
 export function updateSleepUI(): void {
   if (state.sleepMin !== null && state.sleepSec !== null) {

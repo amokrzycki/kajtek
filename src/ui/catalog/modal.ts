@@ -1,5 +1,4 @@
 import {
-  addCustomStation,
   deleteCustomStation,
   fetchRmfCatalog,
   getAllKnownStations,
@@ -9,9 +8,10 @@ import {
   isStationFavorite,
   setStationEnabled,
   setStationFavorite,
-} from "../catalog.js";
-import { ICONS } from "../icons.js";
-import { notifyState } from "../state.js";
+} from "@/catalog";
+import { ICONS } from "@/icons";
+import { notifyState } from "@/state";
+import { handleCustomStationSubmit } from "./form";
 
 let modalEl: HTMLElement | null = null;
 let searchQuery = "";
@@ -147,23 +147,26 @@ function createModalElements(): void {
     if (!nameEl || !urlEl) return;
     if (errEl) errEl.style.display = "none";
 
-    try {
-      addCustomStation(nameEl.value, urlEl.value);
-      nameEl.value = "";
-      urlEl.value = "";
-      showCustomForm = false;
-      if (modalEl) {
-        const formWrap = modalEl.querySelector<HTMLElement>("#catalog-custom-form-wrap");
-        if (formWrap) formWrap.style.display = "none";
-      }
-      notifyState();
-      renderModalBody();
-    } catch (err) {
-      if (errEl) {
-        errEl.textContent = err instanceof Error ? err.message : "Wystąpił błąd";
-        errEl.style.display = "block";
-      }
-    }
+    handleCustomStationSubmit(
+      nameEl.value,
+      urlEl.value,
+      (msg) => {
+        if (errEl) {
+          errEl.textContent = msg;
+          errEl.style.display = "block";
+        }
+      },
+      () => {
+        nameEl.value = "";
+        urlEl.value = "";
+        showCustomForm = false;
+        if (modalEl) {
+          const formWrap = modalEl.querySelector<HTMLElement>("#catalog-custom-form-wrap");
+          if (formWrap) formWrap.style.display = "none";
+        }
+        renderModalBody();
+      },
+    );
   });
 }
 

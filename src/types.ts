@@ -48,6 +48,28 @@ export interface RmfCatalogCache {
   stations: RawRmfStation[];
 }
 
+export interface RawTrack {
+  order?: number;
+  lenght?: string | number;
+  length?: string | number;
+  timestamp?: number;
+  author?: string;
+  artist?: string;
+  title?: string;
+  start?: string;
+  startTime?: string;
+  name?: string;
+  song?: string;
+  coverUrl?: string;
+  current?: RawTrack;
+  now?: RawTrack;
+  upcoming?: RawTrack[];
+  next?: RawTrack[];
+  songs?: RawTrack[];
+  tracks?: RawTrack[];
+  playlist?: RawTrack[];
+}
+
 export interface TrackInfo {
   artist: string;
   title: string;

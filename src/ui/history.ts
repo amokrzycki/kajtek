@@ -1,8 +1,8 @@
-import { TIMERS } from "../consts.js";
-import { ICONS } from "../icons.js";
-import { state } from "../state.js";
-import type { TrackInfo } from "../types.js";
-import { formatDuration } from "../utils.js";
+import { TIMERS } from "@/consts.js";
+import { ICONS } from "@/icons.js";
+import { state } from "@/state.js";
+import type { TrackInfo } from "@/types.js";
+import { formatDuration } from "@/utils.js";
 import { els } from "./elements.js";
 
 let slideTimer: number | undefined;
@@ -15,6 +15,10 @@ export function triggerHistorySlideIn(): void {
   slideTimer = window.setTimeout(() => {
     els.historyPanel.classList.remove("slide-in");
   }, TIMERS.HISTORY_SLIDE_MS);
+}
+
+export function setHistoryLoadingState(loading: boolean): void {
+  els.historyList.classList.toggle("is-loading", loading);
 }
 
 function getTrackKey(t: TrackInfo): string {

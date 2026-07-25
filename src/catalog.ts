@@ -1,4 +1,4 @@
-import { INIT_STATIONS, STORAGE_KEYS, TIMERS } from "./consts.js";
+import { API_ENDPOINTS, INIT_STATIONS, STORAGE_KEYS, TIMERS } from "./consts.js";
 import { state } from "./state.js";
 import type { CustomStation, RawRmfStation, RmfCatalogCache, Station, StationPref } from "./types.js";
 
@@ -17,7 +17,7 @@ export function getStoredRmfCatalog(): RmfCatalogCache | null {
 }
 
 export async function fetchRmfCatalog(): Promise<RmfCatalogCache> {
-  const endpoints = ["/api/rmf/stations", "https://api.rmfon.pl/stations"];
+  const endpoints = [API_ENDPOINTS.RMF_CATALOG_LOCAL, API_ENDPOINTS.RMF_CATALOG_REMOTE];
   let lastError: Error | null = null;
 
   for (const url of endpoints) {
@@ -57,7 +57,7 @@ export async function fetchRmfCatalog(): Promise<RmfCatalogCache> {
               if (rawImg.startsWith("//")) {
                 st.img = `https:${rawImg}`;
               } else if (rawImg.startsWith("/")) {
-                st.img = `https://static.rmf.pl${rawImg}`;
+                st.img = `${API_ENDPOINTS.RMF_STATIC_BASE}${rawImg}`;
               } else {
                 st.img = rawImg;
               }

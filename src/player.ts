@@ -3,7 +3,13 @@ import { applyAudioVolume } from "./controls.js";
 import { getProvider, getRmfFactsTimeInfo } from "./providers.js";
 import { notifyState, radioAudio, setTrackInterval, state, trackInterval } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
-import { els, resolveAlbumCoverUrl, updateAlbumArt, updateHistoryUI, updateNowPlayingTrack } from "./ui.js";
+import {
+  resolveAlbumCoverUrl,
+  setHistoryLoadingState,
+  updateAlbumArt,
+  updateHistoryUI,
+  updateNowPlayingTrack,
+} from "./ui.js";
 
 let failoverTimestamps: number[] = [];
 
@@ -268,7 +274,7 @@ export function selectStation(s: Station) {
   state.liveTrack = null;
   pendingStationSlideIn = true;
   failoverTimestamps = [];
-  els.historyList.classList.add("is-loading");
+  setHistoryLoadingState(true);
 
   ensureStationMetadata(s);
 

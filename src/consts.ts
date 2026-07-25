@@ -8,6 +8,12 @@ export const STORAGE_KEYS = {
   CUSTOM_STATIONS: "kajtek_custom_stations",
 } as const;
 
+export const API_ENDPOINTS = {
+  RMF_CATALOG_LOCAL: "/api/rmf/stations",
+  RMF_CATALOG_REMOTE: "https://api.rmfon.pl/stations",
+  RMF_STATIC_BASE: "https://static.rmf.pl",
+} as const;
+
 export const INIT_STATIONS: Station[] = [
   {
     id: "rmf",
