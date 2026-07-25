@@ -5,12 +5,17 @@ import https from "node:https";
 import path from "node:path";
 import { context } from "esbuild";
 
+const pkg = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
+
 const ctx = await context({
   entryPoints: ["src/app.ts"],
   bundle: true,
   sourcemap: true,
   outfile: "dist/app.js",
   format: "esm",
+  define: {
+    APP_VERSION: JSON.stringify(pkg.version),
+  },
 });
 
 await ctx.watch();

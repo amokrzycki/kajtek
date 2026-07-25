@@ -14,6 +14,13 @@ function refresh() {
   updateUI(currentTrack(), onSelect, onToggleFav);
 }
 
+function setVersion() {
+  const versionEl = document.getElementById("version");
+  if (versionEl) {
+    versionEl.textContent = `${state.version}`;
+  }
+}
+
 function attachEvents() {
   els.darkToggle.addEventListener("click", () => {
     state.dark = !state.dark;
@@ -42,6 +49,7 @@ function attachEvents() {
 }
 
 function init() {
+  setVersion();
   initVU();
   initVolumeControlUI();
   attachEvents();

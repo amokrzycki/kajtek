@@ -2,7 +2,7 @@ import { applyAudioVolume } from "./controls.js";
 import type { Station } from "./data.js";
 import { getProvider, getRmfFactsTimeInfo } from "./providers.js";
 import { radioAudio, setTrackInterval, state, type TrackInfo, trackInterval } from "./state.js";
-import { els, updateHistoryUI, updateNowPlayingTrack } from "./ui.js";
+import { els, updateAlbumArt, updateHistoryUI, updateNowPlayingTrack } from "./ui.js";
 
 async function fetchWithTimeout(url: string, timeoutMs = 3500): Promise<Response> {
   const controller = new AbortController();
@@ -98,6 +98,7 @@ function checkRealtimeTrackState() {
       evaluated = {
         artist: activeItem.artist,
         title: activeItem.title,
+        coverUrl: activeItem.coverUrl || "",
       };
     }
   } else {
@@ -138,6 +139,7 @@ async function refreshTrackInfo() {
       state.history = data.all || [];
       checkRealtimeTrackState();
       updateNowPlayingTrack(state.liveTrack);
+      updateAlbumArt(state.liveTrack?.coverUrl);
       const doFullSlide = pendingStationSlideIn;
       pendingStationSlideIn = false;
       updateHistoryUI(doFullSlide);

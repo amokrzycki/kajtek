@@ -30,7 +30,8 @@
         "noAdjacentSpacesInRegex": "error",
         "noExtraBooleanCast": "error",
         "noUselessCatch": "error",
-        "noUselessEscapeInRegex": "error"
+        "noUselessEscapeInRegex": "error",
+        "noImportantStyles": "off"
       },
       "correctness": {
         "noUnusedVariables": "error",

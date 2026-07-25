@@ -1,3 +1,5 @@
+declare const APP_VERSION: string;
+
 import type { Station } from "./data.js";
 
 export interface TrackInfo {
@@ -14,6 +16,7 @@ export interface TrackInfo {
   gapMin?: number;
   label?: string;
   isLiveBreak?: boolean;
+  coverUrl?: string;
 }
 
 export interface AppState {
@@ -28,6 +31,7 @@ export interface AppState {
   liveTrack: TrackInfo | null;
   history: TrackInfo[];
   showHistory: boolean;
+  version: string;
 }
 
 export const state: AppState = {
@@ -44,6 +48,7 @@ export const state: AppState = {
   liveTrack: null,
   history: [],
   showHistory: false,
+  version: typeof APP_VERSION !== "undefined" ? APP_VERSION : "0.3",
 };
 
 export const radioAudio = new Audio();
