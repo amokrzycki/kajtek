@@ -2,9 +2,10 @@
   "version": "0.3",
   "scripts": {
     "dev": "node dev.mjs",
-    "build": "npm run build:js && npm run build:assets",
+    "build": "npm run build:js && npm run build:css && npm run build:assets",
     "build:js": "esbuild src/app.ts --bundle --minify --sourcemap --outfile=dist/app.js --format=esm '--define:APP_VERSION=\"'\"$npm_package_version\"'\"'",
-    "build:assets": "cp index.html style.css dist/"
+    "build:css": "esbuild styles/index.css --bundle --minify --sourcemap --outfile=dist/style.css",
+    "build:assets": "cp index.html dist/"
   },
   "devDependencies": {
     "esbuild": "0.28.1",

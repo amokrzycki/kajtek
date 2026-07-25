@@ -8,10 +8,10 @@ import { context } from "esbuild";
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
 
 const ctx = await context({
-  entryPoints: ["src/app.ts"],
+  entryPoints: ["src/app.ts", "styles/index.css"],
   bundle: true,
   sourcemap: true,
-  outfile: "dist/app.js",
+  outdir: "dist",
   format: "esm",
   define: {
     APP_VERSION: JSON.stringify(pkg.version),

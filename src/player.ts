@@ -40,12 +40,6 @@ export async function fetchPlaylist(station: Station) {
   const provider = getProvider(station);
   const target = station.playlistUrl;
   const urls = [target];
-  if (target.startsWith("http")) {
-    urls.push(
-      `https://corsproxy.io/?${encodeURIComponent(target)}`,
-      `https://api.allorigins.win/raw?url=${encodeURIComponent(target)}`,
-    );
-  }
 
   for (const url of urls) {
     try {
