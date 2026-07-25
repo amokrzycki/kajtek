@@ -1,4 +1,5 @@
 declare const APP_VERSION: string;
+
 import type { Station } from "./data.js";
 
 export interface TrackInfo {
