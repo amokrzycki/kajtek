@@ -3,7 +3,47 @@ import { applyAudioVolume } from "./controls.js";
 import { getProvider, getRmfFactsTimeInfo } from "./providers.js";
 import { notifyState, radioAudio, setTrackInterval, state, trackInterval } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
-import { els, updateAlbumArt, updateHistoryUI, updateNowPlayingTrack } from "./ui.js";
+import { els, resolveAlbumCoverUrl, updateAlbumArt, updateHistoryUI, updateNowPlayingTrack } from "./ui.js";
+
+let failoverTimestamps: number[] = [];
+
+function handleAudioFailover() {
+  if (!state.playing || !state.station) return;
+
+  const NOW = Date.now();
+  failoverTimestamps = failoverTimestamps.filter((t) => NOW - t < 30000);
+
+  const streams = state.station._streams || [state.station.stream];
+
+  if (failoverTimestamps.length >= 3) {
+    // max 3 stream switches in 30s limit to avoid infinite retry loop during outage.
+    state.playing = false;
+    radioAudio.pause();
+    updateNowPlayingTrack({
+      artist: state.station.name,
+      title: "Błąd odtwarzania streamu",
+    });
+    notifyState();
+    return;
+  }
+
+  failoverTimestamps.push(NOW);
+  const currentIdx = state.station._currentStreamIndex || 0;
+  const nextIdx = (currentIdx + 1) % streams.length;
+  state.station._currentStreamIndex = nextIdx;
+  const nextUrl = streams[nextIdx];
+
+  if (nextUrl) {
+    radioAudio.src = nextUrl;
+    applyAudioVolume();
+    radioAudio.play().catch(() => {
+      // Ignore autoplay restriction errors
+    });
+  }
+}
+
+radioAudio.addEventListener("error", handleAudioFailover);
+radioAudio.addEventListener("stalled", handleAudioFailover);
 
 async function fetchWithTimeout(url: string, timeoutMs = TIMERS.FETCH_TIMEOUT_MS): Promise<Response> {
   const controller = new AbortController();
@@ -34,11 +74,53 @@ async function parseJsonFromRes(res: Response): Promise<unknown> {
   return null;
 }
 
+async function ensureStationMetadata(station: Station) {
+  if (!station.apiBaseUrl) return;
+
+  const stationBaseUrl = station.apiBaseUrl;
+
+  if (!station._streamsFetched) {
+    station._streamsFetched = true;
+    try {
+      const res = await fetchWithTimeout(`${stationBaseUrl}/streams`, TIMERS.FETCH_TIMEOUT_MS);
+      const data = (await parseJsonFromRes(res)) as { playlistMp3?: { item_mp3?: unknown } } | null;
+      const rawMp3 = data?.playlistMp3?.item_mp3;
+      let mp3Urls: string[] = [];
+      if (Array.isArray(rawMp3)) {
+        mp3Urls = rawMp3.filter((u): u is string => typeof u === "string" && u.trim().length > 0);
+      } else if (typeof rawMp3 === "string" && rawMp3.trim().length > 0) {
+        mp3Urls = [rawMp3.trim()];
+      }
+      // premium streams omitted (require auth, return 401/403). Keep hardcoded stream as first element.
+      station._streams = Array.from(new Set([station.stream, ...mp3Urls]));
+    } catch (_) {
+      station._streams = [station.stream];
+    }
+  }
+
+  if (!station._coverFetched) {
+    station._coverFetched = true;
+    try {
+      const res = await fetchWithTimeout(stationBaseUrl, TIMERS.FETCH_TIMEOUT_MS);
+      const data = (await parseJsonFromRes(res)) as { img?: unknown } | null;
+      if (typeof data?.img === "string" && data.img.trim().length > 0) {
+        station.coverUrl = data.img.trim();
+      }
+    } catch (_) {
+      // Ignore errors, coverUrl remains undefined
+    }
+
+    if (state.station?.id === station.id) {
+      updateAlbumArt(resolveAlbumCoverUrl(state.liveTrack, state.station));
+    }
+  }
+}
+
 export async function fetchPlaylist(station: Station) {
-  if (!station?.playlistUrl || (station._consecutiveFailures || 0) > MAX_CONSECUTIVE_FAILURES) return null;
+  if (!station?.apiBaseUrl || (station._consecutiveFailures || 0) > MAX_CONSECUTIVE_FAILURES) return null;
 
   const provider = getProvider(station);
-  const target = station.playlistUrl;
+  const target = `${station.apiBaseUrl}/playlist`;
   const urls = [target];
 
   for (const url of urls) {
@@ -113,6 +195,7 @@ function checkRealtimeTrackState() {
   if (evaluated && (state.liveTrack?.artist !== evaluated.artist || state.liveTrack?.title !== evaluated.title)) {
     state.liveTrack = evaluated;
     updateNowPlayingTrack(state.liveTrack);
+    updateAlbumArt(resolveAlbumCoverUrl(state.liveTrack, state.station));
   }
 }
 
@@ -121,7 +204,7 @@ let pendingStationSlideIn = false;
 async function refreshTrackInfo() {
   if (!state.playing || !state.station) return;
 
-  if (state.station.playlistUrl) {
+  if (state.station.apiBaseUrl) {
     const targetId = state.station.id;
     const data = await fetchPlaylist(state.station);
     if (state.station?.id !== targetId) return;
@@ -131,7 +214,7 @@ async function refreshTrackInfo() {
       state.history = data.all || [];
       checkRealtimeTrackState();
       updateNowPlayingTrack(state.liveTrack);
-      updateAlbumArt(state.liveTrack?.coverUrl);
+      updateAlbumArt(resolveAlbumCoverUrl(state.liveTrack, state.station));
       const doFullSlide = pendingStationSlideIn;
       pendingStationSlideIn = false;
       updateHistoryUI(doFullSlide);
@@ -166,10 +249,16 @@ export function selectStation(s: Station) {
   state.playing = true;
   state.liveTrack = null;
   pendingStationSlideIn = true;
+  failoverTimestamps = [];
   els.historyList.classList.add("is-loading");
 
-  if (s.stream) {
-    radioAudio.src = s.stream;
+  ensureStationMetadata(s);
+
+  const streams = s._streams || [s.stream];
+  const streamUrl = streams[s._currentStreamIndex || 0] || s.stream;
+
+  if (streamUrl) {
+    radioAudio.src = streamUrl;
     applyAudioVolume();
     radioAudio.play().catch(() => {
       // Ignore autoplay restriction errors
@@ -185,10 +274,15 @@ export function togglePlay() {
   state.playing = !state.playing;
 
   if (state.playing) {
-    if (state.station.stream)
+    const streams = state.station._streams || [state.station.stream];
+    const streamUrl = streams[state.station._currentStreamIndex || 0] || state.station.stream;
+    if (streamUrl) {
+      radioAudio.src = streamUrl;
+      applyAudioVolume();
       radioAudio.play().catch(() => {
         // Ignore autoplay restriction errors
       });
+    }
     startTrackRotation();
   } else {
     radioAudio.pause();

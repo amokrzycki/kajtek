@@ -279,10 +279,10 @@ export function getProvider(station?: Station | null): Provider {
     const prov = PROVIDERS[station.provider];
     if (prov) return prov;
   }
-  if (station?.playlistUrl?.includes("rmf")) {
+  if (station?.apiBaseUrl?.includes("rmf")) {
     return rmfProvider;
   }
-  if (station?.playlistUrl?.includes("eska") || station?.playlistUrl?.includes("radioeska")) {
+  if (station?.apiBaseUrl?.includes("eska") || station?.apiBaseUrl?.includes("radioeska")) {
     return eskaProvider;
   }
   return genericProvider;

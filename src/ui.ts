@@ -33,7 +33,7 @@ export function updateSleepUI(): void {
 export function updateNowPlayingTrack(track: TrackInfo | null): void {
   if (!state.station) return;
 
-  if (!track && state.station.playlistUrl) {
+  if (!track && state.station.apiBaseUrl) {
     els.npTrackWrap.classList.remove("visible");
     return;
   }
@@ -45,6 +45,16 @@ export function updateNowPlayingTrack(track: TrackInfo | null): void {
 
   triggerFade(els.npArtist, artistText);
   triggerFade(els.npTitle, titleText);
+}
+
+export function resolveAlbumCoverUrl(track: TrackInfo | null, station: Station | null): string {
+  if (track?.isLiveBreak) {
+    return station?.coverUrl || "";
+  }
+  if (track?.coverUrl && track.coverUrl.trim().length > 0) {
+    return track.coverUrl;
+  }
+  return station?.coverUrl || "";
 }
 
 export function updateAlbumArt(coverUrl: string | undefined): void {
@@ -125,7 +135,7 @@ export function updateUI(
     const label = els.albumArt.querySelector(".album-art-label");
     if (initial) initial.textContent = state.station.name.charAt(0);
     if (label) label.textContent = state.station.name;
-    updateAlbumArt(currentTrack?.coverUrl);
+    updateAlbumArt(resolveAlbumCoverUrl(currentTrack, state.station));
   } else {
     els.npFreq.textContent = "— FM";
     els.npStation.textContent = "wybierz stację";

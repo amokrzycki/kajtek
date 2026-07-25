@@ -6,7 +6,12 @@ export interface Station {
   cat: string;
   provider: string;
   stream: string;
-  playlistUrl?: string;
+  apiBaseUrl?: string;
+  coverUrl?: string;
+  _streams?: string[];
+  _currentStreamIndex?: number;
+  _streamsFetched?: boolean;
+  _coverFetched?: boolean;
   _consecutiveFailures?: number;
   _apiFailed?: boolean;
 }
