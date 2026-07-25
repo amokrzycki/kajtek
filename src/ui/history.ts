@@ -6,6 +6,16 @@ import { formatDuration } from "@/utils.js";
 import { els } from "./elements.js";
 
 let slideTimer: number | undefined;
+let clearTimer: number | undefined;
+
+function clearHistoryContent(): void {
+  if (els.historyList.dataset.signature !== "empty") {
+    els.historyEmpty.style.display = "block";
+    els.historyList.innerHTML = "";
+    els.historyList.dataset.signature = "empty";
+  }
+  els.historyList.classList.remove("is-loading");
+}
 
 export function triggerHistorySlideIn(): void {
   if (slideTimer) window.clearTimeout(slideTimer);
@@ -68,16 +78,24 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
 }
 
 export function updateHistoryUI(animateSlideIn = false): void {
+  if (clearTimer) {
+    window.clearTimeout(clearTimer);
+    clearTimer = undefined;
+  }
+
   const isPanelOpen = state.showHistory && els.historyPanel.classList.contains("open");
   const prevHeight = isPanelOpen ? els.historyList.getBoundingClientRect().height : 0;
 
   if (!state.history || state.history.length === 0) {
-    if (els.historyList.dataset.signature !== "empty") {
-      els.historyEmpty.style.display = "block";
-      els.historyList.innerHTML = "";
-      els.historyList.dataset.signature = "empty";
+    const hasRenderedItems = els.historyList.children.length > 0;
+    const isPanelVisibleOrClosing = !state.showHistory || els.historyPanel.classList.contains("open");
+    if (isPanelVisibleOrClosing && hasRenderedItems) {
+      clearTimer = window.setTimeout(() => {
+        clearHistoryContent();
+      }, 320);
+    } else {
+      clearHistoryContent();
     }
-    els.historyList.classList.remove("is-loading");
     return;
   }
 

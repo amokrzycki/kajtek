@@ -1,6 +1,6 @@
 import { getFactsLabel, MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
-import { getProvider, getRmfFactsTimeInfo } from "./providers.js";
+import { genericProvider, getProvider, getRmfFactsTimeInfo } from "./providers.js";
 import { notifyState, radioAudio, setTrackInterval, state, trackInterval } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import {
@@ -259,6 +259,9 @@ export function currentTrack(): TrackInfo | null {
 
 export function selectStation(s: Station) {
   state.station = s;
+  if (getProvider(s) === genericProvider) {
+    state.showHistory = false;
+  }
   delete s._consecutiveFailures;
   delete s._apiFailed;
   state.playing = true;

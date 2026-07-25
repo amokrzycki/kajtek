@@ -1,5 +1,6 @@
 import { STORAGE_KEYS } from "./consts.js";
 import { ICONS } from "./icons.js";
+import { genericProvider, getProvider } from "./providers.js";
 import { state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import { els, initVolumeControlUI, initVU } from "./ui/elements.js";
@@ -167,6 +168,13 @@ export function updateUI(
 
   updateSleepUI();
 
+  const isGeneric = Boolean(state.station && getProvider(state.station) === genericProvider);
+  if (isGeneric && state.showHistory) {
+    state.showHistory = false;
+  }
+
+  els.historyToggleBtn.disabled = isGeneric;
+  els.historyToggleBtn.classList.toggle("disabled", isGeneric);
   els.historyToggleBtn.setAttribute("aria-expanded", String(state.showHistory));
   els.historyArrow.textContent = state.showHistory ? "▲" : "▼";
   els.historyPanel.classList.toggle("open", state.showHistory);
