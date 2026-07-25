@@ -10,18 +10,6 @@
     box-shadow var(--k-tr);
 }
 
-.vu-strip {
-  display: flex;
-  gap: 2px;
-  padding: 0.65rem 1.5rem 0;
-  height: 40px;
-  align-items: flex-end;
-
-  .dark &.active .vu-seg {
-    box-shadow: 0 0 4px currentColor;
-  }
-}
-
 .vu-seg {
   flex: 1;
   height: 6px;
@@ -39,12 +27,35 @@
   }
 }
 
+.vu-strip {
+  display: flex;
+  gap: 2px;
+  padding: 0.65rem 1.5rem 0;
+  height: 40px;
+  align-items: flex-end;
+
+  .dark &.active .vu-seg {
+    box-shadow: 0 0 4px currentColor;
+  }
+}
+
 .np-body {
   display: grid;
   grid-template-columns: 50px 88px 1fr 50px;
   align-items: center;
   gap: 0.9rem;
   padding: 1rem 1.5rem 0.85rem;
+}
+
+.reel-hub {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--k-bg-raised);
+  border: 2px solid var(--k-text-muted);
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .tape-reel {
@@ -102,17 +113,6 @@
       border-color: var(--k-accent);
     }
   }
-}
-
-.reel-hub {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--k-bg-raised);
-  border: 2px solid var(--k-text-muted);
-  position: relative;
-  z-index: 1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 @keyframes reel-spin {

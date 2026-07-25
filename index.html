@@ -42,7 +42,7 @@
       </header>
 
       <main class="kajtek-main">
-        <section class="np-panel">
+        <section class="np-panel" aria-label="Odtwarzacz radiowy">
           <div id="vu-strip" class="vu-strip" aria-hidden="true"></div>
 
           <div class="np-body">
@@ -53,7 +53,7 @@
               <span class="album-art-initial">?</span>
               <div class="album-art-label">— —</div>
             </div>
-            <div class="np-info">
+            <div class="np-info" aria-live="polite">
               <div class="np-freq-row">
                 <span id="np-freq" class="np-freq-val">— FM</span>
                 <span id="np-live-dot" class="np-live-dot"></span>
@@ -100,7 +100,7 @@
         </section>
 
         <div class="controls-row">
-          <div id="volume-panel" class="k-panel">
+          <section id="volume-panel" class="k-panel" aria-label="Panel głośności">
             <div class="k-label">GŁOŚNOŚĆ</div>
             <div class="volume-row">
               <button type="button" id="mute-btn" class="mute-btn" aria-label="Wycisz/Włącz dźwięk"></button>
@@ -116,29 +116,29 @@
               </div>
               <span id="vol-val" class="vol-val">72</span>
             </div>
-          </div>
+          </section>
 
-          <div class="k-panel">
+          <section class="k-panel" aria-label="Wyłącznik czasowy">
             <div class="k-label">SLEEP TIMER</div>
             <div class="sleep-keys">
-              <button type="button" class="sleep-key btn-key" data-min="15">
+              <button type="button" class="sleep-key btn-key" data-min="15" aria-label="Wyłącz za 15 minut">
                 <span class="sleep-val">15</span><span class="sleep-unit">min</span>
               </button>
-              <button type="button" class="sleep-key btn-key" data-min="30">
+              <button type="button" class="sleep-key btn-key" data-min="30" aria-label="Wyłącz za 30 minut">
                 <span class="sleep-val">30</span><span class="sleep-unit">min</span>
               </button>
-              <button type="button" class="sleep-key btn-key" data-min="60">
+              <button type="button" class="sleep-key btn-key" data-min="60" aria-label="Wyłącz za 60 minut">
                 <span class="sleep-val">60</span><span class="sleep-unit">min</span>
               </button>
-              <button type="button" class="sleep-key btn-key" data-min="90">
+              <button type="button" class="sleep-key btn-key" data-min="90" aria-label="Wyłącz za 90 minut">
                 <span class="sleep-val">90</span><span class="sleep-unit">min</span>
               </button>
             </div>
             <div id="sleep-count" class="sleep-count" style="display: none"></div>
-          </div>
+          </section>
         </div>
 
-        <section id="station-list-container" class="station-list"></section>
+        <section id="station-list-container" class="station-list" aria-label="Lista stacji radiowych"></section>
       </main>
 
       <footer class="kajtek-footer">

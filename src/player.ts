@@ -1,7 +1,7 @@
 import { getFactsLabel, MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
 import { getProvider, getRmfFactsTimeInfo } from "./providers.js";
-import { radioAudio, setTrackInterval, state, trackInterval } from "./state.js";
+import { notifyState, radioAudio, setTrackInterval, state, trackInterval } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import { els, updateAlbumArt, updateHistoryUI, updateNowPlayingTrack } from "./ui.js";
 
@@ -159,7 +159,7 @@ export function currentTrack(): TrackInfo | null {
   return state.liveTrack;
 }
 
-export function selectStation(s: Station, onUIUpdate: () => void) {
+export function selectStation(s: Station) {
   state.station = s;
   delete s._consecutiveFailures;
   delete s._apiFailed;
@@ -177,10 +177,10 @@ export function selectStation(s: Station, onUIUpdate: () => void) {
   }
 
   startTrackRotation();
-  onUIUpdate();
+  notifyState();
 }
 
-export function togglePlay(onUIUpdate: () => void) {
+export function togglePlay() {
   if (!state.station) return;
   state.playing = !state.playing;
 
@@ -195,5 +195,5 @@ export function togglePlay(onUIUpdate: () => void) {
     stopTrackRotation();
   }
 
-  onUIUpdate();
+  notifyState();
 }

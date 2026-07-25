@@ -20,6 +20,20 @@ export const state: AppState = {
   version: typeof APP_VERSION !== "undefined" ? APP_VERSION : DEFAULT_VERSION,
 };
 
+type StateListener = (state: AppState) => void;
+const listeners = new Set<StateListener>();
+
+export function subscribeState(fn: StateListener): () => void {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+export function notifyState(): void {
+  listeners.forEach((fn) => {
+    fn(state);
+  });
+}
+
 export const radioAudio = new Audio();
 radioAudio.crossOrigin = "anonymous";
 

@@ -57,6 +57,18 @@
   }
 }
 
+.sc-name {
+  font-family: var(--k-font-display);
+  font-size: 1.02rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--k-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--k-tr);
+}
+
 .station-card {
   background: var(--k-bg-panel);
   border: 1px solid var(--k-border);
@@ -137,18 +149,6 @@
 .sc-main {
   flex: 1;
   min-width: 0;
-}
-
-.sc-name {
-  font-family: var(--k-font-display);
-  font-size: 1.02rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: var(--k-text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: color var(--k-tr);
 }
 
 .sc-meta {
