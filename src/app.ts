@@ -1,7 +1,7 @@
 import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
-import type { Station } from "./data.js";
 import { currentTrack, selectStation, togglePlay } from "./player.js";
 import { state } from "./state.js";
+import type { Station } from "./types.js";
 import { els, initVolumeControlUI, initVU, renderStationList, triggerHistorySlideIn, updateUI } from "./ui.js";
 
 function onSelect(s: Station) {
