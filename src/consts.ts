@@ -14,7 +14,7 @@ export const ALL_STATIONS: Station[] = [
     cat: "national",
     provider: "rmf",
     stream: "https://rs202-krk.rmfstream.pl/rmf_fm",
-    playlistUrl: "/api/rmf/stations/5/playlist",
+    apiBaseUrl: "/api/rmf/stations/5",
   },
   {
     id: "rmf-maxxx",
@@ -24,7 +24,7 @@ export const ALL_STATIONS: Station[] = [
     cat: "national",
     provider: "rmf",
     stream: "https://rs202-krk.rmfstream.pl/rmf_maxxx",
-    playlistUrl: "/api/rmf/stations/6/playlist",
+    apiBaseUrl: "/api/rmf/stations/6",
   },
   {
     id: "rmf-classic",
@@ -34,7 +34,7 @@ export const ALL_STATIONS: Station[] = [
     cat: "national",
     provider: "rmf",
     stream: "https://rs202-krk.rmfstream.pl/RMFCLASSIC48",
-    playlistUrl: "/api/rmf/stations/7/playlist",
+    apiBaseUrl: "/api/rmf/stations/7",
   },
 ];
 
