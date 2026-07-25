@@ -20,7 +20,7 @@ export function cancelVolAnim(): void {
 export function applyAudioVolume(): void {
   // iOS ignores HTMLMediaElement.volume (uses hardware buttons);
   radioAudio.muted = state.muted;
-  radioAudio.volume = isIOS() ? 1 : state.vol / 100;
+  radioAudio.volume = isIOS() ? 1 : (state.vol / 100) ** 2;
 }
 
 export function updateVolume(val: number): void {
@@ -50,7 +50,7 @@ export function toggleMute(): void {
     const currentVal = startVal + (endVal - startVal) * ease;
 
     if (!isIOS()) {
-      radioAudio.volume = currentVal / 100;
+      radioAudio.volume = (currentVal / 100) ** 2;
     }
 
     if (els.volSlider) {
