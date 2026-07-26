@@ -52,7 +52,7 @@
   &::before {
     content: "";
     position: absolute;
-    inset: 0px;
+    inset: 0px 1.1rem;
     border-radius: 6px;
     border: 1px solid var(--k-border-3);
     box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.15);
@@ -97,7 +97,46 @@
   border: 2px solid var(--k-text-muted);
   position: relative;
   z-index: 1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .dark & {
+    background: #38322b;
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  }
+
+  /* 6 authentic cassette drive teeth (czarne ząbki szpuli) */
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(from 0deg, rgba(15, 12, 10, 0.88) 0deg 22deg, transparent 22deg 60deg);
+    z-index: 2;
+
+    .dark & {
+      background: repeating-conic-gradient(from 0deg, #000000 0deg 22deg, rgba(255, 255, 255, 0.32) 22deg 60deg);
+    }
+  }
+
+  &::after {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--k-bg-inset);
+    border: 1px solid var(--k-border-3);
+    z-index: 3;
+    position: relative;
+
+    .dark & {
+      background: #25201b;
+      border-color: rgba(255, 255, 255, 0.35);
+    }
+  }
 }
 
 .tape-reel {
@@ -116,12 +155,21 @@
     background var(--k-tr),
     border-color var(--k-tr);
 
+  /* Magnetic tape spool volume around the hub */
   &::before {
     content: "";
     position: absolute;
-    inset: 5px;
+    inset: 3px;
     border-radius: 50%;
+    background: radial-gradient(circle, transparent 32%, #2d1e17 33%, #1c120e 72%, transparent 73%);
     border: 1px dashed var(--k-border-3);
+    opacity: 0.85;
+
+    .dark & {
+      background: radial-gradient(circle, transparent 32%, #5a3726 33%, #2a1810 72%, transparent 73%);
+      border-color: rgba(255, 255, 255, 0.22);
+      opacity: 0.95;
+    }
   }
 
   &::after {
@@ -391,17 +439,34 @@
 }
 
 .np-controls {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding: 0.85rem 1.5rem 1.25rem;
+  padding: 2.4rem 1.5rem 1.25rem;
   transition: border-color var(--k-tr);
+
+  /* Authentic Unitra ZRK badge & STEREO CASSETTE PLAYER PS 101 branding */
+  &::before {
+    content: "[U] UNITRA ZRK  •  STEREO CASSETTE PLAYER PS 101";
+    position: absolute;
+    top: 0.4rem;
+    left: 1.5rem;
+    font-family: var(--k-font-mono);
+    font-size: 0.46rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    color: var(--k-text-muted);
+    opacity: 0.65;
+    pointer-events: none;
+    user-select: none;
+  }
 }
 
 .play-btn {
   width: 68px;
   height: 68px;
-  border-radius: 50%;
+  border-radius: 20%;
   background: var(--k-bg-raised);
   border: 1px solid var(--k-border-3);
   box-shadow: var(--k-sh-btn);
@@ -444,34 +509,6 @@
 
     .dark & {
       box-shadow: var(--k-sh-btn), var(--k-glow);
-    }
-  }
-}
-
-.equalizer {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  height: 30px;
-  width: 36px;
-  flex-shrink: 0;
-
-  .eq-bar {
-    flex: 1;
-    border-radius: 2px 2px 0 0;
-    background: var(--k-accent);
-    height: 4px;
-    opacity: 0.3;
-    transition:
-      height 60ms ease,
-      opacity var(--k-tr);
-  }
-
-  &.active .eq-bar {
-    opacity: 1;
-
-    .dark & {
-      box-shadow: 0 0 5px var(--k-accent);
     }
   }
 }
@@ -575,7 +612,13 @@
   }
 
   .np-controls {
-    padding: 0.75rem 1rem 1rem;
+    padding: 1.4rem 1rem 1rem;
+
+    &::before {
+      left: 1rem;
+      font-size: 0.38rem;
+      letter-spacing: 0.08em;
+    }
   }
 
   .vu-strip {
