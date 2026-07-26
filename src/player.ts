@@ -1,4 +1,4 @@
-import { getFactsLabel, MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
+import { MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
 import { genericProvider, getProvider, getRmfFactsTimeInfo } from "./providers.js";
 import { notifyState, radioAudio, setTrackInterval, state, trackInterval } from "./state.js";
@@ -10,6 +10,7 @@ import {
   updateHistoryUI,
   updateNowPlayingTrack,
 } from "./ui.js";
+import { getFactsLabel } from "./utils.js";
 
 let failoverTimestamps: number[] = [];
 
@@ -58,17 +59,14 @@ async function fetchWithTimeout(url: string, timeoutMs = TIMERS.FETCH_TIMEOUT_MS
 async function parseJsonFromRes(res: Response): Promise<unknown> {
   if (!res.ok) return null;
   const json = await res.json();
-  if (Array.isArray(json)) return json;
-  if (json?.contents) {
+  if (json?.contents && typeof json.contents === "string") {
     try {
-      const parsed = JSON.parse(json.contents);
-      if (Array.isArray(parsed) || typeof parsed === "object") return parsed;
+      return JSON.parse(json.contents);
     } catch (_) {
       // Ignore parse errors
     }
   }
-  if (typeof json === "object") return json;
-  return null;
+  return json;
 }
 
 async function ensureStationMetadata(station: Station) {
@@ -80,15 +78,9 @@ async function ensureStationMetadata(station: Station) {
     station._streamsFetched = true;
     try {
       const res = await fetchWithTimeout(`${stationBaseUrl}/streams`, TIMERS.FETCH_TIMEOUT_MS);
-      const data = (await parseJsonFromRes(res)) as { playlistMp3?: { item_mp3?: unknown } } | null;
+      const data = (await parseJsonFromRes(res)) as { playlistMp3?: { item_mp3?: string | string[] } } | null;
       const rawMp3 = data?.playlistMp3?.item_mp3;
-      let mp3Urls: string[] = [];
-      if (Array.isArray(rawMp3)) {
-        mp3Urls = rawMp3.filter((u): u is string => typeof u === "string" && u.trim().length > 0);
-      } else if (typeof rawMp3 === "string" && rawMp3.trim().length > 0) {
-        mp3Urls = [rawMp3.trim()];
-      }
-      // premium streams omitted (require auth, return 401/403). Keep hardcoded stream as first element.
+      const mp3Urls = Array.isArray(rawMp3) ? rawMp3 : rawMp3 ? [rawMp3] : [];
       station._streams = Array.from(new Set([station.stream, ...mp3Urls]));
     } catch (_) {
       station._streams = [station.stream];

@@ -1,6 +1,5 @@
-import { getFactsLabel } from "./consts.js";
 import type { PlaylistResult, Provider, RawTrack, Station, TrackInfo } from "./types.js";
-import { decodeEntities } from "./utils.js";
+import { decodeEntities, getFactsLabel } from "./utils.js";
 
 export function getRmfFactsTimeInfo(timestamp: number): { isFacts: boolean; targetHourStr: string } {
   const d = new Date(timestamp * 1000);
@@ -31,7 +30,7 @@ export const rmfProvider: Provider = {
     for (let i = 0; i < sorted.length; i++) {
       const item = sorted[i];
       if (!item) continue;
-      const len = Number.parseInt(String(item.lenght || item.length || "0"), 10);
+      const len = Number(item.length ?? item.lenght ?? 0);
       let endTs = item.timestamp ? item.timestamp + len : null;
       let effectiveLen = len;
       let pendingBreak: TrackInfo | null = null;
@@ -96,7 +95,7 @@ export const rmfProvider: Provider = {
     }
 
     const curItem = sorted.find((item) => item.order === 0) || sorted[0];
-    const curLen = Number.parseInt(String(curItem?.lenght || curItem?.length || "0"), 10);
+    const curLen = Number(curItem?.length ?? curItem?.lenght ?? 0);
     const curEndTs = curItem?.timestamp ? curItem.timestamp + curLen : null;
     const hasUpcoming = sorted.some((item) => (item.order ?? 0) > 0);
 
@@ -226,7 +225,7 @@ export const genericProvider: Provider = {
     if (list.length === 0) return null;
 
     const processed: TrackInfo[] = list.map((item: RawTrack, idx: number) => {
-      const len = Number.parseInt(String(item.lenght || item.length || "0"), 10);
+      const len = Number(item.length ?? item.lenght ?? 0);
       return {
         order: item.order ?? idx,
         artist: decodeEntities(item.artist || item.author || item.name || station?.name),

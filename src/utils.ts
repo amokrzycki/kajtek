@@ -26,3 +26,5 @@ export function triggerFade(el: HTMLElement, newText: string): void {
   void el.offsetWidth;
   el.classList.add("fade-in");
 }
+
+export const getFactsLabel = (targetHourStr: string) => `Serwis informacyjny / Fakty RMF FM (~${targetHourStr})`;

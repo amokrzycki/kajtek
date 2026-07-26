@@ -26,7 +26,7 @@ export const INIT_STATIONS: Station[] = [
     coverUrl: "https://static.rmf.pl/portal/stations/covers/rmf-fm/20240404114958_rmf-fm_600.jpg",
   },
   {
-    id: "rmf-maxxx",
+    id: "maxxx",
     name: "RMF MAXX",
     short: "RMF MAXX. Hity #naMAXXa",
     cat: "national",
@@ -36,7 +36,7 @@ export const INIT_STATIONS: Station[] = [
     coverUrl: "https://static.rmf.pl/portal/stations/covers/rmf-maxx/20240404115440_rmf-maxx_600.jpg",
   },
   {
-    id: "rmf-classic",
+    id: "classic",
     name: "RMF CLASSIC",
     short: "RMF Classic. Muzyka z klasą",
     cat: "national",
@@ -57,5 +57,3 @@ export const TIMERS = {
 export const VU_COUNT = 18;
 export const MAX_CONSECUTIVE_FAILURES = 5;
 export const DEFAULT_VERSION = "0.3";
-
-export const getFactsLabel = (targetHourStr: string) => `Serwis informacyjny / Fakty RMF FM (~${targetHourStr})`;
