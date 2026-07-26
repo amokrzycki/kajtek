@@ -15,10 +15,10 @@
   --k-text-2: #554e49;
   --k-text-muted: #7a7570;
   --k-text-faint: #aaa59f;
-  --k-accent: #be5224;
-  --k-accent-2: #d06838;
-  --k-accent-dim: rgba(190, 82, 36, 0.12);
-  --k-accent-ring: rgba(190, 82, 36, 0.35);
+  --k-accent: #c4251b;
+  --k-accent-2: #d83428;
+  --k-accent-dim: rgba(196, 37, 27, 0.12);
+  --k-accent-ring: rgba(196, 37, 27, 0.35);
   --k-green: #52b862;
   --k-border: rgba(0, 0, 0, 0.08);
   --k-border-2: rgba(0, 0, 0, 0.13);
@@ -46,10 +46,10 @@
   --k-text-2: #cdc5ba;
   --k-text-muted: #a39b91;
   --k-text-faint: #787067;
-  --k-accent: #e57442;
-  --k-accent-2: #f28654;
-  --k-accent-dim: rgba(229, 116, 66, 0.18);
-  --k-accent-ring: rgba(229, 116, 66, 0.45);
+  --k-accent: #e53a2e;
+  --k-accent-2: #f24e42;
+  --k-accent-dim: rgba(229, 58, 46, 0.18);
+  --k-accent-ring: rgba(229, 58, 46, 0.45);
   --k-border: rgba(255, 255, 255, 0.08);
   --k-border-2: rgba(255, 255, 255, 0.14);
   --k-border-3: rgba(255, 255, 255, 0.22);
@@ -58,7 +58,7 @@
   --k-sh-md: 2px 5px 16px rgba(0, 0, 0, 0.55), 0 2px 5px rgba(0, 0, 0, 0.35);
   --k-sh-inset: inset 0 1px 4px rgba(0, 0, 0, 0.55), inset 0 1px 2px rgba(0, 0, 0, 0.32);
   --k-sh-btn: inset 0 1px 0 var(--k-hi), inset 0 -1px 0 rgba(0, 0, 0, 0.4), var(--k-sh-sm);
-  --k-glow: 0 0 16px rgba(229, 116, 66, 0.4);
+  --k-glow: 0 0 16px rgba(229, 58, 46, 0.4);
 }
 
 *,

@@ -114,7 +114,7 @@
     background: var(--k-accent);
 
     .dark & {
-      box-shadow: 0 0 6px rgba(207, 101, 53, 0.55);
+      box-shadow: 0 0 6px var(--k-accent-ring);
     }
   }
 
