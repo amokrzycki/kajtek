@@ -30,17 +30,16 @@ export type CustomStation = {
 export interface RawRmfStation {
   id: number | string;
   name: string;
-  idname?: string;
-  slug?: string;
-  short?: string;
-  mountpoint_mp3?: string;
-  mountpoint_aac?: string;
+  idname: string;
+  slug: string;
+  short: string;
+  mountpoint_mp3: string;
+  mountpoint_aac: string;
   description?: string;
-  img?: string;
-  coverUrl?: string;
+  img: string;
   search?: string;
-  in_premium?: number;
-  station_category?: Array<{ name: string; slug: string }>;
+  in_premium: number;
+  station_category: Array<{ name: string; slug: string }>;
 }
 
 export interface RmfCatalogCache {

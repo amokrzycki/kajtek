@@ -30,38 +30,32 @@ export async function fetchRmfCatalog(): Promise<RmfCatalogCache> {
 
       if (Array.isArray(rawList)) {
         const validatedStations: RawRmfStation[] = rawList
-          .filter((item): item is RawRmfStation => Boolean(item && typeof item === "object"))
+          .filter((item): item is Record<string, unknown> & Partial<RawRmfStation> =>
+            Boolean(item && typeof item === "object"),
+          )
           .map((item) => {
-            const st: RawRmfStation = {
-              id: item.id ?? item.idname ?? Math.random().toString(36).slice(2),
-              name: typeof item.name === "string" && item.name.trim().length > 0 ? item.name.trim() : "Stacja RMF",
-            };
-            if (typeof item.idname === "string") st.idname = item.idname;
-            if (typeof item.slug === "string") st.slug = item.slug;
-            if (typeof item.short === "string") st.short = item.short;
-            if (typeof item.mountpoint_mp3 === "string") st.mountpoint_mp3 = item.mountpoint_mp3;
-            if (typeof item.mountpoint_aac === "string") st.mountpoint_aac = item.mountpoint_aac;
-            if (typeof item.description === "string") st.description = item.description;
-
-            const rawImg =
-              typeof item.img === "string"
-                ? item.img.trim()
-                : typeof item.coverUrl === "string"
-                  ? item.coverUrl.trim()
-                  : null;
-            if (rawImg && rawImg.length > 0) {
-              if (rawImg.startsWith("//")) {
-                st.img = `https:${rawImg}`;
-              } else if (rawImg.startsWith("/")) {
-                st.img = `${API_ENDPOINTS.RMF_STATIC_BASE}${rawImg}`;
-              } else {
-                st.img = rawImg;
-              }
+            const rawImg = typeof item.img === "string" ? item.img.trim() : "";
+            let img = rawImg;
+            if (rawImg.startsWith("//")) {
+              img = `https:${rawImg}`;
+            } else if (rawImg.startsWith("/")) {
+              img = `${API_ENDPOINTS.RMF_STATIC_BASE}${rawImg}`;
             }
 
-            if (typeof item.search === "string") st.search = item.search;
-            if (typeof item.in_premium === "number") st.in_premium = item.in_premium;
-            if (Array.isArray(item.station_category)) st.station_category = item.station_category;
+            const st: RawRmfStation = {
+              id: item.id ?? item.idname ?? "",
+              name: typeof item.name === "string" && item.name.trim() ? item.name.trim() : "Stacja RMF",
+              idname: String(item.idname ?? item.id ?? ""),
+              slug: String(item.slug ?? ""),
+              short: String(item.short ?? ""),
+              mountpoint_mp3: String(item.mountpoint_mp3 ?? ""),
+              mountpoint_aac: String(item.mountpoint_aac ?? ""),
+              img,
+              in_premium: typeof item.in_premium === "number" ? item.in_premium : 0,
+              station_category: Array.isArray(item.station_category) ? item.station_category : [],
+            };
+            if (item.description) st.description = String(item.description);
+            if (item.search) st.search = String(item.search);
             return st;
           });
 
@@ -86,11 +80,7 @@ export function getCustomStations(): CustomStation[] {
     const raw = localStorage.getItem(STORAGE_KEYS.CUSTOM_STATIONS);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed)) {
-      return parsed.filter((c): c is CustomStation =>
-        Boolean(c && typeof c.id === "string" && typeof c.name === "string" && typeof c.stream === "string"),
-      );
-    }
+    return Array.isArray(parsed) ? (parsed as CustomStation[]) : [];
   } catch (_) {
     // Ignore JSON parse error
   }
@@ -226,7 +216,7 @@ export function getAllKnownStations(): Station[] {
         return;
       }
       const st: Station = {
-        id,
+        id: raw.idname,
         name: raw.name,
         short: raw.short || raw.description || "RMF Radio",
         cat: raw.station_category?.[0]?.name || "national",
