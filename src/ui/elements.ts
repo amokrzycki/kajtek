@@ -8,6 +8,7 @@ export const els = {
   reelLeft: document.getElementById("reel-left") as HTMLDivElement,
   reelRight: document.getElementById("reel-right") as HTMLDivElement,
   albumArt: document.getElementById("album-art") as HTMLDivElement,
+  npShortRow: document.getElementById("np-short-row") as HTMLDivElement,
   npShort: document.getElementById("np-short") as HTMLSpanElement,
   npLiveDot: document.getElementById("np-live-dot") as HTMLSpanElement,
   npStation: document.getElementById("np-station") as HTMLDivElement,
