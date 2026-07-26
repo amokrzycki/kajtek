@@ -132,6 +132,7 @@ export function updateUI(
   els.playBtn.innerHTML = state.playing ? ICONS.pause : ICONS.play;
 
   if (state.station) {
+    els.npShortRow.classList.remove("hidden");
     const shortText = state.station.short;
     triggerFade(els.npShort, shortText);
     if (els.npStation.textContent !== state.station.name) {
@@ -148,6 +149,7 @@ export function updateUI(
     if (label) label.textContent = state.station.name;
     updateAlbumArt(resolveAlbumCoverUrl(currentTrack, state.station));
   } else {
+    els.npShortRow.classList.add("hidden");
     els.npShort.textContent = "—";
     els.npStation.textContent = "wybierz stację";
     els.npStation.classList.add("empty");

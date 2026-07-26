@@ -240,6 +240,10 @@
   align-items: center;
   gap: 0.6rem;
   margin-bottom: 0.35rem;
+
+  &.hidden {
+    display: none;
+  }
 }
 
 .np-short-val {
@@ -324,9 +328,9 @@
 .np-title {
   font-size: 1.05rem;
   color: var(--k-text-2);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   transition: color var(--k-tr);
   display: block;
 }
@@ -470,26 +474,60 @@
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 560px) {
   .np-body {
-    grid-template-columns: 38px 72px 1fr 38px;
-    gap: 0.65rem;
-    padding: 0.85rem 1rem 0.75rem;
+    display: grid;
+    grid-template-columns: 44px 1fr 44px;
+    grid-template-areas:
+      "reel-l art   reel-r"
+      "info   info  info";
+    align-items: center;
+    justify-items: center;
+    gap: 0.85rem 0.6rem;
+    padding: 0.9rem 1rem 0.85rem;
   }
-  .album-art {
-    width: 72px;
-    height: 72px;
+
+  #reel-left {
+    grid-area: reel-l;
+    justify-self: start;
   }
+
+  #album-art {
+    grid-area: art;
+    width: 80px;
+    height: 80px;
+  }
+
+  #reel-right {
+    grid-area: reel-r;
+    justify-self: end;
+  }
+
   .tape-reel {
-    width: 38px;
-    height: 38px;
+    width: 44px;
+    height: 44px;
   }
+
+  .np-info {
+    grid-area: info;
+    width: 100%;
+    min-height: auto;
+    text-align: center;
+    margin-top: 0.2rem;
+  }
+
+  .np-short-row {
+    justify-content: center;
+  }
+
   .np-station {
     font-size: 1.5rem;
   }
+
   .np-controls {
     padding: 0.75rem 1rem 1rem;
   }
+
   .vu-strip {
     padding: 0.5rem 1rem 0;
   }
