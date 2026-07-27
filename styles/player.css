@@ -693,10 +693,6 @@
 }
 
 @media (max-width: 560px) {
-  .side-buttons {
-    display: none;
-  }
-
   .kajtek-stripe {
     display: none;
   }
