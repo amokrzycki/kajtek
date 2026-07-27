@@ -7,10 +7,7 @@ import { openCatalogModal } from "./catalog/modal.js";
 import { els } from "./elements.js";
 
 export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (id: string) => void): void {
-  // Toggle grid view modifier class on main station list container
-  els.stationListContainer.classList.toggle("is-grid-view", state.viewMode === "grid");
-
-  // FIRST: Record positions of existing cards before DOM update
+  // FIRST: Record positions of existing cards BEFORE updating viewMode / DOM
   const firstPositions = new Map<string, DOMRect>();
   const oldCards = els.stationListContainer.querySelectorAll<HTMLElement>(".station-card[data-id]");
   oldCards.forEach((card) => {
@@ -20,43 +17,62 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
     }
   });
 
-  els.stationListContainer.innerHTML = "";
+  // Toggle grid view modifier class on main station list container AFTER recording initial positions
+  els.stationListContainer.classList.toggle("is-grid-view", state.viewMode === "grid");
+
+  let topBar = els.stationListContainer.querySelector<HTMLElement>(".station-list-toolbar");
+  if (!topBar) {
+    topBar = document.createElement("div");
+    topBar.className = "station-list-toolbar";
+    topBar.innerHTML = `
+      <button type="button" id="open-catalog-btn" class="btn-catalog-trigger">
+        ${ICONS.radio} Katalog stacji
+      </button>
+      <div class="view-toggle-group" data-view="${state.viewMode}" role="radiogroup" aria-label="Przełącznik widoku">
+        <span class="view-toggle-indicator" aria-hidden="true"></span>
+        <button type="button" class="btn-view-toggle${state.viewMode === "list" ? " active" : ""}" data-view="list" title="Widok listy" aria-label="Widok listy">
+          ${ICONS.viewList}
+        </button>
+        <button type="button" class="btn-view-toggle${state.viewMode === "grid" ? " active" : ""}" data-view="grid" title="Widok kafelków" aria-label="Widok kafelków">
+          ${ICONS.viewGrid}
+        </button>
+      </div>
+    `;
+
+    topBar.querySelector("#open-catalog-btn")?.addEventListener("click", () => openCatalogModal());
+
+    topBar.querySelectorAll<HTMLButtonElement>(".btn-view-toggle").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const mode = btn.dataset.view as "list" | "grid";
+        if (mode && state.viewMode !== mode) {
+          state.viewMode = mode;
+          localStorage.setItem(STORAGE_KEYS.VIEW_MODE, mode);
+          renderStationList(onSelect, onToggleFav);
+        }
+      });
+    });
+  }
+
+  const toggleGroup = topBar.querySelector(".view-toggle-group");
+  if (toggleGroup) {
+    toggleGroup.setAttribute("data-view", state.viewMode);
+    toggleGroup.querySelectorAll<HTMLButtonElement>(".btn-view-toggle").forEach((btn) => {
+      btn.classList.toggle("active", btn.dataset.view === state.viewMode);
+    });
+  }
+
+  // Remove existing content except topBar
+  Array.from(els.stationListContainer.children).forEach((child) => {
+    if (child !== topBar) child.remove();
+  });
+
+  if (!topBar.parentElement) {
+    els.stationListContainer.appendChild(topBar);
+  }
 
   const enabledStations = getEnabledStations();
-
   const favList = enabledStations.filter((s) => state.favs.has(s.id));
   const otherList = enabledStations.filter((s) => !state.favs.has(s.id));
-
-  // Top control bar for catalog popup modal and view toggle
-  const topBar = document.createElement("div");
-  topBar.className = "station-list-toolbar";
-  topBar.innerHTML = `
-    <button type="button" id="open-catalog-btn" class="btn-catalog-trigger">
-      ${ICONS.radio} Dostosuj listę stacji / Katalog
-    </button>
-    <div class="view-toggle-group" role="radiogroup" aria-label="Przełącznik widoku">
-      <button type="button" class="btn-view-toggle${state.viewMode === "list" ? " active" : ""}" data-view="list" title="Widok listy" aria-label="Widok listy">
-        ${ICONS.viewList}
-      </button>
-      <button type="button" class="btn-view-toggle${state.viewMode === "grid" ? " active" : ""}" data-view="grid" title="Widok kafelków" aria-label="Widok kafelków">
-        ${ICONS.viewGrid}
-      </button>
-    </div>
-  `;
-  els.stationListContainer.appendChild(topBar);
-
-  topBar.querySelector("#open-catalog-btn")?.addEventListener("click", () => openCatalogModal());
-
-  topBar.querySelectorAll<HTMLButtonElement>(".btn-view-toggle").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const mode = btn.dataset.view as "list" | "grid";
-      if (mode && state.viewMode !== mode) {
-        state.viewMode = mode;
-        localStorage.setItem(STORAGE_KEYS.VIEW_MODE, mode);
-        renderStationList(onSelect, onToggleFav);
-      }
-    });
-  });
 
   const sections = [
     { label: "Ulubione", key: "fav", list: favList },
@@ -152,13 +168,13 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
             card.style.zIndex = "10";
 
             requestAnimationFrame(() => {
-              card.style.transition = "transform 380ms cubic-bezier(0.2, 0.8, 0.25, 1)";
+              card.style.transition = "transform 480ms cubic-bezier(0.16, 1, 0.3, 1)";
               card.style.transform = "";
 
               setTimeout(() => {
                 card.style.transition = "";
                 card.style.zIndex = "";
-              }, 380);
+              }, 480);
             });
           }
         }

@@ -28,7 +28,18 @@ export function updateVolume(val: number): void {
   state.vol = val;
   if (state.muted && val > 0) state.muted = false;
   applyAudioVolume();
-  notifyState();
+  // update volume UI directly to avoid firing global notifyState & re-rendering station list on every slider frame
+  if (els.volSlider) {
+    els.volSlider.value = String(val);
+    els.volSlider.style.setProperty("--vol", `${val}%`);
+  }
+  if (els.volVal) {
+    els.volVal.textContent = state.muted ? "—" : String(val);
+  }
+  if (els.muteBtn) {
+    els.muteBtn.classList.toggle("muted", state.muted);
+    els.muteBtn.innerHTML = ICONS.vol(state.muted, val);
+  }
 }
 
 export function toggleMute(): void {
