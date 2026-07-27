@@ -1,3 +1,4 @@
+import { DEFAULT_BREAK_LABEL } from "./consts.js";
 import type { PlaylistResult, Provider, RawTrack, Station, TrackInfo } from "./types.js";
 import { decodeEntities, getFactsLabel } from "./utils.js";
 
@@ -42,7 +43,9 @@ export const rmfProvider: Provider = {
           if (gapSec > 0) {
             const isRmf = station?.id === "rmf";
             const factsInfo = isRmf ? getRmfFactsTimeInfo(endTs) : { isFacts: false, targetHourStr: "" };
-            const isRealBreak = factsInfo.isFacts || gapSec >= 120;
+            // news break requires gapSec >= 60s to ignore short gaps (8s). Ceiling: news updates < 60s missed
+            const isFactsBreak = factsInfo.isFacts && gapSec >= 60;
+            const isRealBreak = isFactsBreak || gapSec >= 120;
 
             if (isRealBreak) {
               const gapMin = Math.round(gapSec / 60);
@@ -52,7 +55,7 @@ export const rmfProvider: Provider = {
               const ss = String(d.getSeconds()).padStart(2, "0");
               const hasSeconds = item.start?.split(":").length === 3 || ss !== "00";
               const breakStartStr = hasSeconds ? `${hh}:${mm}:${ss}` : `${hh}:${mm}`;
-              const label = factsInfo.isFacts ? getFactsLabel(factsInfo.targetHourStr) : "Przerwa / Reklamy";
+              const label = isFactsBreak ? getFactsLabel(factsInfo.targetHourStr) : DEFAULT_BREAK_LABEL;
 
               pendingBreak = {
                 order: item.order ?? i,
@@ -135,7 +138,7 @@ export const rmfProvider: Provider = {
         const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
         const label = factsInfo.isFacts
           ? getFactsLabel(factsInfo.targetHourStr)
-          : currentActive.label || "Przerwa / Reklamy";
+          : currentActive.label || DEFAULT_BREAK_LABEL;
 
         activeTrack = {
           artist: station?.name || "Radio",
@@ -152,7 +155,7 @@ export const rmfProvider: Provider = {
     } else if (curEndTs && nowSec >= curEndTs) {
       const isRmf = station?.id === "rmf";
       const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
-      const breakTitle = factsInfo.isFacts ? getFactsLabel(factsInfo.targetHourStr) : "Przerwa / Reklamy";
+      const breakTitle = factsInfo.isFacts ? getFactsLabel(factsInfo.targetHourStr) : DEFAULT_BREAK_LABEL;
       activeTrack = {
         artist: station?.name || "Radio",
         title: breakTitle,

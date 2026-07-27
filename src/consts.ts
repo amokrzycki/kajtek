@@ -6,6 +6,7 @@ export const STORAGE_KEYS = {
   STATION_PREFS: "kajtek_station_prefs",
   RMF_CATALOG_CACHE: "kajtek_rmf_catalog",
   CUSTOM_STATIONS: "kajtek_custom_stations",
+  VIEW_MODE: "kajtek_view_mode",
 } as const;
 
 export const API_ENDPOINTS = {
@@ -54,6 +55,7 @@ export const TIMERS = {
   HISTORY_SLIDE_MS: 700,
 } as const;
 
+export const DEFAULT_BREAK_LABEL = "Przerwa / Reklamy";
 export const VU_COUNT = 18;
 export const MAX_CONSECUTIVE_FAILURES = 5;
 export const DEFAULT_VERSION = "0.3";

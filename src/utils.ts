@@ -27,4 +27,6 @@ export function triggerFade(el: HTMLElement, newText: string): void {
   el.classList.add("fade-in");
 }
 
-export const getFactsLabel = (targetHourStr: string) => `Serwis informacyjny / Fakty RMF FM (~${targetHourStr})`;
+export const getFactsLabel = (targetHourStr: string) => `Serwis informacyjny (~${targetHourStr})`;
+
+export const capitalizeFirstLetter = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);

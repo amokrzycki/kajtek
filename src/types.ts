@@ -98,6 +98,7 @@ export interface AppState {
   liveTrack: TrackInfo | null;
   history: TrackInfo[];
   showHistory: boolean;
+  viewMode: "list" | "grid";
   version: string;
 }
 

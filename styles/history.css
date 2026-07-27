@@ -247,7 +247,7 @@
   color: #c4251b;
   white-space: nowrap;
   flex-shrink: 1;
-  max-width: 55%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   transition: color var(--k-tr);
@@ -450,7 +450,7 @@
   }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 640px) {
   .history-inner {
     padding: 0.65rem 0.65rem 0.8rem;
   }

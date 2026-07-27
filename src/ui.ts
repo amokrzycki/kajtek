@@ -1,3 +1,4 @@
+import { getEnabledStations } from "./catalog.js";
 import { STORAGE_KEYS } from "./consts.js";
 import { isVolAnimating } from "./controls.js";
 import { ICONS } from "./icons.js";
@@ -184,7 +185,38 @@ export function updateUI(
   els.historyPanel.classList.toggle("open", state.showHistory);
   updateHistoryUI();
 
-  renderStationList(onSelect, onToggleFav);
+  if (shouldRenderStationList()) {
+    renderStationList(onSelect, onToggleFav);
+  }
+}
+
+/* ponytail: memoize station list render triggers so volume/sleep/playing updates don't touch station DOM */
+let lastStationId: string | null = null;
+let lastFavsKey = "";
+let lastViewMode = "";
+let lastEnabledKey = "";
+
+function shouldRenderStationList(): boolean {
+  const currentStationId = state.station?.id ?? null;
+  const currentFavsKey = Array.from(state.favs).sort().join(",");
+  const currentViewMode = state.viewMode;
+  const currentEnabledKey = getEnabledStations()
+    .map((s) => s.id)
+    .join(",");
+
+  if (
+    currentStationId !== lastStationId ||
+    currentFavsKey !== lastFavsKey ||
+    currentViewMode !== lastViewMode ||
+    currentEnabledKey !== lastEnabledKey
+  ) {
+    lastStationId = currentStationId;
+    lastFavsKey = currentFavsKey;
+    lastViewMode = currentViewMode;
+    lastEnabledKey = currentEnabledKey;
+    return true;
+  }
+  return false;
 }
 
 function applyTheme(): void {
