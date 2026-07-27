@@ -17,6 +17,7 @@ export const state: AppState = {
   liveTrack: null,
   history: [],
   showHistory: false,
+  viewMode: (localStorage.getItem(STORAGE_KEYS.VIEW_MODE) as "list" | "grid") || "list",
   version: typeof APP_VERSION !== "undefined" ? APP_VERSION : DEFAULT_VERSION,
 };
 

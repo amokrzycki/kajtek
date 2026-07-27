@@ -1,6 +1,7 @@
 import { API_ENDPOINTS, INIT_STATIONS, STORAGE_KEYS, TIMERS } from "./consts.js";
 import { state } from "./state.js";
 import type { CustomStation, RawRmfStation, RmfCatalogCache, Station, StationPref } from "./types.js";
+import { capitalizeFirstLetter } from "./utils.js";
 
 export function getStoredRmfCatalog(): RmfCatalogCache | null {
   try {
@@ -47,7 +48,7 @@ export async function fetchRmfCatalog(): Promise<RmfCatalogCache> {
               name: typeof item.name === "string" && item.name.trim() ? item.name.trim() : "Stacja RMF",
               idname: String(item.idname ?? item.id ?? ""),
               slug: String(item.slug ?? ""),
-              short: String(item.short ?? ""),
+              short: capitalizeFirstLetter(String(item.short ?? "")),
               mountpoint_mp3: String(item.mountpoint_mp3 ?? ""),
               mountpoint_aac: String(item.mountpoint_aac ?? ""),
               img,

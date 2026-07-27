@@ -6,6 +6,7 @@ export const STORAGE_KEYS = {
   STATION_PREFS: "kajtek_station_prefs",
   RMF_CATALOG_CACHE: "kajtek_rmf_catalog",
   CUSTOM_STATIONS: "kajtek_custom_stations",
+  VIEW_MODE: "kajtek_view_mode",
 } as const;
 
 export const API_ENDPOINTS = {

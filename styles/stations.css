@@ -52,7 +52,7 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: 580px) {
     grid-template-columns: 1fr;
   }
 }
@@ -233,11 +233,15 @@
 
 /* Station catalog toolbar & modal */
 .station-list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-bottom: 0.8rem;
 }
 
 .btn-catalog-trigger {
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 0.65rem 1rem;
   display: flex;
   align-items: center;
@@ -257,6 +261,134 @@
   &:hover {
     background: var(--k-bg-inset);
     border-color: var(--k-accent);
+  }
+}
+
+.view-toggle-group {
+  display: flex;
+  align-items: center;
+  background: var(--k-bg-panel);
+  border: 1px solid var(--k-border-2);
+  border-radius: var(--k-rc);
+  padding: 2px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.btn-view-toggle {
+  background: none;
+  border: none;
+  padding: 0.5rem 0.55rem;
+  border-radius: var(--k-rb);
+  color: var(--k-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  transition:
+    background var(--k-tr),
+    color var(--k-tr),
+    box-shadow var(--k-tr);
+
+  &:hover {
+    color: var(--k-text);
+  }
+
+  &.active {
+    background: var(--k-bg-inset);
+    color: var(--k-accent);
+    box-shadow: var(--k-sh-inset);
+  }
+}
+
+/* ponytail: grid view modifier for high-density station cards. ceiling: auto-fill minmax 92px fixed tile height; upgrade path: add draggable resize / configurable column counts if requested */
+.is-grid-view .station-grid {
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 0.5rem;
+
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+    gap: 0.65rem;
+  }
+}
+
+.is-grid-view .station-card {
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  padding: 0.6rem 0.35rem;
+  gap: 0.35rem;
+  min-height: 86px;
+  position: relative;
+
+  .sc-thumb,
+  .sc-thumb-placeholder {
+    width: 36px;
+    height: 36px;
+    margin: 0 auto;
+  }
+
+  .sc-main {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .sc-name {
+    font-size: 0.78rem;
+    line-height: 1.15;
+    white-space: normal;
+    word-break: break-word;
+    width: 100%;
+    text-align: center;
+  }
+
+  .sc-meta {
+    display: none;
+
+    @media (min-width: 480px) {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+      margin-top: 1px;
+    }
+  }
+
+  .sc-short {
+    font-size: 0.62rem;
+    line-height: 1.15;
+    max-width: 100%;
+    white-space: normal;
+    word-break: break-word;
+    text-align: center;
+  }
+
+  .sc-star {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    padding: 2px;
+  }
+
+  @media (min-width: 1024px) {
+    padding: 0.75rem 0.5rem;
+    min-height: 98px;
+
+    .sc-thumb,
+    .sc-thumb-placeholder {
+      width: 42px;
+      height: 42px;
+    }
+
+    .sc-name {
+      font-size: 0.85rem;
+    }
+
+    .sc-short {
+      font-size: 0.68rem;
+    }
   }
 }
 

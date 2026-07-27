@@ -1,4 +1,5 @@
 import { getEnabledStations } from "@/catalog.js";
+import { STORAGE_KEYS } from "@/consts.js";
 import { ICONS } from "@/icons.js";
 import { state } from "@/state.js";
 import type { Station } from "@/types.js";
@@ -6,6 +7,9 @@ import { openCatalogModal } from "./catalog/modal.js";
 import { els } from "./elements.js";
 
 export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (id: string) => void): void {
+  // Toggle grid view modifier class on main station list container
+  els.stationListContainer.classList.toggle("is-grid-view", state.viewMode === "grid");
+
   // FIRST: Record positions of existing cards before DOM update
   const firstPositions = new Map<string, DOMRect>();
   const oldCards = els.stationListContainer.querySelectorAll<HTMLElement>(".station-card[data-id]");
@@ -23,17 +27,36 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
   const favList = enabledStations.filter((s) => state.favs.has(s.id));
   const otherList = enabledStations.filter((s) => !state.favs.has(s.id));
 
-  // Top control bar for catalog popup modal
+  // Top control bar for catalog popup modal and view toggle
   const topBar = document.createElement("div");
   topBar.className = "station-list-toolbar";
   topBar.innerHTML = `
     <button type="button" id="open-catalog-btn" class="btn-catalog-trigger">
       ${ICONS.radio} Dostosuj listę stacji / Katalog
     </button>
+    <div class="view-toggle-group" role="radiogroup" aria-label="Przełącznik widoku">
+      <button type="button" class="btn-view-toggle${state.viewMode === "list" ? " active" : ""}" data-view="list" title="Widok listy" aria-label="Widok listy">
+        ${ICONS.viewList}
+      </button>
+      <button type="button" class="btn-view-toggle${state.viewMode === "grid" ? " active" : ""}" data-view="grid" title="Widok kafelków" aria-label="Widok kafelków">
+        ${ICONS.viewGrid}
+      </button>
+    </div>
   `;
   els.stationListContainer.appendChild(topBar);
 
   topBar.querySelector("#open-catalog-btn")?.addEventListener("click", () => openCatalogModal());
+
+  topBar.querySelectorAll<HTMLButtonElement>(".btn-view-toggle").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const mode = btn.dataset.view as "list" | "grid";
+      if (mode && state.viewMode !== mode) {
+        state.viewMode = mode;
+        localStorage.setItem(STORAGE_KEYS.VIEW_MODE, mode);
+        renderStationList(onSelect, onToggleFav);
+      }
+    });
+  });
 
   const sections = [
     { label: "Ulubione", key: "fav", list: favList },
