@@ -69,7 +69,7 @@
     .dark & {
       box-shadow:
         var(--k-sh-btn),
-        0 0 8px rgba(207, 101, 53, 0.3);
+        0 0 8px var(--k-accent-ring);
     }
   }
 }
@@ -243,7 +243,7 @@
     .dark & {
       box-shadow:
         var(--k-sh-inset),
-        0 0 10px rgba(207, 101, 53, 0.28);
+        0 0 10px var(--k-accent-ring);
     }
   }
 }

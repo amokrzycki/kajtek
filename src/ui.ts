@@ -119,7 +119,6 @@ export function updateUI(
   els.vuStrip.classList.toggle("active", state.playing);
   els.reelLeft.classList.toggle("spinning", state.playing);
   els.reelRight.classList.toggle("spinning", state.playing);
-  els.equalizer.classList.toggle("active", state.playing);
 
   if (state.playing) {
     startVisualizer();

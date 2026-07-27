@@ -49,7 +49,7 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
       <span class="pl-dot"></span>
       <span class="pl-break-label">
         <span class="pl-tape-icon">${ICONS.tape}</span>
-        ${t.label}
+        <span class="pl-break-text">${t.label}</span>
       </span>
       <span class="pl-dur">${breakDur}</span>
     `;

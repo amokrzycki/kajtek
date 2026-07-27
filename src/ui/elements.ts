@@ -15,7 +15,6 @@ export const els = {
   npTrackWrap: document.getElementById("np-track") as HTMLDivElement,
   npArtist: document.getElementById("np-artist") as HTMLDivElement,
   npTitle: document.getElementById("np-title") as HTMLSpanElement,
-  equalizer: document.getElementById("equalizer") as HTMLDivElement,
   playBtn: document.getElementById("play-btn") as HTMLButtonElement,
   historyToggleBtn: document.getElementById("history-toggle-btn") as HTMLButtonElement,
   historyArrow: document.getElementById("history-arrow") as HTMLSpanElement,

@@ -63,19 +63,12 @@ export function stopVisualizer() {
   resetVisuals();
 }
 
-let currentEqLevels = [4, 4, 4, 4, 4];
 let currentVuLevels: number[] = new Array(VU_COUNT).fill(3);
 let peakTracker = 180;
 
 function resetVisuals() {
-  currentEqLevels = [4, 4, 4, 4, 4];
   currentVuLevels = new Array(VU_COUNT).fill(3);
   peakTracker = 180;
-
-  const eqBars = els.equalizer ? els.equalizer.querySelectorAll(".eq-bar") : [];
-  eqBars.forEach((bar) => {
-    (bar as HTMLElement).style.height = "4px";
-  });
 
   const vuSegs = els.vuStrip ? els.vuStrip.querySelectorAll(".vu-seg") : [];
   vuSegs.forEach((seg) => {
@@ -90,7 +83,6 @@ function updateFrame() {
     return;
   }
 
-  const eqBars = els.equalizer ? els.equalizer.querySelectorAll(".eq-bar") : [];
   const vuSegs = els.vuStrip ? els.vuStrip.querySelectorAll(".vu-seg") : [];
 
   let useRealData = isConnected && !corsFailed && !state.muted;
@@ -111,26 +103,6 @@ function updateFrame() {
 
     if (sum > 0) {
       peakTracker = Math.max(120, Math.max(peakTracker * 0.96, maxBinVal));
-
-      const binIndices = [2, 6, 14, 24, 36];
-      const minH = 4;
-      const maxH = 30;
-
-      eqBars.forEach((bar, idx) => {
-        const binIndex = binIndices[idx] || idx * 6;
-        const val = dataArray[binIndex] || 0;
-        const norm = Math.min(1, val / peakTracker);
-        const power = norm ** 1.35;
-        const targetH = Math.max(minH, Math.round(power * maxH));
-
-        if (targetH > (currentEqLevels[idx] ?? 0)) {
-          currentEqLevels[idx] = (currentEqLevels[idx] ?? 0) * 0.3 + targetH * 0.7;
-        } else {
-          currentEqLevels[idx] = (currentEqLevels[idx] ?? 0) * 0.72 + targetH * 0.28;
-        }
-
-        (bar as HTMLElement).style.height = `${Math.round(currentEqLevels[idx] ?? 0)}px`;
-      });
 
       vuSegs.forEach((seg, idx) => {
         const progress = idx / (VU_COUNT - 1);
@@ -168,19 +140,6 @@ function updateFrame() {
       resetVisuals();
     } else {
       const volFactor = 0.4 + rawVol * 0.6;
-      const minH = 4;
-      const maxH = 30;
-
-      eqBars.forEach((bar, idx) => {
-        const speed = [3.2, 4.5, 3.8, 5.1, 4.1][idx] ?? 4;
-        const phase = [0, 1.2, 2.4, 3.6, 4.8][idx] ?? 0;
-        const val = ((Math.sin(now * speed + phase) + 1) / 2) ** 1.6;
-        const targetH = Math.max(minH, Math.round(val * maxH * volFactor));
-
-        const curEq = currentEqLevels[idx] ?? 0;
-        currentEqLevels[idx] = curEq * 0.7 + targetH * 0.3;
-        (bar as HTMLElement).style.height = `${Math.round(currentEqLevels[idx] ?? 0)}px`;
-      });
 
       vuSegs.forEach((seg, idx) => {
         const speed = 3.6 + (idx % 6) * 0.55;
