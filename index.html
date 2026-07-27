@@ -43,9 +43,23 @@
 
       <main class="kajtek-main">
         <section class="np-panel" aria-label="Odtwarzacz radiowy">
+          <div class="side-buttons" aria-hidden="true">
+            <span class="side-nub"></span>
+            <span class="side-nub"></span>
+            <span class="side-nub"></span>
+          </div>
+
           <div id="vu-strip" class="vu-strip" aria-hidden="true"></div>
 
           <div class="np-body">
+            <div class="kajtek-stripe" aria-hidden="true">
+              <span>K</span>
+              <span>A</span>
+              <span>J</span>
+              <span>T</span>
+              <span>E</span>
+              <span>K</span>
+            </div>
             <div id="reel-left" class="tape-reel" aria-hidden="true">
               <div class="reel-hub"></div>
             </div>
@@ -73,6 +87,11 @@
 
           <div class="np-controls">
             <button type="button" id="play-btn" class="play-btn" disabled aria-label="Odtwarzaj"></button>
+            <div class="np-branding" aria-hidden="true">
+              <div class="unitra-sub"><span class="u-box">U</span> UNITRA zrk</div>
+              <div class="stereo-title">STEREO</div>
+              <div class="cassette-sub">CASSETTE PLAYER PS 101</div>
+            </div>
             <button
               type="button"
               id="history-toggle-btn"
