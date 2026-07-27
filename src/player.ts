@@ -1,4 +1,4 @@
-import { MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
+import { DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
 import { genericProvider, getProvider, getRmfFactsTimeInfo } from "./providers.js";
 import { notifyState, radioAudio, setTrackInterval, state, trackInterval } from "./state.js";
@@ -154,7 +154,7 @@ function checkRealtimeTrackState() {
     if (activeItem.isBreak) {
       const isRmf = state.station.id === "rmf";
       const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
-      let label = activeItem.label || "Przerwa / Reklamy";
+      let label = activeItem.label || DEFAULT_BREAK_LABEL;
 
       if (factsInfo.isFacts) {
         label = getFactsLabel(factsInfo.targetHourStr);
@@ -177,7 +177,7 @@ function checkRealtimeTrackState() {
     if (curTrack?.endTimestamp && nowSec >= curTrack.endTimestamp) {
       const isRmf = state.station.id === "rmf";
       const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
-      let label = "Przerwa / Reklamy";
+      let label = DEFAULT_BREAK_LABEL;
       if (factsInfo.isFacts) {
         label = getFactsLabel(factsInfo.targetHourStr);
       }

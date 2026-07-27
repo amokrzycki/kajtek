@@ -247,7 +247,7 @@
   color: #c4251b;
   white-space: nowrap;
   flex-shrink: 1;
-  max-width: 55%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   transition: color var(--k-tr);

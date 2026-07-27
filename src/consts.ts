@@ -55,6 +55,7 @@ export const TIMERS = {
   HISTORY_SLIDE_MS: 700,
 } as const;
 
+export const DEFAULT_BREAK_LABEL = "Przerwa / Reklamy";
 export const VU_COUNT = 18;
 export const MAX_CONSECUTIVE_FAILURES = 5;
 export const DEFAULT_VERSION = "0.3";
