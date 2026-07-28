@@ -19,6 +19,22 @@ export function getRmfFactsTimeInfo(timestamp: number): { isFacts: boolean; targ
   return { isFacts, targetHourStr };
 }
 
+export function getFactsInfo(
+  station: Station | null | undefined,
+  timestamp: number,
+): { isFacts: boolean; targetHourStr: string } {
+  return station?.id === "rmf" ? getRmfFactsTimeInfo(timestamp) : { isFacts: false, targetHourStr: "" };
+}
+
+function formatBreakStart(timestampSec: number, originalStart?: string | null): string {
+  const d = new Date(timestampSec * 1000);
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  const ss = String(d.getSeconds()).padStart(2, "0");
+  const hasSeconds = originalStart?.split(":").length === 3 || ss !== "00";
+  return hasSeconds ? `${hh}:${mm}:${ss}` : `${hh}:${mm}`;
+}
+
 export const rmfProvider: Provider = {
   name: "RMF Network Provider",
   parse(data: unknown, station?: Station | null): PlaylistResult | null {
@@ -41,20 +57,14 @@ export const rmfProvider: Provider = {
         if (item.timestamp && len && nextItem?.timestamp && endTs) {
           const gapSec = nextItem.timestamp - endTs;
           if (gapSec > 0) {
-            const isRmf = station?.id === "rmf";
-            const factsInfo = isRmf ? getRmfFactsTimeInfo(endTs) : { isFacts: false, targetHourStr: "" };
+            const factsInfo = getFactsInfo(station, endTs);
             // news break requires gapSec >= 60s to ignore short gaps (8s). Ceiling: news updates < 60s missed
             const isFactsBreak = factsInfo.isFacts && gapSec >= 60;
             const isRealBreak = isFactsBreak || gapSec >= 120;
 
             if (isRealBreak) {
               const gapMin = Math.round(gapSec / 60);
-              const d = new Date(endTs * 1000);
-              const hh = String(d.getHours()).padStart(2, "0");
-              const mm = String(d.getMinutes()).padStart(2, "0");
-              const ss = String(d.getSeconds()).padStart(2, "0");
-              const hasSeconds = item.start?.split(":").length === 3 || ss !== "00";
-              const breakStartStr = hasSeconds ? `${hh}:${mm}:${ss}` : `${hh}:${mm}`;
+              const breakStartStr = formatBreakStart(endTs, item.start);
               const label = isFactsBreak ? getFactsLabel(factsInfo.targetHourStr) : DEFAULT_BREAK_LABEL;
 
               pendingBreak = {
@@ -103,17 +113,8 @@ export const rmfProvider: Provider = {
     const hasUpcoming = sorted.some((item) => (item.order ?? 0) > 0);
 
     if (!hasUpcoming && curEndTs) {
-      const endDate = new Date(curEndTs * 1000);
-      const endMin = endDate.getMinutes();
-      const endHour = endDate.getHours();
-      const endSec = endDate.getSeconds();
-      const hasSeconds = curItem?.start?.split(":").length === 3 || endSec !== 0;
-      const breakStartStr = hasSeconds
-        ? `${String(endHour).padStart(2, "0")}:${String(endMin).padStart(2, "0")}:${String(endSec).padStart(2, "0")}`
-        : `${String(endHour).padStart(2, "0")}:${String(endMin).padStart(2, "0")}`;
-
-      const isRmf = station?.id === "rmf";
-      const factsInfo = isRmf ? getRmfFactsTimeInfo(curEndTs) : { isFacts: false, targetHourStr: "" };
+      const breakStartStr = formatBreakStart(curEndTs, curItem?.start);
+      const factsInfo = getFactsInfo(station, curEndTs);
       const breakLabel = factsInfo.isFacts ? getFactsLabel(factsInfo.targetHourStr) : "Przerwa / Serwis informacyjny";
 
       processed.push({
@@ -134,8 +135,7 @@ export const rmfProvider: Provider = {
     let activeTrack: TrackInfo | null = null;
     if (currentActive) {
       if (currentActive.isBreak) {
-        const isRmf = station?.id === "rmf";
-        const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
+        const factsInfo = getFactsInfo(station, nowSec);
         const label = factsInfo.isFacts
           ? getFactsLabel(factsInfo.targetHourStr)
           : currentActive.label || DEFAULT_BREAK_LABEL;
@@ -153,8 +153,7 @@ export const rmfProvider: Provider = {
         };
       }
     } else if (curEndTs && nowSec >= curEndTs) {
-      const isRmf = station?.id === "rmf";
-      const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
+      const factsInfo = getFactsInfo(station, nowSec);
       const breakTitle = factsInfo.isFacts ? getFactsLabel(factsInfo.targetHourStr) : DEFAULT_BREAK_LABEL;
       activeTrack = {
         artist: station?.name || "Radio",

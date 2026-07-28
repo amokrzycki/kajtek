@@ -104,11 +104,6 @@
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
 }
 
-.station-card.active .sc-name {
-  color: var(--k-text);
-  font-weight: 700;
-}
-
 .sc-led-dot {
   display: inline-block;
   width: 7px;
@@ -412,6 +407,11 @@
   .is-grid-view .sc-short {
     font-size: 0.68rem;
   }
+}
+
+.station-card.active .sc-name {
+  color: var(--k-text);
+  font-weight: 700;
 }
 
 /* ——— modal katalogu ——— */

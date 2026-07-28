@@ -1,5 +1,5 @@
-import { addCustomStation } from "@/catalog";
-import { notifyState } from "@/state";
+import { addCustomStation } from "@/catalog.js";
+import { notifyState } from "@/state.js";
 
 export function handleCustomStationSubmit(
   nameVal: string,

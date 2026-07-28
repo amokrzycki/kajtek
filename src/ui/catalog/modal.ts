@@ -6,11 +6,11 @@ import {
   getStoredRmfCatalog,
   isStationEnabled,
   setStationEnabled,
-} from "@/catalog";
-import { ICONS } from "@/icons";
-import { notifyState } from "@/state";
-import { escapeHtml } from "@/utils";
-import { handleCustomStationSubmit } from "./form";
+} from "@/catalog.js";
+import { ICONS } from "@/icons.js";
+import { notifyState } from "@/state.js";
+import { escapeHtml, renderStationThumbHtml } from "@/utils.js";
+import { handleCustomStationSubmit } from "./form.js";
 
 let modalEl: HTMLElement | null = null;
 let searchQuery = "";
@@ -279,9 +279,12 @@ function renderModalBody(): void {
     row.className = `k-catalog-row${enabled ? " enabled" : ""}`;
 
     const safeName = escapeHtml(station.name);
-    const logoHtml = station.coverUrl
-      ? `<img src="${station.coverUrl}" alt="" class="catalog-thumb" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><div class="catalog-thumb-placeholder" style="display:none;">${escapeHtml(station.name.charAt(0))}</div>`
-      : `<div class="catalog-thumb-placeholder">${escapeHtml(station.name.charAt(0))}</div>`;
+    const logoHtml = renderStationThumbHtml(
+      station.coverUrl,
+      station.name,
+      "catalog-thumb",
+      "catalog-thumb-placeholder",
+    );
 
     row.innerHTML = `
       <div class="catalog-col-info">

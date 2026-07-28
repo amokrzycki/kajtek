@@ -3,7 +3,7 @@ import { STORAGE_KEYS } from "@/consts.js";
 import { ICONS } from "@/icons.js";
 import { state } from "@/state.js";
 import type { Station } from "@/types.js";
-import { escapeHtml } from "@/utils.js";
+import { escapeHtml, renderStationThumbHtml } from "@/utils.js";
 import { openCatalogModal } from "./catalog/modal.js";
 import { els } from "./elements.js";
 
@@ -107,9 +107,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
         const isFav = state.favs.has(s.id);
 
         const safeName = escapeHtml(s.name);
-        const logoHtml = s.coverUrl
-          ? `<img src="${escapeHtml(s.coverUrl)}" alt="" class="sc-thumb" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><div class="sc-thumb-placeholder" style="display:none;">${escapeHtml(s.name.charAt(0))}</div>`
-          : `<div class="sc-thumb-placeholder">${escapeHtml(s.name.charAt(0))}</div>`;
+        const logoHtml = renderStationThumbHtml(s.coverUrl, s.name, "sc-thumb", "sc-thumb-placeholder");
 
         const card = document.createElement("div");
         card.className = `station-card${isSelected ? " active" : ""}`;

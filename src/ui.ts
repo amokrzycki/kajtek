@@ -5,7 +5,7 @@ import { ICONS } from "./icons.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
-import { els, initVolumeControlUI, initVU } from "./ui/elements.js";
+import { els, initVolumeControlUI, initVU, renderVolLadder } from "./ui/elements.js";
 import { setHistoryLoadingState, triggerHistorySlideIn, updateHistoryUI } from "./ui/history.js";
 import { renderStationList } from "./ui/stations.js";
 import { triggerFade } from "./utils.js";
@@ -22,6 +22,7 @@ export {
   initVolumeControlUI,
   initVU,
   renderStationList,
+  renderVolLadder,
   setHistoryLoadingState,
   triggerFade,
   triggerHistorySlideIn,

@@ -1,6 +1,6 @@
-import { DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
+import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
-import { genericProvider, getProvider, getRmfFactsTimeInfo } from "./providers.js";
+import { genericProvider, getFactsInfo, getProvider } from "./providers.js";
 import { notifyState, radioAudio, setTrackInterval, state, trackInterval } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import {
@@ -10,9 +10,23 @@ import {
   updateHistoryUI,
   updateNowPlayingTrack,
 } from "./ui.js";
-import { getFactsLabel } from "./utils.js";
+import { getFactsLabel, resolveProtocolRelativeUrl } from "./utils.js";
 
 let failoverTimestamps: number[] = [];
+
+function getCurrentStreamUrl(station: Station): string {
+  const streams = station._streams || [station.stream];
+  return streams[station._currentStreamIndex || 0] || station.stream;
+}
+
+function playStreamUrl(url: string | undefined): void {
+  if (!url) return;
+  radioAudio.src = url;
+  applyAudioVolume();
+  radioAudio.play().catch(() => {
+    // Ignore autoplay restriction errors
+  });
+}
 
 function handleAudioFailover() {
   if (!state.playing || !state.station) return;
@@ -38,15 +52,7 @@ function handleAudioFailover() {
   const currentIdx = state.station._currentStreamIndex || 0;
   const nextIdx = (currentIdx + 1) % streams.length;
   state.station._currentStreamIndex = nextIdx;
-  const nextUrl = streams[nextIdx];
-
-  if (nextUrl) {
-    radioAudio.src = nextUrl;
-    applyAudioVolume();
-    radioAudio.play().catch(() => {
-      // Ignore autoplay restriction errors
-    });
-  }
+  playStreamUrl(streams[nextIdx]);
 }
 
 radioAudio.addEventListener("error", handleAudioFailover);
@@ -93,13 +99,7 @@ async function ensureStationMetadata(station: Station) {
       const res = await fetchWithTimeout(stationBaseUrl, TIMERS.FETCH_TIMEOUT_MS);
       const data = (await parseJsonFromRes(res)) as { img?: unknown } | null;
       if (typeof data?.img === "string" && data.img.trim().length > 0) {
-        let imgUrl = data.img.trim();
-        if (imgUrl.startsWith("//")) {
-          imgUrl = `https:${imgUrl}`;
-        } else if (imgUrl.startsWith("/")) {
-          imgUrl = `https://static.rmf.pl${imgUrl}`;
-        }
-        station.coverUrl = imgUrl;
+        station.coverUrl = resolveProtocolRelativeUrl(data.img.trim(), API_ENDPOINTS.RMF_STATIC_BASE);
       }
     } catch (_) {
       // Ignore errors, coverUrl remains undefined
@@ -149,8 +149,7 @@ function checkRealtimeTrackState() {
   let evaluated: TrackInfo | null = null;
   if (activeItem) {
     if (activeItem.isBreak) {
-      const isRmf = state.station.id === "rmf";
-      const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
+      const factsInfo = getFactsInfo(state.station, nowSec);
       let label = activeItem.label || DEFAULT_BREAK_LABEL;
 
       if (factsInfo.isFacts) {
@@ -172,8 +171,7 @@ function checkRealtimeTrackState() {
   } else {
     const curTrack = state.history.find((t) => t.order === 0) || state.history[0];
     if (curTrack?.endTimestamp && nowSec >= curTrack.endTimestamp) {
-      const isRmf = state.station.id === "rmf";
-      const factsInfo = isRmf ? getRmfFactsTimeInfo(nowSec) : { isFacts: false, targetHourStr: "" };
+      const factsInfo = getFactsInfo(state.station, nowSec);
       let label = DEFAULT_BREAK_LABEL;
       if (factsInfo.isFacts) {
         label = getFactsLabel(factsInfo.targetHourStr);
@@ -261,16 +259,7 @@ export function selectStation(s: Station) {
 
   ensureStationMetadata(s);
 
-  const streams = s._streams || [s.stream];
-  const streamUrl = streams[s._currentStreamIndex || 0] || s.stream;
-
-  if (streamUrl) {
-    radioAudio.src = streamUrl;
-    applyAudioVolume();
-    radioAudio.play().catch(() => {
-      // Ignore autoplay restriction errors
-    });
-  }
+  playStreamUrl(getCurrentStreamUrl(s));
 
   startTrackRotation();
   notifyState();
@@ -281,15 +270,7 @@ export function togglePlay() {
   state.playing = !state.playing;
 
   if (state.playing) {
-    const streams = state.station._streams || [state.station.stream];
-    const streamUrl = streams[state.station._currentStreamIndex || 0] || state.station.stream;
-    if (streamUrl) {
-      radioAudio.src = streamUrl;
-      applyAudioVolume();
-      radioAudio.play().catch(() => {
-        // Ignore autoplay restriction errors
-      });
-    }
+    playStreamUrl(getCurrentStreamUrl(state.station));
     startTrackRotation();
   } else {
     radioAudio.pause();

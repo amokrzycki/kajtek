@@ -1,8 +1,7 @@
 import { setStationFavorite } from "./catalog.js";
-import { VOL_LEDS } from "./consts.js";
 import { ICONS } from "./icons.js";
 import { notifyState, radioAudio, setSleepInterval, sleepInterval, state } from "./state.js";
-import { els, updateSleepUI } from "./ui.js";
+import { els, renderVolLadder, updateSleepUI } from "./ui.js";
 import { isIOS } from "./utils.js";
 
 let volAnimFrame: number | null = null;
@@ -41,15 +40,7 @@ export function updateVolume(val: number): void {
     els.muteBtn.classList.toggle("muted", state.muted);
     els.muteBtn.innerHTML = ICONS.vol(state.muted, val);
   }
-  if (els.volLadder) {
-    const lit = Math.round((val / 100) * VOL_LEDS);
-    [...els.volLadder.children].forEach((d, i) => {
-      const pct = ((i + 1) / VOL_LEDS) * 100;
-      d.classList.toggle("on", i < lit);
-      d.classList.toggle("warn", pct > 60 && pct <= 85);
-      d.classList.toggle("hot", pct > 85);
-    });
-  }
+  renderVolLadder(val);
 }
 
 export function toggleMute(): void {
@@ -85,15 +76,7 @@ export function toggleMute(): void {
       els.muteBtn.classList.toggle("muted", targetMuted);
       els.muteBtn.innerHTML = ICONS.vol(targetMuted, Math.round(currentVal));
     }
-    if (els.volLadder) {
-      const lit = Math.round((currentVal / 100) * VOL_LEDS);
-      [...els.volLadder.children].forEach((d, i) => {
-        const pct = ((i + 1) / VOL_LEDS) * 100;
-        d.classList.toggle("on", i < lit);
-        d.classList.toggle("warn", pct > 60 && pct <= 85);
-        d.classList.toggle("hot", pct > 85);
-      });
-    }
+    renderVolLadder(currentVal);
 
     if (progress < 1) {
       volAnimFrame = requestAnimationFrame(step);

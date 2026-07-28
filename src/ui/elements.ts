@@ -31,6 +31,17 @@ export const els = {
   stationListContainer: document.getElementById("station-list-container") as HTMLElement,
 };
 
+export function renderVolLadder(val: number): void {
+  if (!els.volLadder) return;
+  const lit = Math.round((val / 100) * VOL_LEDS);
+  [...els.volLadder.children].forEach((d, i) => {
+    const pct = ((i + 1) / VOL_LEDS) * 100;
+    d.classList.toggle("on", i < lit);
+    d.classList.toggle("warn", pct > 60 && pct <= 85);
+    d.classList.toggle("hot", pct > 85);
+  });
+}
+
 export function initVolumeControlUI(): void {
   if (els.volLadder) {
     for (let i = 0; i < VOL_LEDS; i++) {
@@ -38,14 +49,7 @@ export function initVolumeControlUI(): void {
       d.className = "vol-led";
       els.volLadder.appendChild(d);
     }
-
-    const lit = Math.round((state.vol / 100) * VOL_LEDS);
-    [...els.volLadder.children].forEach((d, i) => {
-      const pct = ((i + 1) / VOL_LEDS) * 100;
-      d.classList.toggle("on", i < lit);
-      d.classList.toggle("warn", pct > 60 && pct <= 85);
-      d.classList.toggle("hot", pct > 85);
-    });
+    renderVolLadder(state.vol);
   }
   if (!isIOS()) return;
   state.vol = 100;
