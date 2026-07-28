@@ -47,30 +47,46 @@
   display: flex;
   gap: 3px;
   padding: 0.75rem 1.5rem 0;
-  height: 48px;
-  align-items: flex-end;
+  height: 80px;
   margin-bottom: 0.85rem;
   user-select: none;
 }
 
-.vu-seg {
+.vu-col {
+  position: relative;
   flex: 1;
-  height: 8px;
+  height: 100%;
   border-radius: 1px;
-  background: var(--k-case-vu-off);
-  transition:
-    height var(--k-vu),
-    background var(--k-vu),
-    box-shadow var(--k-vu);
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(to top, transparent 0 3px, rgba(0, 0, 0, 0.5) 3px 4px),
+    linear-gradient(
+      to top,
+      rgba(74, 222, 58, 0.22) 0 58%,
+      rgba(255, 210, 61, 0.22) 58% 84%,
+      rgba(255, 69, 58, 0.22) 84% 100%
+    ),
+    var(--k-vu-track);
 }
 
-.vu-seg.on {
-  background: var(--k-case-vu-on);
-  box-shadow: 0 0 4px rgba(255, 235, 59, 0.8);
+.vu-fill {
+  position: absolute;
+  inset: 0;
+  --vu-level: 0%;
+  clip-path: inset(calc(100% - var(--vu-level)) 0 0 0);
+  background:
+    repeating-linear-gradient(to top, transparent 0 3px, rgba(0, 0, 0, 0.55) 3px 4px),
+    linear-gradient(to top, var(--k-vu-led-green) 0 58%, var(--k-vu-led-yellow) 58% 84%, var(--k-vu-led-red) 84% 100%);
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.35));
 }
 
-.vu-seg.peak {
-  background: var(--k-case-vu-peak);
+.vu-cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0%;
+  height: 2px;
+  background: #ffffff;
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.9);
 }
 
@@ -601,10 +617,10 @@
 
 @media (max-width: 640px) {
   .np-body {
-    grid-template-columns: 44px 1fr 44px 22px;
+    grid-template-columns: 44px 1fr 44px;
     grid-template-areas:
-      "reel-l art  reel-r scale"
-      "info   info info   scale";
+      "reel-l art  reel-r"
+      "info   info info";
     justify-items: center;
     gap: 0.85rem 0.7rem;
     padding: 1.4rem 1rem;
@@ -632,8 +648,7 @@
   }
 
   .np-tape-scale {
-    grid-area: scale;
-    align-self: center;
+    display: none;
   }
 
   .np-info {
@@ -654,6 +669,7 @@
 
   .np-controls {
     padding: 1rem;
+    text-align: center;
   }
 
   .np-branding .stereo-title {
@@ -662,6 +678,6 @@
   }
 
   .vu-strip {
-    padding: 0.5rem 1rem 0;
+    padding: 1rem 1rem 0;
   }
 }

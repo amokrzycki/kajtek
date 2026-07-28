@@ -56,6 +56,7 @@ export const TIMERS = {
 } as const;
 
 export const DEFAULT_BREAK_LABEL = "Przerwa / Reklamy";
-export const VU_COUNT = 18;
+export const VU_COUNT = 24;
+export const VOL_LEDS = 18;
 export const MAX_CONSECUTIVE_FAILURES = 5;
 export const DEFAULT_VERSION = "0.3";

@@ -54,9 +54,10 @@
   --k-case-edge: #b21b14;
   --k-case-ink: #ffffff;
   --k-case-ink-dim: rgba(255, 255, 255, 0.9);
-  --k-case-vu-on: #ffeb3b;
-  --k-case-vu-peak: #ffffff;
-  --k-case-vu-off: rgba(0, 0, 0, 0.3);
+  --k-vu-led-green: #4ade3a;
+  --k-vu-led-yellow: #ffd23d;
+  --k-vu-led-red: #ff453a;
+  --k-vu-track: rgba(0, 0, 0, 0.42);
 
   /* ——— ramki i cienie ——— */
   --k-border: rgba(0, 0, 0, 0.08);
@@ -102,11 +103,11 @@
   --k-tr-fast: 100ms ease;
   --k-tr-panel: 300ms cubic-bezier(0.16, 1, 0.3, 1);
   --k-ease-mech: cubic-bezier(0.16, 1, 0.3, 1);
-  --k-vu: 70ms linear;
 
   --k-vol-1: #15803d;
   --k-vol-2: #a86400;
   --k-vol-3: #c4251b;
+  --k-vol-off: rgba(0, 0, 0, 0.14);
 }
 
 .dark {
@@ -155,6 +156,7 @@
   --k-vol-1: #4ade80;
   --k-vol-2: #ffeb3b;
   --k-vol-3: #ef5a4a;
+  --k-vol-off: rgba(255, 255, 255, 0.1);
 }
 
 *,
@@ -208,8 +210,5 @@
   .sc-led-dot {
     animation: none !important;
     opacity: 1 !important;
-  }
-  .vu-seg {
-    transition: none !important;
   }
 }
