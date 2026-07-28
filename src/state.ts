@@ -3,6 +3,15 @@ declare const APP_VERSION: string;
 import { DEFAULT_VERSION, STORAGE_KEYS } from "./consts.js";
 import type { AppState, TrackInfo } from "./types.js";
 
+function getStoredFavs(): string[] {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVS) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
 export const state: AppState = {
   dark: localStorage.getItem(STORAGE_KEYS.THEME)
     ? localStorage.getItem(STORAGE_KEYS.THEME) === "dark"
@@ -11,7 +20,7 @@ export const state: AppState = {
   playing: false,
   vol: 10,
   muted: false,
-  favs: new Set<string>(JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVS) || "[]")),
+  favs: new Set<string>(getStoredFavs()),
   sleepMin: null,
   sleepSec: null,
   liveTrack: null,
@@ -37,6 +46,15 @@ export function notifyState(): void {
 
 export const radioAudio = new Audio();
 radioAudio.crossOrigin = "anonymous";
+
+if ("mediaSession" in navigator) {
+  radioAudio.addEventListener("play", () => {
+    navigator.mediaSession.playbackState = "playing";
+  });
+  radioAudio.addEventListener("pause", () => {
+    navigator.mediaSession.playbackState = "paused";
+  });
+}
 
 export let sleepInterval: ReturnType<typeof setInterval> | number | null = null;
 export let trackInterval: ReturnType<typeof setInterval> | number | null = null;

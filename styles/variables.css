@@ -5,21 +5,61 @@
   --k-font-body: "IBM Plex Mono", monospace;
   --k-font-mono: "IBM Plex Mono", monospace;
 
+  /* ——— powierzchnie (blat) ——— */
   --k-bg: #eeebe3;
   --k-bg-sub: #e6e2d9;
   --k-bg-panel: #e9e5dc;
   --k-bg-raised: #f0ede5;
   --k-bg-inset: #d2cdc3;
   --k-bg-deep: #c4bfb4;
+
+  /* ——— tekst ——— */
   --k-text: #272320;
   --k-text-2: #554e49;
-  --k-text-muted: #7a7570;
-  --k-text-faint: #aaa59f;
+  --k-text-muted: #5f5a54;
+  --k-text-faint: #6b665f;
+  --k-text-disabled: #8d8880;
+
   --k-accent: #c4251b;
   --k-accent-2: #d83428;
+  --k-accent-text: #a81c14;
   --k-accent-dim: rgba(196, 37, 27, 0.12);
   --k-accent-ring: rgba(196, 37, 27, 0.35);
+
+  /* ——— statusy: jedna paleta LED dla historii i kart stacji ——— */
   --k-green: #52b862;
+  --k-led-live: #15803d;
+  --k-led-next: #b45309;
+  --k-led-active: #c4251b;
+  --k-led-off: #b9b3aa;
+  --k-green-text: #166534;
+  --k-next-text: #8a4004;
+
+  /* ——— wyświetlacz: NIE zmienia się z motywem ——— */
+  --k-disp-bg: linear-gradient(155deg, #3a1410 0%, #140806 100%);
+  --k-disp-well: #100d0b;
+  --k-disp-frame: rgba(255, 255, 255, 0.32);
+  --k-disp-text: #ffffff;
+  --k-disp-text-2: #e2e8f0;
+  --k-disp-text-3: #a3aebd;
+  --k-disp-accent: #ffd54f;
+  --k-disp-dim: #9c948a;
+  --k-disp-live: #4ade80;
+  --k-disp-next: #f59e0b;
+  --k-disp-rule: rgba(255, 255, 255, 0.18);
+  --k-disp-hair: rgba(255, 255, 255, 0.08);
+
+  /* ——— obudowa ——— */
+  --k-case: linear-gradient(180deg, #e03228 0%, #c4221a 100%);
+  --k-case-edge: #b21b14;
+  --k-case-ink: #ffffff;
+  --k-case-ink-dim: rgba(255, 255, 255, 0.9);
+  --k-vu-led-green: #4ade3a;
+  --k-vu-led-yellow: #ffd23d;
+  --k-vu-led-red: #ff453a;
+  --k-vu-track: rgba(0, 0, 0, 0.42);
+
+  /* ——— ramki i cienie ——— */
   --k-border: rgba(0, 0, 0, 0.08);
   --k-border-2: rgba(0, 0, 0, 0.13);
   --k-border-3: rgba(0, 0, 0, 0.21);
@@ -28,11 +68,46 @@
   --k-sh-md: 2px 4px 12px rgba(0, 0, 0, 0.13), 0 2px 4px rgba(0, 0, 0, 0.08);
   --k-sh-inset: inset 0 1px 3px rgba(0, 0, 0, 0.2), inset 0 1px 1px rgba(0, 0, 0, 0.09);
   --k-sh-btn: inset 0 1px 0 var(--k-hi), inset 0 -1px 0 rgba(0, 0, 0, 0.11), var(--k-sh-sm);
+  --k-sh-contact: 0 18px 30px -12px rgba(120, 40, 30, 0.45), 2px 4px 12px rgba(0, 0, 0, 0.13);
   --k-glow: none;
-  --k-tr: 230ms ease;
+
+  /* ——— siatka blatu (szew 1a) ——— */
+  --k-grid-line: rgba(0, 0, 0, 0.022);
+
+  /* ——— promienie: trzy na całą aplikację ——— */
   --k-r: 11px;
-  --k-rb: 7px;
   --k-rc: 9px;
+  --k-rb: 7px;
+
+  /* ——— odstępy: skala 4 ——— */
+  --k-s1: 8px;
+  --k-s2: 12px;
+  --k-s3: 16px;
+  --k-s4: 20px;
+  --k-s5: 32px;
+
+  /* ——— typografia ——— */
+  --k-fs-brand: 2.5rem;
+  --k-fs-display: 1.95rem;
+  --k-fs-num: 1.2rem;
+  --k-fs-card: 1.02rem;
+  --k-fs-lead: 1.05rem;
+  --k-fs-body: 0.78rem;
+  --k-fs-data: 0.7rem;
+  --k-fs-label: 0.65rem;
+  --k-fs-tag: 0.54rem;
+  --k-tracking-label: 0.18em;
+
+  /* ——— ruch ——— */
+  --k-tr: 230ms ease;
+  --k-tr-fast: 100ms ease;
+  --k-tr-panel: 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  --k-ease-mech: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --k-vol-1: #15803d;
+  --k-vol-2: #a86400;
+  --k-vol-3: #c4251b;
+  --k-vol-off: rgba(0, 0, 0, 0.14);
 }
 
 .dark {
@@ -42,14 +117,29 @@
   --k-bg-raised: #2c2924;
   --k-bg-inset: #131210;
   --k-bg-deep: #0c0b09;
+
   --k-text: #f0eae1;
   --k-text-2: #cdc5ba;
   --k-text-muted: #a39b91;
-  --k-text-faint: #787067;
+  --k-text-faint: #9c948a;
+  --k-text-disabled: #6f6a64;
+
   --k-accent: #c4251b;
   --k-accent-2: #d83428;
+  --k-accent-text: #ef5a4a;
   --k-accent-dim: rgba(229, 58, 46, 0.18);
   --k-accent-ring: rgba(229, 58, 46, 0.45);
+
+  --k-led-live: #4ade80;
+  --k-led-next: #f59e0b;
+  --k-led-active: #ef5a4a;
+  --k-led-off: #5c5650;
+  --k-green-text: #4ade80;
+  --k-next-text: #f59e0b;
+
+  /* wyświetlacz identyczny jak w light — to ta sama, zawsze podświetlona szyba */
+  --k-disp-frame: rgba(255, 255, 255, 0.3);
+
   --k-border: rgba(255, 255, 255, 0.08);
   --k-border-2: rgba(255, 255, 255, 0.14);
   --k-border-3: rgba(255, 255, 255, 0.22);
@@ -58,7 +148,15 @@
   --k-sh-md: 2px 5px 16px rgba(0, 0, 0, 0.55), 0 2px 5px rgba(0, 0, 0, 0.35);
   --k-sh-inset: inset 0 1px 4px rgba(0, 0, 0, 0.55), inset 0 1px 2px rgba(0, 0, 0, 0.32);
   --k-sh-btn: inset 0 1px 0 var(--k-hi), inset 0 -1px 0 rgba(0, 0, 0, 0.4), var(--k-sh-sm);
+  --k-sh-contact: 0 20px 34px -12px rgba(0, 0, 0, 0.7), 2px 5px 16px rgba(0, 0, 0, 0.45);
   --k-glow: 0 0 16px rgba(229, 58, 46, 0.4);
+
+  --k-grid-line: rgba(255, 255, 255, 0.014);
+
+  --k-vol-1: #4ade80;
+  --k-vol-2: #ffeb3b;
+  --k-vol-3: #ef5a4a;
+  --k-vol-off: rgba(255, 255, 255, 0.1);
 }
 
 *,
@@ -69,18 +167,54 @@
   padding: 0;
 }
 
+html,
+body {
+  background: var(--k-bg);
+  overscroll-behavior-y: none;
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--k-bg-inset) transparent;
+}
+*::-webkit-scrollbar {
+  width: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--k-bg-inset);
+  border-radius: 4px;
+}
 
-  &::-webkit-scrollbar {
-    width: 4px;
+.hidden {
+  display: none !important;
+}
+
+/* Focus: jeden wzorzec na całą aplikację */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible,
+.station-card:focus-visible,
+.k-catalog-row:focus-visible {
+  outline: 2px solid var(--k-accent-2);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 120ms !important;
+    scroll-behavior: auto !important;
   }
-  &::-webkit-scrollbar-track {
-    background: transparent;
+  .tape-reel.spinning {
+    animation: none !important;
   }
-  &::-webkit-scrollbar-thumb {
-    background: var(--k-bg-inset);
-    border-radius: 4px;
+  .np-live-dot.on,
+  .sc-led-dot {
+    animation: none !important;
+    opacity: 1 !important;
   }
 }

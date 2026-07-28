@@ -3,8 +3,8 @@
   font-family: var(--k-font-body);
   background: var(--k-bg);
   background-image:
-    linear-gradient(rgba(0, 0, 0, 0.022) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 0, 0, 0.022) 1px, transparent 1px);
+    linear-gradient(var(--k-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--k-grid-line) 1px, transparent 1px);
   background-size: 24px 24px;
   color: var(--k-text);
   display: flex;
@@ -13,12 +13,6 @@
   transition:
     background-color var(--k-tr),
     color var(--k-tr);
-
-  .dark & {
-    background-image:
-      linear-gradient(rgba(255, 255, 255, 0.012) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255, 255, 255, 0.012) 1px, transparent 1px);
-  }
 }
 
 .kajtek-main {
@@ -27,7 +21,7 @@
   padding: 0 1rem 3.5rem;
   display: flex;
   flex-direction: column;
-  gap: 1.2rem;
+  gap: var(--k-s4);
 }
 
 .kajtek-header {
@@ -43,24 +37,24 @@
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
+}
 
-  .brand-name {
-    font-family: var(--k-font-display);
-    font-size: 2.5rem;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    color: var(--k-text);
-    line-height: 1;
-    transition: color var(--k-tr);
-  }
+.header-brand .brand-name {
+  font-family: var(--k-font-display);
+  font-size: var(--k-fs-brand);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--k-text);
+  line-height: 1;
+  transition: color var(--k-tr);
+}
 
-  .brand-sub {
-    font-family: var(--k-font-mono);
-    font-size: 0.65rem;
-    color: var(--k-text-muted);
-    letter-spacing: 0.07em;
-    transition: color var(--k-tr);
-  }
+.header-brand .brand-sub {
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-label);
+  color: var(--k-text-muted);
+  letter-spacing: 0.07em;
+  transition: color var(--k-tr);
 }
 
 .dark-toggle {
@@ -72,85 +66,74 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
 
-  .dark-toggle-knob {
-    position: relative;
-    width: 36px;
-    height: 36px;
-    border-radius: 20%;
-    background: var(--k-bg-raised);
-    border: 1px solid var(--k-border-3);
-    box-shadow: var(--k-sh-btn);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition:
-      background var(--k-tr),
-      border-color var(--k-tr),
-      box-shadow 100ms ease,
-      transform 100ms ease,
-      color var(--k-tr);
-  }
+.dark-toggle .dark-toggle-knob {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  border-radius: 20%;
+  background: var(--k-bg-raised);
+  border: 1px solid var(--k-border-3);
+  box-shadow: var(--k-sh-btn);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    background var(--k-tr),
+    border-color var(--k-tr),
+    box-shadow var(--k-tr-fast),
+    transform var(--k-tr-fast),
+    color var(--k-tr);
+}
 
-  &:focus-visible .dark-toggle-knob {
-    outline: 2px solid var(--k-accent);
-    outline-offset: 3px;
-  }
+.dark-toggle:active .dark-toggle-knob {
+  transform: translateY(1px);
+  box-shadow: var(--k-sh-inset);
+}
 
-  &:hover .dark-toggle-knob {
-    color: var(--k-text);
-    border-color: var(--k-border-3);
-  }
+.dark-toggle .dark-toggle-icon {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--k-text-muted);
+  transition: color var(--k-tr);
+}
 
-  &:active .dark-toggle-knob {
-    transform: translateY(1px);
-    box-shadow: var(--k-sh-inset);
-  }
+.dark-toggle:hover .dark-toggle-icon {
+  color: var(--k-text);
+}
 
-  .dark-toggle-icon {
-    position: relative;
-    width: 20px;
-    height: 20px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--k-text-muted);
-    transition: color var(--k-tr);
+.dark-toggle .dark-toggle-icon svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transition:
+    opacity 350ms cubic-bezier(0.4, 0, 0.2, 1),
+    transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
 
-    svg {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transition:
-        opacity 350ms cubic-bezier(0.4, 0, 0.2, 1),
-        transform 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
-    }
+.dark-toggle .icon-sun {
+  opacity: 1;
+  transform: translate(-50%, -50%) rotate(0deg) scale(1);
+}
 
-    .icon-sun {
-      opacity: 1;
-      transform: translate(-50%, -50%) rotate(0deg) scale(1);
-    }
+.dark-toggle .icon-moon {
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(-180deg) scale(0.4);
+}
 
-    .icon-moon {
-      opacity: 0;
-      transform: translate(-50%, -50%) rotate(-180deg) scale(0.4);
-    }
-  }
+.dark-toggle.on .icon-sun {
+  opacity: 0;
+  transform: translate(-50%, -50%) rotate(180deg) scale(0.4);
+}
 
-  &:hover .dark-toggle-icon {
-    color: var(--k-text);
-  }
-
-  &.on .dark-toggle-icon {
-    .icon-sun {
-      opacity: 0;
-      transform: translate(-50%, -50%) rotate(180deg) scale(0.4);
-    }
-    .icon-moon {
-      opacity: 1;
-      transform: translate(-50%, -50%) rotate(0deg) scale(1);
-    }
-  }
+.dark-toggle.on .icon-moon {
+  opacity: 1;
+  transform: translate(-50%, -50%) rotate(0deg) scale(1);
 }
 
 .kajtek-footer {
@@ -167,14 +150,18 @@
     border-color var(--k-tr);
 }
 
-@media (max-width: 370px) {
-  .header-brand {
-    flex-direction: column;
-  }
+.kajtek-footer p + p {
+  margin-top: 0.35rem;
 }
 
 @media (max-width: 480px) {
   .header-brand .brand-name {
     font-size: 2.1rem;
+  }
+}
+
+@media (max-width: 370px) {
+  .header-brand {
+    flex-direction: column;
   }
 }

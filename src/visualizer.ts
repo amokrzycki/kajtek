@@ -63,29 +63,54 @@ export function stopVisualizer() {
   resetVisuals();
 }
 
-let currentVuLevels: number[] = new Array(VU_COUNT).fill(3);
+// Classic Winamp analyzer feel: chunky low-rate sampling, instant attack, gravity-accelerated fall.
+const CELL_PX = 4; // must match the LED pitch baked into the .vu-fill background in player.css
+const SAMPLE_INTERVAL_MS = 40; // ~25fps target refresh, not 60fps smoothness
+const BAR_GRAVITY = 130; // cells / s^2
+const PEAK_GRAVITY = 70; // cells / s^2 — peak dot falls slower than the bar itself
+const PEAK_HOLD_MS = 300;
+
+let cellCount = 10;
+let targetCells: number[] = new Array(VU_COUNT).fill(0);
+let currentCells: number[] = new Array(VU_COUNT).fill(0);
+let fallVelocity: number[] = new Array(VU_COUNT).fill(0);
+let peakCells: number[] = new Array(VU_COUNT).fill(0);
+let peakVelocity: number[] = new Array(VU_COUNT).fill(0);
+let peakHoldUntil: number[] = new Array(VU_COUNT).fill(0);
 let peakTracker = 180;
+let lastFrameTime = 0;
+let lastSampleTime = 0;
 
 function resetVisuals() {
-  currentVuLevels = new Array(VU_COUNT).fill(3);
+  targetCells = new Array(VU_COUNT).fill(0);
+  currentCells = new Array(VU_COUNT).fill(0);
+  fallVelocity = new Array(VU_COUNT).fill(0);
+  peakCells = new Array(VU_COUNT).fill(0);
+  peakVelocity = new Array(VU_COUNT).fill(0);
+  peakHoldUntil = new Array(VU_COUNT).fill(0);
   peakTracker = 180;
+  lastFrameTime = 0;
+  lastSampleTime = 0;
 
-  const vuSegs = els.vuStrip ? els.vuStrip.querySelectorAll(".vu-seg") : [];
-  vuSegs.forEach((seg) => {
-    (seg as HTMLElement).style.height = "6px";
-    seg.classList.remove("on");
+  const fills = els.vuStrip ? els.vuStrip.querySelectorAll<HTMLElement>(".vu-fill") : [];
+  const caps = els.vuStrip ? els.vuStrip.querySelectorAll<HTMLElement>(".vu-cap") : [];
+  fills.forEach((fill) => {
+    fill.style.setProperty("--vu-level", "0%");
+  });
+  caps.forEach((cap) => {
+    cap.style.bottom = "0%";
   });
 }
 
-function updateFrame() {
-  if (!state.playing) {
-    resetVisuals();
-    return;
-  }
+function getCellCount(): number {
+  const col = els.vuStrip ? els.vuStrip.querySelector<HTMLElement>(".vu-col") : null;
+  const h = col?.clientHeight ?? 0;
+  return h > 0 ? Math.max(4, Math.round(h / CELL_PX)) : cellCount;
+}
 
-  const vuSegs = els.vuStrip ? els.vuStrip.querySelectorAll(".vu-seg") : [];
-
-  let useRealData = isConnected && !corsFailed && !state.muted;
+function sampleTargets(totalCount: number) {
+  cellCount = getCellCount();
+  const useRealData = isConnected && !corsFailed && !state.muted && !!analyser;
 
   if (useRealData && analyser) {
     const dataArray = new Uint8Array(analyser.frequencyBinCount);
@@ -104,8 +129,8 @@ function updateFrame() {
     if (sum > 0) {
       peakTracker = Math.max(120, Math.max(peakTracker * 0.96, maxBinVal));
 
-      vuSegs.forEach((seg, idx) => {
-        const progress = idx / (VU_COUNT - 1);
+      for (let idx = 0; idx < totalCount; idx++) {
+        const progress = totalCount > 1 ? idx / (totalCount - 1) : 0;
         const binIndex = Math.min(46, Math.max(2, Math.floor(progress ** 1.15 * 44) + 2));
 
         const bandVariation = 1 + Math.sin(idx * 1.8 + binIndex) * 0.1;
@@ -114,51 +139,85 @@ function updateFrame() {
 
         const norm = Math.min(1, rawVal / peakTracker);
         const power = norm ** 1.4;
-        const targetH = Math.max(3, Math.round(power * 24));
-
-        const curVu = currentVuLevels[idx] ?? 0;
-        if (targetH > curVu) {
-          currentVuLevels[idx] = curVu * 0.25 + targetH * 0.75;
-        } else {
-          currentVuLevels[idx] = curVu * 0.75 + targetH * 0.25;
-        }
-
-        const renderH = Math.round(currentVuLevels[idx] ?? 0);
-        (seg as HTMLElement).style.height = `${renderH}px`;
-        seg.classList.toggle("on", renderH > 4);
-      });
-    } else {
-      useRealData = false;
+        targetCells[idx] = Math.round(power * cellCount);
+      }
+      return;
     }
   }
 
-  if (!useRealData) {
-    const now = Date.now() / 1000;
-    const rawVol = state.muted ? 0 : state.vol / 100;
-
-    if (rawVol === 0) {
-      resetVisuals();
-    } else {
-      const volFactor = 0.4 + rawVol * 0.6;
-
-      vuSegs.forEach((seg, idx) => {
-        const speed = 3.6 + (idx % 6) * 0.55;
-        const phase = idx * 0.5;
-        const wave = ((Math.sin(now * speed + phase) + Math.cos(now * 2.7 - idx * 0.4) + 2) / 4) ** 1.5;
-        const targetH = Math.max(3, Math.round(wave * 24 * volFactor));
-
-        const curVu = currentVuLevels[idx] ?? 0;
-        if (targetH > curVu) {
-          currentVuLevels[idx] = curVu * 0.3 + targetH * 0.7;
-        } else {
-          currentVuLevels[idx] = curVu * 0.75 + targetH * 0.25;
-        }
-        const renderH = Math.round(currentVuLevels[idx] ?? 0);
-        (seg as HTMLElement).style.height = `${renderH}px`;
-        seg.classList.toggle("on", renderH > 4);
-      });
-    }
+  const rawVol = state.muted ? 0 : state.vol / 100;
+  if (rawVol === 0) {
+    targetCells = new Array(VU_COUNT).fill(0);
+    return;
   }
+
+  const nowS = Date.now() / 1000;
+  const volFactor = 0.4 + rawVol * 0.6;
+  for (let idx = 0; idx < totalCount; idx++) {
+    const speed = 3.6 + (idx % 6) * 0.55;
+    const phase = idx * 0.5;
+    const wave = ((Math.sin(nowS * speed + phase) + Math.cos(nowS * 2.7 - idx * 0.4) + 2) / 4) ** 1.5;
+    targetCells[idx] = Math.round(wave * cellCount * volFactor);
+  }
+}
+
+function applyPhysics(
+  fills: NodeListOf<HTMLElement> | HTMLElement[],
+  caps: NodeListOf<HTMLElement> | HTMLElement[],
+  now: number,
+  dt: number,
+) {
+  fills.forEach((fill, idx) => {
+    const target = targetCells[idx] ?? 0;
+    const cur = currentCells[idx] ?? 0;
+
+    if (target >= cur) {
+      currentCells[idx] = target;
+      fallVelocity[idx] = 0;
+    } else {
+      fallVelocity[idx] = (fallVelocity[idx] ?? 0) + BAR_GRAVITY * dt;
+      currentCells[idx] = Math.max(target, cur - (fallVelocity[idx] ?? 0) * dt);
+    }
+
+    const renderCell = currentCells[idx] ?? 0;
+    fill.style.setProperty("--vu-level", `${(renderCell / cellCount) * 100}%`);
+
+    const cap = caps[idx];
+    if (!cap) return;
+
+    const curPeak = peakCells[idx] ?? 0;
+    if (renderCell >= curPeak) {
+      peakCells[idx] = renderCell;
+      peakVelocity[idx] = 0;
+      peakHoldUntil[idx] = now + PEAK_HOLD_MS;
+    } else if (now > (peakHoldUntil[idx] ?? 0)) {
+      peakVelocity[idx] = (peakVelocity[idx] ?? 0) + PEAK_GRAVITY * dt;
+      peakCells[idx] = Math.max(renderCell, curPeak - (peakVelocity[idx] ?? 0) * dt);
+    }
+    cap.style.bottom = `${((peakCells[idx] ?? 0) / cellCount) * 100}%`;
+  });
+}
+
+function updateFrame() {
+  if (!state.playing) {
+    resetVisuals();
+    return;
+  }
+
+  const fills = els.vuStrip ? els.vuStrip.querySelectorAll<HTMLElement>(".vu-fill") : [];
+  const caps = els.vuStrip ? els.vuStrip.querySelectorAll<HTMLElement>(".vu-cap") : [];
+  const totalCount = fills.length || VU_COUNT;
+
+  const now = performance.now();
+  const dt = lastFrameTime ? Math.min(0.1, (now - lastFrameTime) / 1000) : 0;
+  lastFrameTime = now;
+
+  if (now - lastSampleTime >= SAMPLE_INTERVAL_MS) {
+    lastSampleTime = now;
+    sampleTargets(totalCount);
+  }
+
+  applyPhysics(fills, caps, now, dt);
 
   animId = requestAnimationFrame(updateFrame);
 }

@@ -1,7 +1,7 @@
 import { API_ENDPOINTS, INIT_STATIONS, STORAGE_KEYS, TIMERS } from "./consts.js";
 import { state } from "./state.js";
 import type { CustomStation, RawRmfStation, RmfCatalogCache, Station, StationPref } from "./types.js";
-import { capitalizeFirstLetter } from "./utils.js";
+import { capitalizeFirstLetter, resolveProtocolRelativeUrl } from "./utils.js";
 
 export function getStoredRmfCatalog(): RmfCatalogCache | null {
   try {
@@ -36,12 +36,7 @@ export async function fetchRmfCatalog(): Promise<RmfCatalogCache> {
           )
           .map((item) => {
             const rawImg = typeof item.img === "string" ? item.img.trim() : "";
-            let img = rawImg;
-            if (rawImg.startsWith("//")) {
-              img = `https:${rawImg}`;
-            } else if (rawImg.startsWith("/")) {
-              img = `${API_ENDPOINTS.RMF_STATIC_BASE}${rawImg}`;
-            }
+            const img = resolveProtocolRelativeUrl(rawImg, API_ENDPOINTS.RMF_STATIC_BASE);
 
             const st: RawRmfStation = {
               id: item.id ?? item.idname ?? "",

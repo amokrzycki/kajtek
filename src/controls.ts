@@ -1,7 +1,7 @@
 import { setStationFavorite } from "./catalog.js";
 import { ICONS } from "./icons.js";
 import { notifyState, radioAudio, setSleepInterval, sleepInterval, state } from "./state.js";
-import { els, updateSleepUI } from "./ui.js";
+import { els, renderVolLadder, updateSleepUI } from "./ui.js";
 import { isIOS } from "./utils.js";
 
 let volAnimFrame: number | null = null;
@@ -40,6 +40,7 @@ export function updateVolume(val: number): void {
     els.muteBtn.classList.toggle("muted", state.muted);
     els.muteBtn.innerHTML = ICONS.vol(state.muted, val);
   }
+  renderVolLadder(val);
 }
 
 export function toggleMute(): void {
@@ -75,6 +76,7 @@ export function toggleMute(): void {
       els.muteBtn.classList.toggle("muted", targetMuted);
       els.muteBtn.innerHTML = ICONS.vol(targetMuted, Math.round(currentVal));
     }
+    renderVolLadder(currentVal);
 
     if (progress < 1) {
       volAnimFrame = requestAnimationFrame(step);

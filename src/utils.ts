@@ -30,3 +30,24 @@ export function triggerFade(el: HTMLElement, newText: string): void {
 export const getFactsLabel = (targetHourStr: string) => `Serwis informacyjny (~${targetHourStr})`;
 
 export const capitalizeFirstLetter = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+
+export function escapeHtml(str: string): string {
+  return str.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+}
+
+export function resolveProtocolRelativeUrl(url: string, base: string): string {
+  if (url.startsWith("//")) return `https:${url}`;
+  if (url.startsWith("/")) return `${base}${url}`;
+  return url;
+}
+
+export function renderStationThumbHtml(
+  coverUrl: string | undefined,
+  name: string,
+  thumbClass: string,
+  placeholderClass: string,
+): string {
+  const initial = escapeHtml(name.charAt(0));
+  if (!coverUrl) return `<div class="${placeholderClass}">${initial}</div>`;
+  return `<img src="${escapeHtml(coverUrl)}" alt="" class="${thumbClass}" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><div class="${placeholderClass}" style="display:none;">${initial}</div>`;
+}

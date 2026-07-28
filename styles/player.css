@@ -1,17 +1,23 @@
+/* KAJTEK · player.css — obudowa (strefa 1) + wyświetlacz (strefa 2)
+   Patch v1 wchłonięty: okno zawsze ciemne, okładka 128 px, licznik taśmy
+   we własnej kolumnie gridu, szpule 44 px na tokenach wyświetlacza. */
+
 .np-panel {
   position: relative;
-  background: linear-gradient(180deg, #e03228 0%, #c4221a 100%);
-  border: 1px solid #b21b14;
+  background: var(--k-case);
+  border: 1px solid var(--k-case-edge);
   border-radius: var(--k-r);
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.4),
     inset 0 -2px 5px rgba(0, 0, 0, 0.35),
-    var(--k-sh-md);
+    var(--k-sh-contact);
   overflow: visible;
   transition:
     border-color var(--k-tr),
     box-shadow var(--k-tr);
 }
+
+/* ——— boczne guziki obudowy ——— */
 
 .side-buttons {
   position: absolute;
@@ -22,151 +28,117 @@
   gap: 14px;
   z-index: 10;
   pointer-events: none;
-
-  .side-nub {
-    width: 8px;
-    height: 30px;
-    border-radius: 4px 0 0 4px;
-    background: linear-gradient(90deg, #2a2622 0%, #151311 100%);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.2),
-      -1px 2px 4px rgba(0, 0, 0, 0.4);
-  }
+  user-select: none;
 }
 
-.vu-seg {
-  flex: 1;
-  height: 6px;
-  border-radius: 1px;
-  background: rgba(0, 0, 0, 0.3);
-  transition:
-    height 70ms ease-out,
-    background 80ms ease;
-
-  &.on:nth-child(-n + 14) {
-    background: #ffeb3b;
-  }
-  &.on:nth-child(n + 15) {
-    background: #ffffff;
-  }
+.side-buttons .side-nub {
+  width: 8px;
+  height: 30px;
+  border-radius: 4px 0 0 4px;
+  background: linear-gradient(90deg, #2a2622 0%, #151311 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    -1px 2px 4px rgba(0, 0, 0, 0.4);
 }
+
+/* ——— wskaźnik wysterowania ——— */
 
 .vu-strip {
   display: flex;
-  gap: 2px;
-  padding: 0.65rem 1.5rem 0;
-  height: 40px;
-  align-items: flex-end;
+  gap: 3px;
+  padding: 0.75rem 1.5rem 0;
+  height: 80px;
   margin-bottom: 0.85rem;
-
-  .dark &.active .vu-seg {
-    box-shadow: 0 0 4px currentColor;
-  }
+  user-select: none;
 }
+
+.vu-col {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  border-radius: 1px;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(to top, transparent 0 3px, rgba(0, 0, 0, 0.5) 3px 4px),
+    linear-gradient(
+      to top,
+      rgba(74, 222, 58, 0.22) 0 58%,
+      rgba(255, 210, 61, 0.22) 58% 84%,
+      rgba(255, 69, 58, 0.22) 84% 100%
+    ),
+    var(--k-vu-track);
+}
+
+.vu-fill {
+  position: absolute;
+  inset: 0;
+  --vu-level: 0%;
+  clip-path: inset(calc(100% - var(--vu-level)) 0 0 0);
+  background:
+    repeating-linear-gradient(to top, transparent 0 3px, rgba(0, 0, 0, 0.55) 3px 4px),
+    linear-gradient(to top, var(--k-vu-led-green) 0 58%, var(--k-vu-led-yellow) 58% 84%, var(--k-vu-led-red) 84% 100%);
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.35));
+}
+
+.vu-cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0%;
+  height: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.9);
+}
+
+/* ——— okno wyświetlacza ——— */
 
 .np-body {
   position: relative;
   display: grid;
-  grid-template-columns: 24px 50px 88px 1fr 50px;
+  grid-template-columns: 30px 44px 128px 1fr 44px 22px;
   align-items: center;
-  gap: 0.9rem;
-  padding: 1.5rem 1.5rem 1.5rem;
-  background: rgba(255, 255, 255, 0.12);
-  border-radius: 6px;
-  margin: 0 1.1rem;
-  transition: background var(--k-tr);
+  gap: var(--k-s3);
+  padding: 18px;
+  margin: 0 18px;
+  background: var(--k-disp-bg);
+  border-radius: var(--k-rc);
+}
 
-  .dark & {
-    background: rgba(12, 10, 8, 0.78);
-  }
+/* Szyba: ramka, pinstripe u góry i dołu, refleks */
+.np-body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--k-rc);
+  border: 1px solid var(--k-disp-frame);
+  box-shadow:
+    inset 0 0 16px rgba(0, 0, 0, 0.6),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  background:
+    repeating-linear-gradient(90deg, var(--k-disp-rule) 0 1px, transparent 1px 4px) top 3px center / calc(100% - 16px)
+    8px no-repeat,
+    repeating-linear-gradient(90deg, var(--k-disp-rule) 0 1px, transparent 1px 4px) bottom 3px center /
+    calc(100% - 16px) 8px no-repeat,
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 45%, transparent 65%);
+  pointer-events: none;
+  z-index: 4;
+}
 
-  /* Acrylic door window overlay frame & glass reflection */
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0px;
-    border-radius: 6px;
-    border: 1px solid rgba(255, 255, 255, 0.4);
-    box-shadow:
-      inset 0 0 10px rgba(0, 0, 0, 0.15),
-      0 2px 6px rgba(0, 0, 0, 0.15);
-    background:
-/* Top vertical pinstripe grill lines */
-      repeating-linear-gradient(
-        90deg,
-        rgba(196, 37, 27, 0.35) 0px,
-        rgba(196, 37, 27, 0.35) 1px,
-        transparent 1px,
-        transparent 4px
-      )
-      top 3px center / calc(100% - 16px) 8px no-repeat,
-      /* Bottom vertical pinstripe grill lines */
-      repeating-linear-gradient(
-        90deg,
-        rgba(196, 37, 27, 0.35) 0px,
-        rgba(196, 37, 27, 0.35) 1px,
-        transparent 1px,
-        transparent 4px
-      ) bottom 3px center / calc(100% - 16px) 8px no-repeat,
-      /* Glass reflection highlight overlay */
-      linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.08) 55%, transparent 75%);
-    pointer-events: none;
-    z-index: 4;
-    transition:
-      background var(--k-tr),
-      border-color var(--k-tr),
-      box-shadow var(--k-tr);
-
-    .dark & {
-      border-color: rgba(255, 255, 255, 0.3);
-      box-shadow:
-        inset 0 0 14px rgba(0, 0, 0, 0.5),
-        0 2px 6px rgba(0, 0, 0, 0.3);
-      background:
-        repeating-linear-gradient(
-          90deg,
-          rgba(255, 255, 255, 0.3) 0px,
-          rgba(255, 255, 255, 0.3) 1px,
-          transparent 1px,
-          transparent 4px
-        )
-        top 3px center / calc(100% - 16px) 8px no-repeat,
-        repeating-linear-gradient(
-          90deg,
-          rgba(255, 255, 255, 0.3) 0px,
-          rgba(255, 255, 255, 0.3) 1px,
-          transparent 1px,
-          transparent 4px
-        )
-        bottom 3px center / calc(100% - 16px) 8px no-repeat,
-        linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 45%, transparent 65%);
-    }
-  }
-
-  /* Unitra PS 101 tape scale indicator markings (100 - 50 - 0) */
-  &::after {
-    content: "END • 100 • 50 • 0 • START";
-    position: absolute;
-    right: 1.1rem;
-    top: 51%;
-    transform: translateY(-50%) rotate(90deg);
-    font-family: var(--k-font-mono);
-    font-size: 0.42rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    color: #ffffff;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
-    opacity: 0.95;
-    pointer-events: none;
-    z-index: 5;
-    user-select: none;
-    white-space: nowrap;
-  }
+.np-tape-scale {
+  writing-mode: vertical-rl;
+  font-family: var(--k-font-mono);
+  font-size: 0.44rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--k-disp-dim);
+  white-space: nowrap;
+  justify-self: center;
+  user-select: none;
 }
 
 .kajtek-stripe {
   height: 100%;
-  min-height: 90px;
+  min-height: 128px;
   background: linear-gradient(180deg, #f8f8fa 0%, #e2e2e8 50%, #d4d4dc 100%);
   border: 1px solid rgba(0, 0, 0, 0.18);
   border-radius: 3px;
@@ -180,135 +152,109 @@
     0 1px 3px rgba(0, 0, 0, 0.12);
   z-index: 2;
   user-select: none;
-
-  span {
-    font-family: var(--k-font-display);
-    font-size: 0.72rem;
-    font-weight: 700;
-    line-height: 1;
-    color: #1a1816;
-    letter-spacing: 0.04em;
-  }
-
-  .dark & span {
-    color: #151311;
-  }
 }
 
-.reel-hub {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: var(--k-bg-raised);
-  border: 2px solid var(--k-text-muted);
-  position: relative;
-  z-index: 1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  .dark & {
-    background: #38322b;
-    border-color: rgba(255, 255, 255, 0.4);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
-  }
-
-  /* 6 authentic cassette drive teeth (czarne ząbki szpuli) */
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0px;
-    border-radius: 50%;
-    background: repeating-conic-gradient(from 0deg, rgba(15, 12, 10, 0.88) 0deg 22deg, transparent 22deg 60deg);
-    z-index: 2;
-
-    .dark & {
-      background: repeating-conic-gradient(from 0deg, #000000 0deg 22deg, rgba(255, 255, 255, 0.32) 22deg 60deg);
-    }
-  }
-
-  &::after {
-    content: "";
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--k-bg-inset);
-    border: 1px solid var(--k-border-3);
-    z-index: 3;
-    position: relative;
-
-    .dark & {
-      background: #25201b;
-      border-color: rgba(255, 255, 255, 0.35);
-    }
-  }
+.kajtek-stripe span {
+  font-family: var(--k-font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #151311;
+  letter-spacing: 0.04em;
 }
+
+/* ——— szpule ——— */
 
 .tape-reel {
   flex-shrink: 0;
-  width: 50px;
-  height: 50px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: var(--k-bg-inset);
-  border: 2px solid var(--k-border-3);
-  box-shadow: var(--k-sh-inset);
+  background: var(--k-disp-well);
+  border: 2px solid var(--k-disp-frame);
+  box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.55);
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
+}
+
+/* nawinięta taśma wokół piasty */
+.tape-reel::before {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  background: radial-gradient(circle, transparent 32%, #5a3726 33%, #2a1810 72%, transparent 73%);
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  opacity: 0.95;
+}
+
+/* trzy okienka szpuli */
+.tape-reel::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border-radius: 50%;
+  background: conic-gradient(
+    from 0deg,
+    var(--k-accent) 0deg 32deg,
+    var(--k-disp-well) 32deg 120deg,
+    var(--k-accent) 120deg 152deg,
+    var(--k-disp-well) 152deg 240deg,
+    var(--k-accent) 240deg 272deg,
+    var(--k-disp-well) 272deg 360deg
+  );
+  opacity: 0.95;
+}
+
+.reel-hub {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #38322b;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  position: relative;
+  z-index: 3;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition:
-    background var(--k-tr),
-    border-color var(--k-tr);
+    border-color var(--k-tr),
+    box-shadow var(--k-tr);
+}
 
-  /* Magnetic tape spool volume around the hub */
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 3px;
-    border-radius: 50%;
-    background: radial-gradient(circle, transparent 32%, #2d1e17 33%, #1c120e 72%, transparent 73%);
-    border: 1px dashed var(--k-border-3);
-    opacity: 0.85;
+/* zębatki napędu */
+.reel-hub::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: repeating-conic-gradient(from 0deg, #000000 0deg 22deg, rgba(255, 255, 255, 0.32) 22deg 60deg);
+  z-index: 2;
+}
 
-    .dark & {
-      background: radial-gradient(circle, transparent 32%, #5a3726 33%, #2a1810 72%, transparent 73%);
-      border-color: rgba(255, 255, 255, 0.22);
-      opacity: 0.95;
-    }
-  }
+.reel-hub::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #25201b;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  z-index: 3;
+  position: relative;
+}
 
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 9px;
-    border-radius: 50%;
-    background: conic-gradient(
-      from 0deg,
-      var(--k-accent) 0deg 32deg,
-      var(--k-bg-inset) 32deg 120deg,
-      var(--k-accent) 120deg 152deg,
-      var(--k-bg-inset) 152deg 240deg,
-      var(--k-accent) 240deg 272deg,
-      var(--k-bg-inset) 272deg 360deg
-    );
-    opacity: 0.85;
+.tape-reel.spinning {
+  animation: reel-spin 2.2s linear infinite;
+}
 
-    .dark & {
-      opacity: 0.95;
-    }
-  }
-
-  &.spinning {
-    animation: reel-spin 2.2s linear infinite;
-
-    .dark & .reel-hub {
-      box-shadow:
-        0 0 0 2px var(--k-bg-panel),
-        0 0 8px var(--k-accent-ring);
-      border-color: var(--k-accent);
-    }
-  }
+.tape-reel.spinning .reel-hub {
+  border-color: var(--k-accent-2);
+  box-shadow:
+    0 0 0 2px var(--k-disp-well),
+    0 0 8px var(--k-accent-ring);
 }
 
 @keyframes reel-spin {
@@ -320,60 +266,42 @@
   }
 }
 
+/* ——— okładka / logo stacji ——— */
+
 .album-art {
   position: relative;
-  width: 88px;
-  height: 88px;
-  border-radius: 8px;
+  width: 128px;
+  height: 128px;
+  border-radius: var(--k-rb);
   overflow: hidden;
   border: 2px solid rgba(255, 255, 255, 0.4);
   box-shadow:
-    0 4px 14px rgba(0, 0, 0, 0.6),
+    0 6px 18px rgba(0, 0, 0, 0.6),
     inset 0 1px 0 rgba(255, 255, 255, 0.2);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(150deg, #1a0a05 0%, #7a2808 55%, #2a1005 100%);
   transition:
-    border-color var(--k-tr),
+    background 400ms ease,
     box-shadow var(--k-tr);
+}
 
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: repeating-linear-gradient(
-      -45deg,
-      transparent 0px,
-      transparent 4px,
-      rgba(255, 255, 255, 0.03) 4px,
-      rgba(255, 255, 255, 0.03) 5px
-    );
-    pointer-events: none;
-    z-index: 1;
-  }
-
-  &[data-v="0"] {
-    background: linear-gradient(150deg, #1a0a05 0%, #7a2808 55%, #2a1005 100%);
-  }
-  &[data-v="1"] {
-    background: linear-gradient(150deg, #050e1a 0%, #0b3678 55%, #05101e 100%);
-  }
-  &[data-v="2"] {
-    background: linear-gradient(150deg, #141405 0%, #484510 55%, #100f05 100%);
-  }
-  &[data-v="3"] {
-    background: linear-gradient(150deg, #0a0514 0%, #3a1060 55%, #080412 100%);
-  }
-  &[data-v="4"] {
-    background: linear-gradient(150deg, #051410 0%, #0a4538 55%, #051210 100%);
-  }
-  &[data-v="5"] {
-    background: linear-gradient(150deg, #140505 0%, #6a0808 55%, #120505 100%);
-  }
-  &[data-v="6"] {
-    background: linear-gradient(150deg, #141005 0%, #604a08 55%, #121005 100%);
-  }
-  &[data-v="7"] {
-    background: linear-gradient(150deg, #051414 0%, #0a4848 55%, #051212 100%);
-  }
+/* delikatna faktura druku na okładce */
+.album-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent 0px,
+    transparent 4px,
+    rgba(255, 255, 255, 0.03) 4px,
+    rgba(255, 255, 255, 0.03) 5px
+  );
+  pointer-events: none;
+  z-index: 1;
 }
 
 .album-art-img {
@@ -387,40 +315,35 @@
 }
 
 .album-art-initial {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding-bottom: 20px;
-  font-family: var(--k-font-display);
-  font-size: 3.2rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.14);
-  letter-spacing: -0.02em;
+  position: relative;
   z-index: 2;
+  font-family: var(--k-font-display);
+  font-size: 1.9rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-align: center;
+  padding: 0 6px;
+  color: rgba(255, 255, 255, 0.92);
   user-select: none;
   transition: opacity 300ms ease;
 }
 
-.album-art-label {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 26px;
-  background: rgba(0, 0, 0, 0.52);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 3;
-  font-family: var(--k-font-mono);
-  font-size: 0.44rem;
-  letter-spacing: 0.14em;
-  color: rgba(255, 255, 255, 0.5);
-  text-transform: uppercase;
-  transition: opacity 300ms ease;
+.album-art.empty .album-art-initial {
+  font-size: 3.4rem;
+  color: rgba(255, 255, 255, 0.14);
 }
+
+/* logo stacji zastępuje inicjał — nic się na nie nie nakłada */
+.album-art.has-logo .album-art-initial {
+  opacity: 0;
+}
+
+.album-art.has-logo::after {
+  opacity: 0.45;
+}
+
+/* ——— dane utworu ——— */
 
 .np-info {
   flex: 1;
@@ -436,18 +359,14 @@
   align-items: center;
   gap: 0.6rem;
   margin-bottom: 0.35rem;
-
-  &.hidden {
-    display: none;
-  }
 }
 
 .np-short-val {
   font-family: var(--k-font-display);
   font-weight: 700;
-  font-size: 0.75rem;
-  color: #ffd54f;
-  letter-spacing: 0.08em;
+  font-size: 0.85rem;
+  color: var(--k-disp-accent);
+  letter-spacing: 0.02em;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
@@ -455,15 +374,15 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #4ade80;
-  box-shadow: 0 0 8px #4ade80;
+  background: var(--k-disp-live);
+  box-shadow: 0 0 8px var(--k-disp-live);
   opacity: 0;
   transition: opacity var(--k-tr);
+}
 
-  &.on {
-    opacity: 1;
-    animation: live-pulse 2.4s ease-in-out infinite;
-  }
+.np-live-dot.on {
+  opacity: 1;
+  animation: live-pulse 2.4s ease-in-out infinite;
 }
 
 @keyframes live-pulse {
@@ -476,25 +395,25 @@
   }
 }
 
+/* line-height 1.2 — polskie ogonki (ą, ę, j, y) muszą się zmieścić w wierszu */
 .np-station {
   font-family: var(--k-font-display);
-  font-size: 1.95rem;
+  font-size: var(--k-fs-display);
   font-weight: 700;
   letter-spacing: 0.03em;
-  color: #ffffff;
+  color: var(--k-disp-text);
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
-  line-height: 1.05;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
 
-  &.empty {
-    font-size: 1rem;
-    font-weight: 400;
-    color: rgba(255, 255, 255, 0.55);
-    font-family: var(--k-font-body);
-    font-style: italic;
-    text-shadow: none;
-  }
+.np-station.empty {
+  font-size: 1rem;
+  font-weight: 400;
+  font-family: var(--k-font-body);
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.62);
+  text-shadow: none;
 }
 
 .np-track {
@@ -502,16 +421,16 @@
   min-width: 0;
   opacity: 0;
   transition: opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
 
-  &.visible {
-    opacity: 1;
-  }
+.np-track.visible {
+  opacity: 1;
 }
 
 .np-artist {
   font-size: 0.7rem;
   font-weight: 600;
-  color: #ffd54f;
+  color: var(--k-disp-accent);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   text-transform: uppercase;
   letter-spacing: 0.09em;
@@ -519,12 +438,10 @@
 }
 
 .np-title {
-  font-size: 1.05rem;
-  color: #f1f5f9;
+  font-size: var(--k-fs-lead);
+  color: var(--k-disp-text-2);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
-  white-space: normal;
   overflow-wrap: anywhere;
-  word-break: break-word;
   display: block;
 }
 
@@ -535,11 +452,15 @@
 @keyframes fade-in-anim {
   from {
     opacity: 0;
+    transform: translateY(3px);
   }
   to {
     opacity: 1;
+    transform: none;
   }
 }
+
+/* ——— pas sterowania obudowy ——— */
 
 .np-controls {
   position: relative;
@@ -547,8 +468,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 1.25rem 1.5rem 1.25rem;
-  transition: border-color var(--k-tr);
+  padding: var(--k-s4) 1.5rem;
 }
 
 .np-branding {
@@ -558,48 +478,48 @@
   align-items: center;
   justify-content: center;
   user-select: none;
+}
 
-  .unitra-sub {
-    font-family: var(--k-font-mono);
-    font-size: 0.55rem;
-    font-weight: 700;
-    letter-spacing: 0.15em;
-    color: rgba(255, 255, 255, 0.95);
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
+.np-branding .unitra-sub {
+  font-family: var(--k-font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--k-case-ink-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
 
-    .u-box {
-      background: #ffffff;
-      color: #c4221a;
-      font-size: 0.46rem;
-      font-weight: 900;
-      padding: 1px 4px;
-      border-radius: 2px;
-      line-height: 1;
-    }
-  }
+.np-branding .unitra-sub .u-box {
+  background: var(--k-case-ink);
+  color: #c4221a;
+  font-size: 0.46rem;
+  font-weight: 900;
+  padding: 1px 4px;
+  border-radius: 2px;
+  line-height: 1;
+}
 
-  .stereo-title {
-    font-family: var(--k-font-display);
-    font-size: 1.4rem;
-    font-weight: 800;
-    letter-spacing: 0.32em;
-    color: transparent;
-    -webkit-text-stroke: 1.5px #ffffff;
-    text-align: center;
-    line-height: 1.1;
-    margin: 2px 0 1px;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
-  }
+.np-branding .stereo-title {
+  font-family: var(--k-font-display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--k-case-ink);
+  text-align: center;
+  line-height: 1.1;
+  margin: 2px 0 1px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
 
-  .cassette-sub {
-    font-family: var(--k-font-mono);
-    font-size: 0.48rem;
-    font-weight: 600;
-    letter-spacing: 0.18em;
-    color: rgba(255, 255, 255, 0.9);
-  }
+.np-branding .cassette-sub {
+  font-family: var(--k-font-mono);
+  font-size: 0.48rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--k-case-ink-dim);
 }
 
 .play-btn {
@@ -622,34 +542,31 @@
     box-shadow var(--k-tr),
     transform var(--k-tr);
   -webkit-tap-highlight-color: transparent;
+}
 
-  &:disabled {
-    opacity: 0.3;
-    cursor: default;
-  }
+.play-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
 
-  &:not(:disabled):hover {
-    color: var(--k-accent);
-    background: var(--k-bg);
-    border-color: var(--k-accent);
-    box-shadow:
-      var(--k-sh-btn),
-      0 0 12px var(--k-accent-dim);
-    transform: scale(1.04);
-  }
+.play-btn:not(:disabled):hover {
+  color: var(--k-accent-text);
+  background: var(--k-bg);
+  border-color: var(--k-accent);
+  box-shadow:
+    var(--k-sh-btn),
+    0 0 12px var(--k-accent-dim);
+  transform: scale(1.04);
+}
 
-  &:not(:disabled):active {
-    box-shadow: var(--k-sh-inset);
-    transform: scale(0.96) translateY(1px);
-  }
+.play-btn:not(:disabled):active {
+  box-shadow: var(--k-sh-inset);
+  transform: scale(0.96) translateY(1px);
+}
 
-  &.playing {
-    color: var(--k-accent);
-
-    .dark & {
-      box-shadow: var(--k-sh-btn), var(--k-glow);
-    }
-  }
+.play-btn.playing {
+  color: var(--k-accent-text);
+  box-shadow: var(--k-sh-btn), var(--k-glow);
 }
 
 .history-btn {
@@ -657,7 +574,7 @@
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 0.38rem 0.75rem;
+  padding: 0.5rem 0.75rem;
   background: var(--k-bg-inset);
   border: 1px solid var(--k-border-2);
   border-radius: var(--k-rb);
@@ -672,49 +589,46 @@
     background var(--k-tr);
   -webkit-tap-highlight-color: transparent;
   min-height: 34px;
-
-  &:hover:not(:disabled):not(.disabled) {
-    color: var(--k-text);
-  }
-
-  &:disabled,
-  &.disabled {
-    opacity: 0.45;
-    cursor: not-allowed;
-    pointer-events: none;
-    box-shadow: none;
-  }
-
-  .history-arrow {
-    font-size: 0.46rem;
-    opacity: 0.7;
-  }
 }
 
-@media (max-width: 560px) {
-  .kajtek-stripe {
-    display: none;
-  }
+.history-btn:hover:not(:disabled):not(.disabled) {
+  color: var(--k-text);
+}
 
+.history-btn:disabled,
+.history-btn.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+.history-btn .history-arrow {
+  font-size: 0.46rem;
+  opacity: 0.7;
+  transition: transform var(--k-tr-panel);
+}
+
+.history-btn[aria-expanded="true"] .history-arrow {
+  transform: rotate(180deg);
+}
+
+/* ——— mobile ——— */
+
+@media (max-width: 640px) {
   .np-body {
-    display: grid;
     grid-template-columns: 44px 1fr 44px;
     grid-template-areas:
-      "reel-l art   reel-r"
-      "info   info  info";
-    align-items: center;
+      "reel-l art  reel-r"
+      "info   info info";
     justify-items: center;
-    gap: 0.85rem 0.6rem;
-    padding: 1.9rem 1rem 1.9rem;
+    gap: 0.85rem 0.7rem;
+    padding: 1.4rem 1rem;
+    margin: 0 12px;
   }
 
-  /* Keep tape scale text neatly positioned next to right reel on mobile */
-  .np-body::after {
-    top: 70px;
-    right: 1.1rem;
-    font-size: 0.36rem;
-    letter-spacing: 0.08em;
-    opacity: 0.75;
+  .kajtek-stripe {
+    display: none;
   }
 
   #reel-left {
@@ -724,8 +638,8 @@
 
   #album-art {
     grid-area: art;
-    width: 80px;
-    height: 80px;
+    width: 96px;
+    height: 96px;
   }
 
   #reel-right {
@@ -733,9 +647,8 @@
     justify-self: end;
   }
 
-  .tape-reel {
-    width: 44px;
-    height: 44px;
+  .np-tape-scale {
+    display: none;
   }
 
   .np-info {
@@ -756,6 +669,7 @@
 
   .np-controls {
     padding: 1rem;
+    text-align: center;
   }
 
   .np-branding .stereo-title {
@@ -764,6 +678,6 @@
   }
 
   .vu-strip {
-    padding: 0.5rem 1rem 0;
+    padding: 1rem 1rem 0;
   }
 }

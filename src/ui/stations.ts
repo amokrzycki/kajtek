@@ -3,6 +3,7 @@ import { STORAGE_KEYS } from "@/consts.js";
 import { ICONS } from "@/icons.js";
 import { state } from "@/state.js";
 import type { Station } from "@/types.js";
+import { escapeHtml, renderStationThumbHtml } from "@/utils.js";
 import { openCatalogModal } from "./catalog/modal.js";
 import { els } from "./elements.js";
 
@@ -88,7 +89,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
 
     const header = document.createElement("div");
     header.className = "section-header";
-    header.innerHTML = `<span class="section-title">${sec.label}</span><span class="section-count">${sec.list.length}</span>`;
+    header.innerHTML = `<span class="section-title">${sec.label}</span><span class="k-rule"></span><span class="section-count">${sec.list.length}</span>`;
     secDiv.appendChild(header);
 
     if (sec.list.length === 0) {
@@ -105,9 +106,8 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
         const isSelected = state.station && state.station.id === s.id;
         const isFav = state.favs.has(s.id);
 
-        const logoHtml = s.coverUrl
-          ? `<img src="${s.coverUrl}" alt="" class="sc-thumb" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><div class="sc-thumb-placeholder" style="display:none;">${s.name.charAt(0)}</div>`
-          : `<div class="sc-thumb-placeholder">${s.name.charAt(0)}</div>`;
+        const safeName = escapeHtml(s.name);
+        const logoHtml = renderStationThumbHtml(s.coverUrl, s.name, "sc-thumb", "sc-thumb-placeholder");
 
         const card = document.createElement("div");
         card.className = `station-card${isSelected ? " active" : ""}`;
@@ -117,9 +117,9 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
         card.innerHTML = `
           ${logoHtml}
           <div class="sc-main">
-            <div class="sc-name">${isSelected ? '<span class="sc-led-dot" aria-hidden="true"></span>' : ""}${s.name}</div>
+            <div class="sc-name">${isSelected ? '<span class="sc-led-dot" aria-hidden="true"></span>' : ""}${safeName}</div>
             <div class="sc-meta">
-              <span class="sc-short">${s.short}</span>
+              <span class="sc-short">${escapeHtml(s.short)}</span>
             </div>
           </div>
           <button class="sc-star${isFav ? " on" : ""}" aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">

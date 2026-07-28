@@ -5,13 +5,12 @@ import {
   getCustomStations,
   getStoredRmfCatalog,
   isStationEnabled,
-  isStationFavorite,
   setStationEnabled,
-  setStationFavorite,
-} from "@/catalog";
-import { ICONS } from "@/icons";
-import { notifyState } from "@/state";
-import { handleCustomStationSubmit } from "./form";
+} from "@/catalog.js";
+import { ICONS } from "@/icons.js";
+import { notifyState } from "@/state.js";
+import { escapeHtml, renderStationThumbHtml } from "@/utils.js";
+import { handleCustomStationSubmit } from "./form.js";
 
 let modalEl: HTMLElement | null = null;
 let searchQuery = "";
@@ -274,25 +273,28 @@ function renderModalBody(): void {
 
   filtered.forEach((station) => {
     const enabled = isStationEnabled(station.id);
-    const favorite = isStationFavorite(station.id);
     const isCustom = customIds.has(station.id);
 
     const row = document.createElement("div");
     row.className = `k-catalog-row${enabled ? " enabled" : ""}`;
 
-    const logoHtml = station.coverUrl
-      ? `<img src="${station.coverUrl}" alt="" class="catalog-thumb" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><div class="catalog-thumb-placeholder" style="display:none;">${station.name.charAt(0)}</div>`
-      : `<div class="catalog-thumb-placeholder">${station.name.charAt(0)}</div>`;
+    const safeName = escapeHtml(station.name);
+    const logoHtml = renderStationThumbHtml(
+      station.coverUrl,
+      station.name,
+      "catalog-thumb",
+      "catalog-thumb-placeholder",
+    );
 
     row.innerHTML = `
       <div class="catalog-col-info">
         ${logoHtml}
         <div class="catalog-details">
           <div class="catalog-name">
-            ${station.name}
+            ${safeName}
             ${isCustom ? '<span class="badge-custom">Własna</span>' : ""}
           </div>
-          <div class="catalog-sub">${station.short}</div>
+          <div class="catalog-sub">${escapeHtml(station.short)}</div>
         </div>
       </div>
 
@@ -305,14 +307,10 @@ function renderModalBody(): void {
         <label class="catalog-toggle-switch" title="${enabled ? "Wyłącz stację" : "Włącz stację"}">
           <input type="checkbox" class="catalog-checkbox" ${enabled ? "checked" : ""} aria-label="Włącz stację" />
         </label>
-        <button type="button" class="sc-star catalog-star ${favorite ? "on" : ""}" ${!enabled ? "disabled title='Włącz stację, aby dodać do ulubionych'" : ""}>
-          ${ICONS.star(favorite)}
-        </button>
       </div>
     `;
 
     const checkbox = row.querySelector<HTMLInputElement>(".catalog-checkbox");
-    const starBtn = row.querySelector<HTMLButtonElement>(".catalog-star");
     const toggleSwitch = row.querySelector<HTMLLabelElement>(".catalog-toggle-switch");
 
     checkbox?.addEventListener("change", (e) => {
@@ -322,27 +320,21 @@ function renderModalBody(): void {
       if (toggleSwitch) {
         toggleSwitch.title = isChecked ? "Wyłącz stację" : "Włącz stację";
       }
-      if (starBtn) {
-        starBtn.disabled = !isChecked;
-        starBtn.title = !isChecked ? "Włącz stację, aby dodać do ulubionych" : "";
-      }
-    });
-    starBtn?.addEventListener("click", () => {
-      if (starBtn.disabled) return;
-      const nextFav = !starBtn.classList.contains("on");
-      setStationFavorite(station.id, nextFav);
-      notifyState();
-      starBtn.classList.toggle("on", nextFav);
-      starBtn.innerHTML = ICONS.star(nextFav);
     });
 
     const deleteBtn = row.querySelector<HTMLButtonElement>(".btn-delete-custom");
-    deleteBtn?.addEventListener("click", () => {
+    deleteBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
       if (confirm(`Czy na pewno chcesz usunąć stację "${station.name}"?`)) {
         deleteCustomStation(station.id);
         notifyState();
         renderModalBody();
       }
+    });
+
+    row.addEventListener("click", (e) => {
+      if ((e.target as HTMLElement).closest(".catalog-toggle-switch, .btn-delete-custom")) return;
+      checkbox?.click();
     });
 
     listContainer.appendChild(row);

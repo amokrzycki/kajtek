@@ -1,4 +1,4 @@
-import type { Station } from "./types";
+import type { Station } from "./types.js";
 
 export const STORAGE_KEYS = {
   THEME: "kajtek_theme",
@@ -56,6 +56,8 @@ export const TIMERS = {
 } as const;
 
 export const DEFAULT_BREAK_LABEL = "Przerwa / Reklamy";
-export const VU_COUNT = 18;
+export const VU_COUNT = 24;
+export const STATIONS_WITH_FACTS = ["rmf", "rmf24"];
+export const VOL_LEDS = 18;
 export const MAX_CONSECUTIVE_FAILURES = 5;
-export const DEFAULT_VERSION = "0.3";
+export const DEFAULT_VERSION = "0.6";

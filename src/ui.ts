@@ -5,7 +5,7 @@ import { ICONS } from "./icons.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
-import { els, initVolumeControlUI, initVU } from "./ui/elements.js";
+import { els, initVolumeControlUI, initVU, renderVolLadder } from "./ui/elements.js";
 import { setHistoryLoadingState, triggerHistorySlideIn, updateHistoryUI } from "./ui/history.js";
 import { renderStationList } from "./ui/stations.js";
 import { triggerFade } from "./utils.js";
@@ -22,11 +22,20 @@ export {
   initVolumeControlUI,
   initVU,
   renderStationList,
+  renderVolLadder,
   setHistoryLoadingState,
   triggerFade,
   triggerHistorySlideIn,
   updateHistoryUI,
 };
+
+export function startHistoryClock(): void {
+  const tick = () => {
+    els.historyClock.textContent = new Date().toLocaleTimeString("pl-PL");
+  };
+  tick();
+  setInterval(tick, 1000);
+}
 
 export function updateSleepUI(): void {
   if (state.sleepMin !== null && state.sleepSec !== null) {
@@ -57,6 +66,15 @@ export function updateNowPlayingTrack(track: TrackInfo | null): void {
 
   triggerFade(els.npArtist, artistText);
   triggerFade(els.npTitle, titleText);
+
+  if ("mediaSession" in navigator) {
+    const coverUrl = resolveAlbumCoverUrl(track, state.station);
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: titleText,
+      artist: artistText,
+      artwork: coverUrl ? [{ src: coverUrl }] : [{ src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    });
+  }
 }
 
 export function resolveAlbumCoverUrl(track: TrackInfo | null, station: Station | null): string {
@@ -181,7 +199,6 @@ export function updateUI(
   els.historyToggleBtn.disabled = isGeneric;
   els.historyToggleBtn.classList.toggle("disabled", isGeneric);
   els.historyToggleBtn.setAttribute("aria-expanded", String(state.showHistory));
-  els.historyArrow.textContent = state.showHistory ? "▲" : "▼";
   els.historyPanel.classList.toggle("open", state.showHistory);
   updateHistoryUI();
 
@@ -223,4 +240,5 @@ function applyTheme(): void {
   document.documentElement.classList.toggle("dark", state.dark);
   els.darkToggle.classList.toggle("on", state.dark);
   localStorage.setItem(STORAGE_KEYS.THEME, state.dark ? "dark" : "light");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", state.dark ? "#1a1816" : "#eeebe3");
 }
