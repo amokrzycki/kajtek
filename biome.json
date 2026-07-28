@@ -5,13 +5,15 @@
     "clientKind": "git",
     "useIgnoreFile": true
   },
+  "files": {
+    "includes": ["**", "!**/node_modules", "!**/dist", "!**/public"]
+  },
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
     "indentWidth": 2,
     "lineEnding": "lf",
     "lineWidth": 120,
-    "includes": ["**", "!**/node_modules", "!**/dist", "!**/public"],
     "expand": "auto",
     "useEditorconfig": true
   },

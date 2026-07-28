@@ -28,6 +28,14 @@ export {
   updateHistoryUI,
 };
 
+export function startHistoryClock(): void {
+  const tick = () => {
+    els.historyClock.textContent = new Date().toLocaleTimeString("pl-PL");
+  };
+  tick();
+  setInterval(tick, 1000);
+}
+
 export function updateSleepUI(): void {
   if (state.sleepMin !== null && state.sleepSec !== null) {
     const m = Math.floor(state.sleepSec / 60);

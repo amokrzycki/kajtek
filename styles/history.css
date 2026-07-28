@@ -91,7 +91,6 @@
 
 .pl-item.is-current {
   background: rgba(74, 222, 128, 0.12);
-  border-left: 2px solid var(--k-disp-live);
   border-radius: 5px;
   padding: 7px 6px 7px 10px;
   margin: 3px 0;
@@ -104,7 +103,6 @@
 
 .pl-item.is-break:not(.is-past) {
   background: rgba(245, 158, 11, 0.12);
-  border-left: 2px solid var(--k-disp-next);
   border-radius: 5px;
   padding: 7px 6px 7px 10px;
   margin: 3px 0;

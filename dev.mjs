@@ -59,12 +59,15 @@ http
       return;
     }
 
-    // ponytail: check dist/ first so compiled assets shadow raw root files
+    // check dist/ then public/ so compiled/static assets shadow raw root files
     let filePath = req.url === "/" ? "./index.html" : `.${req.url}`;
     if (req.url !== "/") {
       const distPath = `./dist${req.url}`;
+      const publicPath = `./public${req.url}`;
       if (fs.existsSync(distPath) && !fs.statSync(distPath).isDirectory()) {
         filePath = distPath;
+      } else if (fs.existsSync(publicPath) && !fs.statSync(publicPath).isDirectory()) {
+        filePath = publicPath;
       }
     }
 

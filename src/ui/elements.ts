@@ -18,6 +18,7 @@ export const els = {
   playBtn: document.getElementById("play-btn") as HTMLButtonElement,
   historyToggleBtn: document.getElementById("history-toggle-btn") as HTMLButtonElement,
   historyPanel: document.getElementById("history-panel") as HTMLDivElement,
+  historyClock: document.getElementById("history-clock") as HTMLSpanElement,
   historyEmpty: document.getElementById("history-empty") as HTMLDivElement,
   historyList: document.getElementById("history-list") as HTMLDivElement,
   volumePanel: document.getElementById("volume-panel") as HTMLDivElement,

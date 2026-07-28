@@ -5,9 +5,7 @@ import {
   getCustomStations,
   getStoredRmfCatalog,
   isStationEnabled,
-  isStationFavorite,
   setStationEnabled,
-  setStationFavorite,
 } from "@/catalog";
 import { ICONS } from "@/icons";
 import { notifyState } from "@/state";
@@ -274,7 +272,6 @@ function renderModalBody(): void {
 
   filtered.forEach((station) => {
     const enabled = isStationEnabled(station.id);
-    const favorite = isStationFavorite(station.id);
     const isCustom = customIds.has(station.id);
 
     const row = document.createElement("div");
@@ -305,14 +302,10 @@ function renderModalBody(): void {
         <label class="catalog-toggle-switch" title="${enabled ? "Wyłącz stację" : "Włącz stację"}">
           <input type="checkbox" class="catalog-checkbox" ${enabled ? "checked" : ""} aria-label="Włącz stację" />
         </label>
-        <button type="button" class="sc-star catalog-star ${favorite ? "on" : ""}" ${!enabled ? "disabled title='Włącz stację, aby dodać do ulubionych'" : ""}>
-          ${ICONS.star(favorite)}
-        </button>
       </div>
     `;
 
     const checkbox = row.querySelector<HTMLInputElement>(".catalog-checkbox");
-    const starBtn = row.querySelector<HTMLButtonElement>(".catalog-star");
     const toggleSwitch = row.querySelector<HTMLLabelElement>(".catalog-toggle-switch");
 
     checkbox?.addEventListener("change", (e) => {
@@ -322,27 +315,21 @@ function renderModalBody(): void {
       if (toggleSwitch) {
         toggleSwitch.title = isChecked ? "Wyłącz stację" : "Włącz stację";
       }
-      if (starBtn) {
-        starBtn.disabled = !isChecked;
-        starBtn.title = !isChecked ? "Włącz stację, aby dodać do ulubionych" : "";
-      }
-    });
-    starBtn?.addEventListener("click", () => {
-      if (starBtn.disabled) return;
-      const nextFav = !starBtn.classList.contains("on");
-      setStationFavorite(station.id, nextFav);
-      notifyState();
-      starBtn.classList.toggle("on", nextFav);
-      starBtn.innerHTML = ICONS.star(nextFav);
     });
 
     const deleteBtn = row.querySelector<HTMLButtonElement>(".btn-delete-custom");
-    deleteBtn?.addEventListener("click", () => {
+    deleteBtn?.addEventListener("click", (e) => {
+      e.stopPropagation();
       if (confirm(`Czy na pewno chcesz usunąć stację "${station.name}"?`)) {
         deleteCustomStation(station.id);
         notifyState();
         renderModalBody();
       }
+    });
+
+    row.addEventListener("click", (e) => {
+      if ((e.target as HTMLElement).closest(".catalog-toggle-switch, .btn-delete-custom")) return;
+      checkbox?.click();
     });
 
     listContainer.appendChild(row);

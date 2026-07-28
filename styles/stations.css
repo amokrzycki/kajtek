@@ -643,6 +643,7 @@
   border-radius: var(--k-r);
   gap: 0.5rem;
   transition: border-color var(--k-tr);
+  cursor: pointer;
 }
 
 .k-catalog-row.enabled {
