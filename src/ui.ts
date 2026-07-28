@@ -120,8 +120,6 @@ export function updateAlbumArt(coverUrl: string | undefined): void {
   } else {
     if (img) {
       img.style.display = "none";
-      img.src = "";
-      img.dataset.src = "";
     }
     if (initial) initial.style.opacity = "";
     if (label) label.style.opacity = "";
