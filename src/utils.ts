@@ -30,3 +30,7 @@ export function triggerFade(el: HTMLElement, newText: string): void {
 export const getFactsLabel = (targetHourStr: string) => `Serwis informacyjny (~${targetHourStr})`;
 
 export const capitalizeFirstLetter = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+
+export function escapeHtml(str: string): string {
+  return str.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+}

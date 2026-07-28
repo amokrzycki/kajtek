@@ -116,23 +116,20 @@ export async function fetchPlaylist(station: Station) {
 
   const provider = getProvider(station);
   const target = `${station.apiBaseUrl}/playlist`;
-  const urls = [target];
 
-  for (const url of urls) {
-    try {
-      const res = await fetchWithTimeout(url, TIMERS.FETCH_TIMEOUT_MS);
-      const data = await parseJsonFromRes(res);
+  try {
+    const res = await fetchWithTimeout(target, TIMERS.FETCH_TIMEOUT_MS);
+    const data = await parseJsonFromRes(res);
 
-      if (data) {
-        const parsed = provider.parse(data, station);
-        if (parsed) {
-          station._consecutiveFailures = 0;
-          return parsed;
-        }
+    if (data) {
+      const parsed = provider.parse(data, station);
+      if (parsed) {
+        station._consecutiveFailures = 0;
+        return parsed;
       }
-    } catch (_) {
-      // Ignore network or parse failures
     }
+  } catch (_) {
+    // Ignore network or parse failures
   }
 
   station._consecutiveFailures = (station._consecutiveFailures || 0) + 1;

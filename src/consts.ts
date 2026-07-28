@@ -1,4 +1,4 @@
-import type { Station } from "./types";
+import type { Station } from "./types.js";
 
 export const STORAGE_KEYS = {
   THEME: "kajtek_theme",

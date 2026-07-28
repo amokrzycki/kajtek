@@ -9,6 +9,7 @@ import {
 } from "@/catalog";
 import { ICONS } from "@/icons";
 import { notifyState } from "@/state";
+import { escapeHtml } from "@/utils";
 import { handleCustomStationSubmit } from "./form";
 
 let modalEl: HTMLElement | null = null;
@@ -277,19 +278,20 @@ function renderModalBody(): void {
     const row = document.createElement("div");
     row.className = `k-catalog-row${enabled ? " enabled" : ""}`;
 
+    const safeName = escapeHtml(station.name);
     const logoHtml = station.coverUrl
-      ? `<img src="${station.coverUrl}" alt="" class="catalog-thumb" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><div class="catalog-thumb-placeholder" style="display:none;">${station.name.charAt(0)}</div>`
-      : `<div class="catalog-thumb-placeholder">${station.name.charAt(0)}</div>`;
+      ? `<img src="${station.coverUrl}" alt="" class="catalog-thumb" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><div class="catalog-thumb-placeholder" style="display:none;">${escapeHtml(station.name.charAt(0))}</div>`
+      : `<div class="catalog-thumb-placeholder">${escapeHtml(station.name.charAt(0))}</div>`;
 
     row.innerHTML = `
       <div class="catalog-col-info">
         ${logoHtml}
         <div class="catalog-details">
           <div class="catalog-name">
-            ${station.name}
+            ${safeName}
             ${isCustom ? '<span class="badge-custom">Własna</span>' : ""}
           </div>
-          <div class="catalog-sub">${station.short}</div>
+          <div class="catalog-sub">${escapeHtml(station.short)}</div>
         </div>
       </div>
 
