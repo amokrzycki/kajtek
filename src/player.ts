@@ -58,6 +58,11 @@ function handleAudioFailover() {
 radioAudio.addEventListener("error", handleAudioFailover);
 radioAudio.addEventListener("stalled", handleAudioFailover);
 
+if ("mediaSession" in navigator) {
+  navigator.mediaSession.setActionHandler("play", togglePlay);
+  navigator.mediaSession.setActionHandler("pause", togglePlay);
+}
+
 async function fetchWithTimeout(url: string, timeoutMs = TIMERS.FETCH_TIMEOUT_MS): Promise<Response> {
   return fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
 }

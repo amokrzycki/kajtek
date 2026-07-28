@@ -167,6 +167,12 @@
   padding: 0;
 }
 
+html,
+body {
+  background: var(--k-bg);
+  overscroll-behavior-y: none;
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--k-bg-inset) transparent;

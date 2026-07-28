@@ -1,4 +1,4 @@
-import { DEFAULT_BREAK_LABEL } from "./consts.js";
+import { DEFAULT_BREAK_LABEL, STATIONS_WITH_FACTS } from "./consts.js";
 import type { PlaylistResult, Provider, RawTrack, Station, TrackInfo } from "./types.js";
 import { decodeEntities, getFactsLabel } from "./utils.js";
 
@@ -23,7 +23,9 @@ export function getFactsInfo(
   station: Station | null | undefined,
   timestamp: number,
 ): { isFacts: boolean; targetHourStr: string } {
-  return station?.id === "rmf" ? getRmfFactsTimeInfo(timestamp) : { isFacts: false, targetHourStr: "" };
+  return station?.id && STATIONS_WITH_FACTS.includes(station.id)
+    ? getRmfFactsTimeInfo(timestamp)
+    : { isFacts: false, targetHourStr: "" };
 }
 
 function formatBreakStart(timestampSec: number, originalStart?: string | null): string {

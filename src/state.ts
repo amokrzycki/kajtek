@@ -47,6 +47,15 @@ export function notifyState(): void {
 export const radioAudio = new Audio();
 radioAudio.crossOrigin = "anonymous";
 
+if ("mediaSession" in navigator) {
+  radioAudio.addEventListener("play", () => {
+    navigator.mediaSession.playbackState = "playing";
+  });
+  radioAudio.addEventListener("pause", () => {
+    navigator.mediaSession.playbackState = "paused";
+  });
+}
+
 export let sleepInterval: ReturnType<typeof setInterval> | number | null = null;
 export let trackInterval: ReturnType<typeof setInterval> | number | null = null;
 
