@@ -72,9 +72,7 @@ export function updateNowPlayingTrack(track: TrackInfo | null): void {
     navigator.mediaSession.metadata = new MediaMetadata({
       title: titleText,
       artist: artistText,
-      artwork: coverUrl
-        ? [{ src: coverUrl }]
-        : [{ src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+      artwork: coverUrl ? [{ src: coverUrl }] : [{ src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
     });
   }
 }
@@ -242,7 +240,5 @@ function applyTheme(): void {
   document.documentElement.classList.toggle("dark", state.dark);
   els.darkToggle.classList.toggle("on", state.dark);
   localStorage.setItem(STORAGE_KEYS.THEME, state.dark ? "dark" : "light");
-  document
-    .querySelector('meta[name="theme-color"]')
-    ?.setAttribute("content", state.dark ? "#1a1816" : "#eeebe3");
+  document.querySelector('meta[name="theme-color"]')?.setAttribute("content", state.dark ? "#1a1816" : "#eeebe3");
 }
