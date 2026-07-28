@@ -25,16 +25,15 @@
                 fill="none"
                 stroke="currentColor"
                 stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round">
+                stroke-linecap="round">
                 <title>Tryb jasny</title>
-                <circle cx="12" cy="12" r="4" />
+                <circle cx="12" cy="12" r="4"></circle>
                 <path
-                  d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+                  d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
               </svg>
               <svg class="icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                 <title>Tryb ciemny</title>
-                <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" />
+                <path d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z"></path>
               </svg>
             </span>
           </span>
@@ -53,19 +52,11 @@
 
           <div class="np-body">
             <div class="kajtek-stripe" aria-hidden="true">
-              <span>K</span>
-              <span>A</span>
-              <span>J</span>
-              <span>T</span>
-              <span>E</span>
-              <span>K</span>
+              <span>K</span><span>A</span><span>J</span><span>T</span><span>E</span><span>K</span>
             </div>
-            <div id="reel-left" class="tape-reel" aria-hidden="true">
-              <div class="reel-hub"></div>
-            </div>
-            <div id="album-art" class="album-art" data-v="0" aria-hidden="true">
+            <div id="reel-left" class="tape-reel" aria-hidden="true"><div class="reel-hub"></div></div>
+            <div id="album-art" class="album-art empty" aria-hidden="true">
               <span class="album-art-initial">?</span>
-              <div class="album-art-label">— —</div>
             </div>
             <div class="np-info" aria-live="polite">
               <div id="np-short-row" class="np-short-row hidden">
@@ -74,15 +65,12 @@
               </div>
               <div id="np-station" class="np-station empty">wybierz stację</div>
               <div id="np-track" class="np-track">
-                <div class="np-track-inner">
-                  <div id="np-artist" class="np-artist">—</div>
-                  <span id="np-title" class="np-title">—</span>
-                </div>
+                <div id="np-artist" class="np-artist">—</div>
+                <span id="np-title" class="np-title">—</span>
               </div>
             </div>
-            <div id="reel-right" class="tape-reel" aria-hidden="true">
-              <div class="reel-hub"></div>
-            </div>
+            <div id="reel-right" class="tape-reel" aria-hidden="true"><div class="reel-hub"></div></div>
+            <div class="np-tape-scale" aria-hidden="true">END · 100 · 50 · 0 · START</div>
           </div>
 
           <div class="np-controls">
@@ -97,41 +85,47 @@
               id="history-toggle-btn"
               class="history-btn"
               aria-expanded="false"
-              aria-label="Historia odtwarzania">
+              aria-controls="history-panel">
               <span>PROGRAM</span>
-              <span id="history-arrow" class="history-arrow">▼</span>
+              <span class="history-arrow" aria-hidden="true">▼</span>
             </button>
           </div>
 
           <div id="history-panel" class="history-panel">
-            <div id="history-inner" class="history-inner">
-              <div id="history-empty" class="history-empty">Historia odtwarzania będzie dostępna po chwili…</div>
+            <div class="history-inner">
+              <div class="history-head">
+                <span class="k-label">PROGRAM</span>
+                <span class="k-rule"></span>
+                <span id="history-clock" class="history-clock"></span>
+              </div>
+              <div id="history-empty" class="history-empty">Program pojawi się po wybraniu stacji…</div>
               <div id="history-list"></div>
             </div>
           </div>
         </section>
 
         <div class="controls-row">
-          <section id="volume-panel" class="k-panel" aria-label="Panel głośności">
-            <div class="k-label">GŁOŚNOŚĆ</div>
+          <section class="k-panel" aria-label="Panel głośności">
+            <div class="k-head"><span class="k-label">Głośność</span><span class="k-rule"></span></div>
             <div class="volume-row">
-              <button type="button" id="mute-btn" class="mute-btn" aria-label="Wycisz/Włącz dźwięk"></button>
+              <button type="button" id="mute-btn" class="mute-btn" aria-label="Wycisz"></button>
               <div class="vol-wrap">
+                <div id="vol-ladder" class="vol-ladder" aria-hidden="true"></div>
                 <input
                   id="vol-slider"
                   type="range"
                   class="vol-slider"
                   min="0"
                   max="100"
-                  value="72"
+                  value="10"
                   aria-label="Suwak głośności">
               </div>
-              <span id="vol-val" class="vol-val">72</span>
+              <span id="vol-val" class="vol-val">10</span>
             </div>
           </section>
 
           <section class="k-panel" aria-label="Wyłącznik czasowy">
-            <div class="k-label">SLEEP TIMER</div>
+            <div class="k-head"><span class="k-label">Sleep timer</span><span class="k-rule"></span></div>
             <div class="sleep-keys">
               <button type="button" class="sleep-key btn-key" data-min="15" aria-label="Wyłącz za 15 minut">
                 <span class="sleep-val">15</span><span class="sleep-unit">min</span>

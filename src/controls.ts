@@ -1,4 +1,5 @@
 import { setStationFavorite } from "./catalog.js";
+import { VU_COUNT } from "./consts.js";
 import { ICONS } from "./icons.js";
 import { notifyState, radioAudio, setSleepInterval, sleepInterval, state } from "./state.js";
 import { els, updateSleepUI } from "./ui.js";
@@ -40,6 +41,15 @@ export function updateVolume(val: number): void {
     els.muteBtn.classList.toggle("muted", state.muted);
     els.muteBtn.innerHTML = ICONS.vol(state.muted, val);
   }
+  if (els.volLadder) {
+    const lit = Math.round((val / 100) * VU_COUNT);
+    [...els.volLadder.children].forEach((d, i) => {
+      const pct = ((i + 1) / VU_COUNT) * 100;
+      d.classList.toggle("on", i < lit);
+      d.classList.toggle("warn", pct > 60 && pct <= 85);
+      d.classList.toggle("hot", pct > 85);
+    });
+  }
 }
 
 export function toggleMute(): void {
@@ -74,6 +84,15 @@ export function toggleMute(): void {
     if (els.muteBtn) {
       els.muteBtn.classList.toggle("muted", targetMuted);
       els.muteBtn.innerHTML = ICONS.vol(targetMuted, Math.round(currentVal));
+    }
+    if (els.volLadder) {
+      const lit = Math.round((currentVal / 100) * VU_COUNT);
+      [...els.volLadder.children].forEach((d, i) => {
+        const pct = ((i + 1) / VU_COUNT) * 100;
+        d.classList.toggle("on", i < lit);
+        d.classList.toggle("warn", pct > 60 && pct <= 85);
+        d.classList.toggle("hot", pct > 85);
+      });
     }
 
     if (progress < 1) {

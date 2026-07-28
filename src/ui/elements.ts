@@ -17,13 +17,13 @@ export const els = {
   npTitle: document.getElementById("np-title") as HTMLSpanElement,
   playBtn: document.getElementById("play-btn") as HTMLButtonElement,
   historyToggleBtn: document.getElementById("history-toggle-btn") as HTMLButtonElement,
-  historyArrow: document.getElementById("history-arrow") as HTMLSpanElement,
   historyPanel: document.getElementById("history-panel") as HTMLDivElement,
   historyEmpty: document.getElementById("history-empty") as HTMLDivElement,
   historyList: document.getElementById("history-list") as HTMLDivElement,
   volumePanel: document.getElementById("volume-panel") as HTMLDivElement,
   muteBtn: document.getElementById("mute-btn") as HTMLButtonElement,
   volSlider: document.getElementById("vol-slider") as HTMLInputElement,
+  volLadder: document.getElementById("vol-ladder") as HTMLDivElement,
   volVal: document.getElementById("vol-val") as HTMLSpanElement,
   sleepKeys: document.querySelectorAll<HTMLButtonElement>(".sleep-key"),
   sleepCount: document.getElementById("sleep-count") as HTMLDivElement,
@@ -31,6 +31,21 @@ export const els = {
 };
 
 export function initVolumeControlUI(): void {
+  if (els.volLadder) {
+    for (let i = 0; i < VU_COUNT; i++) {
+      const d = document.createElement("span");
+      d.className = "vol-led";
+      els.volLadder.appendChild(d);
+    }
+
+    const lit = Math.round((state.vol / 100) * VU_COUNT);
+    [...els.volLadder.children].forEach((d, i) => {
+      const pct = ((i + 1) / VU_COUNT) * 100;
+      d.classList.toggle("on", i < lit);
+      d.classList.toggle("warn", pct > 60 && pct <= 85);
+      d.classList.toggle("hot", pct > 85);
+    });
+  }
   if (!isIOS()) return;
   state.vol = 100;
   els.volumePanel.classList.add("hidden");

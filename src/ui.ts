@@ -181,7 +181,6 @@ export function updateUI(
   els.historyToggleBtn.disabled = isGeneric;
   els.historyToggleBtn.classList.toggle("disabled", isGeneric);
   els.historyToggleBtn.setAttribute("aria-expanded", String(state.showHistory));
-  els.historyArrow.textContent = state.showHistory ? "▲" : "▼";
   els.historyPanel.classList.toggle("open", state.showHistory);
   updateHistoryUI();
 

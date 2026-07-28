@@ -88,7 +88,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
 
     const header = document.createElement("div");
     header.className = "section-header";
-    header.innerHTML = `<span class="section-title">${sec.label}</span><span class="section-count">${sec.list.length}</span>`;
+    header.innerHTML = `<span class="section-title">${sec.label}</span><span class="k-rule"></span><span class="section-count">${sec.list.length}</span>`;
     secDiv.appendChild(header);
 
     if (sec.list.length === 0) {
