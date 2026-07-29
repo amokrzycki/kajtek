@@ -56,14 +56,9 @@ if ("mediaSession" in navigator) {
   });
 }
 
-export let sleepInterval: ReturnType<typeof setInterval> | number | null = null;
-export let trackInterval: ReturnType<typeof setInterval> | number | null = null;
-
-export function setSleepInterval(id: ReturnType<typeof setInterval> | number | null) {
-  sleepInterval = id;
-}
-export function setTrackInterval(id: ReturnType<typeof setInterval> | number | null) {
-  trackInterval = id;
-}
+export const intervals = {
+  sleep: null as ReturnType<typeof setInterval> | number | null,
+  track: null as ReturnType<typeof setInterval> | number | null,
+};
 
 export type { AppState, TrackInfo };

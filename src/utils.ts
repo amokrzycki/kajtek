@@ -32,7 +32,8 @@ export const getFactsLabel = (targetHourStr: string) => `Serwis informacyjny (~$
 export const capitalizeFirstLetter = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
 export function escapeHtml(str: string): string {
-  return str.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
+  const map: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+  return str.replace(/[&<>"']/g, (c) => map[c] ?? c);
 }
 
 export function resolveProtocolRelativeUrl(url: string, base: string): string {

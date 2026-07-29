@@ -127,25 +127,38 @@
   height: 9px;
   border-radius: 1px;
   background: var(--k-vol-off);
+  box-shadow: var(--k-vol-inset);
   transition:
     background var(--k-tr-fast),
     box-shadow var(--k-tr-fast);
 }
 
 .vol-led.on {
-  background: var(--k-vol-1);
+  --k-vol-bg: var(--k-vol-1);
+  --k-vol-glow: var(--k-vol-glow-1);
+  background: var(--k-vol-bg);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.7),
+    0 0 5px var(--k-vol-glow),
+    0 0 2px var(--k-vol-glow),
+    0 1px 2px rgba(0, 0, 0, 0.12);
 }
 
 .vol-led.on.warn {
-  background: var(--k-vol-2);
+  --k-vol-bg: var(--k-vol-2);
+  --k-vol-glow: var(--k-vol-glow-2);
 }
 
 .vol-led.on.hot {
-  background: var(--k-vol-3);
+  --k-vol-bg: var(--k-vol-3);
+  --k-vol-glow: var(--k-vol-glow-3);
 }
 
 .dark .vol-led.on {
-  box-shadow: 0 0 4px currentColor;
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.5),
+    0 0 6px var(--k-vol-glow),
+    0 0 2px var(--k-vol-glow);
 }
 
 .vol-slider {
