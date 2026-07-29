@@ -2,7 +2,7 @@ import { getOrderedStations } from "./catalog.js";
 import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
 import { genericProvider, getFactsInfo, getProvider } from "./providers.js";
-import { notifyState, radioAudio, setTrackInterval, state, trackInterval } from "./state.js";
+import { intervals, notifyState, radioAudio, state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import {
   resolveAlbumCoverUrl,
@@ -77,10 +77,6 @@ if ("mediaSession" in navigator) {
   navigator.mediaSession.setActionHandler("nexttrack", () => navigateStation(1));
 }
 
-async function fetchWithTimeout(url: string, timeoutMs = TIMERS.FETCH_TIMEOUT_MS): Promise<Response> {
-  return fetch(url, { signal: AbortSignal.timeout(timeoutMs) });
-}
-
 async function parseJsonFromRes(res: Response): Promise<unknown> {
   if (!res.ok) return null;
   const json = await res.json();
@@ -102,7 +98,7 @@ async function ensureStationMetadata(station: Station) {
   if (!station._streamsFetched) {
     station._streamsFetched = true;
     try {
-      const res = await fetchWithTimeout(`${stationBaseUrl}/streams`, TIMERS.FETCH_TIMEOUT_MS);
+      const res = await fetch(`${stationBaseUrl}/streams`, { signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS) });
       const data = (await parseJsonFromRes(res)) as { playlistMp3?: { item_mp3?: string | string[] } } | null;
       const rawMp3 = data?.playlistMp3?.item_mp3;
       const mp3Urls = Array.isArray(rawMp3) ? rawMp3 : rawMp3 ? [rawMp3] : [];
@@ -115,7 +111,7 @@ async function ensureStationMetadata(station: Station) {
   if (!station._coverFetched) {
     station._coverFetched = true;
     try {
-      const res = await fetchWithTimeout(stationBaseUrl, TIMERS.FETCH_TIMEOUT_MS);
+      const res = await fetch(stationBaseUrl, { signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS) });
       const data = (await parseJsonFromRes(res)) as { img?: unknown } | null;
       if (typeof data?.img === "string" && data.img.trim().length > 0) {
         station.coverUrl = resolveProtocolRelativeUrl(data.img.trim(), API_ENDPOINTS.RMF_STATIC_BASE);
@@ -137,7 +133,7 @@ export async function fetchPlaylist(station: Station) {
   const target = `${station.apiBaseUrl}/playlist`;
 
   try {
-    const res = await fetchWithTimeout(target, TIMERS.FETCH_TIMEOUT_MS);
+    const res = await fetch(target, { signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS) });
     const data = await parseJsonFromRes(res);
 
     if (data) {
@@ -242,20 +238,18 @@ async function refreshTrackInfo() {
 }
 
 function stopTrackRotation() {
-  if (trackInterval) clearInterval(trackInterval);
-  setTrackInterval(null);
+  if (intervals.track) clearInterval(intervals.track);
+  intervals.track = null;
 }
 
 function startTrackRotation() {
   stopTrackRotation();
   refreshTrackInfo();
   if (state.station?.apiBaseUrl) {
-    setTrackInterval(
-      setInterval(() => {
-        checkRealtimeTrackState();
-        refreshTrackInfo();
-      }, TIMERS.TRACK_POLL_MS),
-    );
+    intervals.track = setInterval(() => {
+      checkRealtimeTrackState();
+      refreshTrackInfo();
+    }, TIMERS.TRACK_POLL_MS);
   }
 }
 

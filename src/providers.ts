@@ -254,9 +254,9 @@ export const PROVIDERS: Record<string, Provider> = {
 };
 
 export function getProvider(station?: Station | null): Provider {
-  if (station?.provider && PROVIDERS[station.provider]) {
-    const prov = PROVIDERS[station.provider];
-    if (prov) return prov;
+  const provider = station?.provider && PROVIDERS[station.provider];
+  if (provider) {
+    return provider;
   }
   if (station?.apiBaseUrl?.includes("rmf")) {
     return rmfProvider;

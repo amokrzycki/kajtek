@@ -2,17 +2,10 @@ import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.j
 import { currentTrack, selectStation, togglePlay } from "./player.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { notifyState, state, subscribeState } from "./state.js";
-import type { Station } from "./types.js";
 import { els, initVolumeControlUI, initVU, startHistoryClock, triggerHistorySlideIn, updateUI } from "./ui.js";
 
-function onSelect(s: Station) {
-  selectStation(s);
-}
-function onToggleFav(id: string) {
-  toggleFav(id);
-}
 function refresh() {
-  updateUI(currentTrack(), onSelect, onToggleFav);
+  updateUI(currentTrack(), selectStation, toggleFav);
 }
 
 function setVersion() {

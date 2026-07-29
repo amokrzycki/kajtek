@@ -1,6 +1,6 @@
 import { setStationFavorite } from "./catalog.js";
 import { ICONS } from "./icons.js";
-import { notifyState, radioAudio, setSleepInterval, sleepInterval, state } from "./state.js";
+import { intervals, notifyState, radioAudio, state } from "./state.js";
 import { els, renderVolLadder, updateSleepUI } from "./ui.js";
 import { isIOS } from "./utils.js";
 
@@ -98,21 +98,19 @@ export function setSleepTimer(minutes: number): void {
 
   state.sleepMin = minutes;
   state.sleepSec = minutes * 60;
-  if (sleepInterval) clearInterval(sleepInterval);
+  if (intervals.sleep) clearInterval(intervals.sleep);
 
-  setSleepInterval(
-    setInterval(() => {
-      if (state.sleepSec !== null && state.sleepSec <= 0) {
-        state.playing = false;
-        radioAudio.pause();
-        cancelSleepTimer();
-        notifyState();
-      } else if (state.sleepSec !== null) {
-        state.sleepSec--;
-        updateSleepUI();
-      }
-    }, 1000),
-  );
+  intervals.sleep = setInterval(() => {
+    if (state.sleepSec !== null && state.sleepSec <= 0) {
+      state.playing = false;
+      radioAudio.pause();
+      cancelSleepTimer();
+      notifyState();
+    } else if (state.sleepSec !== null) {
+      state.sleepSec--;
+      updateSleepUI();
+    }
+  }, 1000);
 
   notifyState();
 }
@@ -120,8 +118,8 @@ export function setSleepTimer(minutes: number): void {
 export function cancelSleepTimer(): void {
   state.sleepMin = null;
   state.sleepSec = null;
-  if (sleepInterval) clearInterval(sleepInterval);
-  setSleepInterval(null);
+  if (intervals.sleep) clearInterval(intervals.sleep);
+  intervals.sleep = null;
   notifyState();
 }
 
