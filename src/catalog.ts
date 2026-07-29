@@ -231,3 +231,10 @@ export function getAllKnownStations(): Station[] {
 export function getEnabledStations(): Station[] {
   return getAllKnownStations().filter((s) => isStationEnabled(s.id));
 }
+
+export function getOrderedStations(): Station[] {
+  const enabled = getEnabledStations();
+  const favs = enabled.filter((s) => state.favs.has(s.id));
+  const others = enabled.filter((s) => !state.favs.has(s.id));
+  return [...favs, ...others];
+}

@@ -69,10 +69,14 @@ export function updateNowPlayingTrack(track: TrackInfo | null): void {
 
   if ("mediaSession" in navigator) {
     const coverUrl = resolveAlbumCoverUrl(track, state.station);
+    const usesTrackCover = !track?.isLiveBreak && Boolean(track?.coverUrl?.trim());
+    const coverSize = usesTrackCover ? "272x272" : "600x600";
     navigator.mediaSession.metadata = new MediaMetadata({
       title: titleText,
       artist: artistText,
-      artwork: coverUrl ? [{ src: coverUrl }] : [{ src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+      artwork: coverUrl
+        ? [{ src: coverUrl, sizes: coverSize }]
+        : [{ src: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
     });
   }
 }

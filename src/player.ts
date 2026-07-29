@@ -1,3 +1,4 @@
+import { getOrderedStations } from "./catalog.js";
 import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
 import { genericProvider, getFactsInfo, getProvider } from "./providers.js";
@@ -58,9 +59,22 @@ function handleAudioFailover() {
 radioAudio.addEventListener("error", handleAudioFailover);
 radioAudio.addEventListener("stalled", handleAudioFailover);
 
+function navigateStation(direction: 1 | -1) {
+  const current = state.station;
+  if (!current) return;
+  const list = getOrderedStations();
+  const idx = list.findIndex((s) => s.id === current.id);
+  if (idx === -1) return;
+  const nextIdx = (idx + direction + list.length) % list.length;
+  const next = list[nextIdx];
+  if (next) selectStation(next);
+}
+
 if ("mediaSession" in navigator) {
   navigator.mediaSession.setActionHandler("play", togglePlay);
   navigator.mediaSession.setActionHandler("pause", togglePlay);
+  navigator.mediaSession.setActionHandler("previoustrack", () => navigateStation(-1));
+  navigator.mediaSession.setActionHandler("nexttrack", () => navigateStation(1));
 }
 
 async function fetchWithTimeout(url: string, timeoutMs = TIMERS.FETCH_TIMEOUT_MS): Promise<Response> {
