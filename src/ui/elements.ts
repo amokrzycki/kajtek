@@ -53,7 +53,7 @@ export function initVolumeControlUI(): void {
   }
   if (!isIOS()) return;
   state.vol = 100;
-  els.volumePanel.classList.add("hidden");
+  els.volumePanel?.classList.add("hidden");
 }
 
 export function initVU(): void {
