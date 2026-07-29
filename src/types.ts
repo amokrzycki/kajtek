@@ -60,6 +60,7 @@ export interface RawTrack {
   name?: string;
   song?: string;
   coverUrl?: string;
+  coverBigUrl?: string;
   current?: RawTrack;
   now?: RawTrack;
   upcoming?: RawTrack[];

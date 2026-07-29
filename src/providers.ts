@@ -97,7 +97,7 @@ export const rmfProvider: Provider = {
         start: item.start || null,
         endTimestamp: endTs,
         length: effectiveLen,
-        coverUrl: item.coverUrl || "",
+        coverUrl: item.coverBigUrl || item.coverUrl || "",
       };
       if (item.timestamp !== undefined) {
         track.timestamp = item.timestamp;
