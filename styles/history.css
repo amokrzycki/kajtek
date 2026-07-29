@@ -38,6 +38,58 @@
   background: repeating-linear-gradient(90deg, var(--k-disp-rule) 0 4px, transparent 4px 8px);
 }
 
+.history-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.history-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-label);
+  letter-spacing: var(--k-tracking-label);
+  color: var(--k-disp-dim);
+  background: none;
+  border: none;
+  padding: 3px 8px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition:
+    background var(--k-tr),
+    color var(--k-tr);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.history-tab:hover {
+  color: var(--k-disp-text-2);
+}
+
+.history-tab.active {
+  color: var(--k-disp-text);
+  background: var(--k-disp-hair);
+}
+
+.fav-tab-count {
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-tag);
+  font-variant-numeric: tabular-nums;
+  color: var(--k-disp-dim);
+  background: var(--k-bg-inset);
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+
+.history-view {
+  display: none;
+}
+
+.history-view.active {
+  display: block;
+}
+
 .history-clock {
   font-family: var(--k-font-mono);
   font-size: 0.58rem;
@@ -319,6 +371,55 @@
 
 .pl-item.is-break:not(.is-past) .pl-tape-icon {
   color: var(--k-disp-next);
+}
+
+.pl-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.pl-fav-star.sc-star {
+  padding: 2px;
+  color: var(--k-disp-dim);
+}
+
+.pl-fav-star.sc-star.on {
+  color: var(--k-led-active);
+}
+
+.pl-fav-star.sc-star:not(:disabled):hover {
+  color: var(--k-disp-accent);
+}
+
+/* ——— wiersz ulubionych ——— */
+
+.fav-item {
+  grid-template-columns: 12ch 14px 1fr auto auto;
+}
+
+.fav-time {
+  color: var(--k-disp-text-3);
+}
+
+.fav-dot {
+  background: var(--k-led-active);
+}
+
+.fav-station {
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-data);
+  color: var(--k-disp-dim);
+  white-space: nowrap;
+}
+
+.fav-star.sc-star {
+  padding: 2px;
+  color: var(--k-led-active);
+}
+
+.fav-star.sc-star:not(:disabled):hover {
+  color: var(--k-disp-accent);
 }
 
 @keyframes pl-slide-in {

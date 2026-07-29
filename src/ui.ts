@@ -6,6 +6,7 @@ import { genericProvider, getProvider } from "./providers.js";
 import { state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import { els, initVolumeControlUI, initVU, renderVolLadder } from "./ui/elements.js";
+import { applyHistoryTabVisibility, renderFavoritesUI } from "./ui/favorites.js";
 import { setHistoryLoadingState, triggerHistorySlideIn, updateHistoryUI } from "./ui/history.js";
 import { renderStationList } from "./ui/stations.js";
 import { triggerFade } from "./utils.js";
@@ -17,6 +18,7 @@ const ART_V: Record<string, string> = {
   "rmf-classic": "2",
 };
 
+export { toggleFavTrack } from "./ui/favorites.js";
 export {
   els,
   initVolumeControlUI,
@@ -203,6 +205,8 @@ export function updateUI(
   els.historyToggleBtn.setAttribute("aria-expanded", String(state.showHistory));
   els.historyPanel.classList.toggle("open", state.showHistory);
   updateHistoryUI();
+  renderFavoritesUI();
+  applyHistoryTabVisibility();
 
   if (shouldRenderStationList()) {
     renderStationList(onSelect, onToggleFav);

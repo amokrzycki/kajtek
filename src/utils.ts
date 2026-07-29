@@ -1,3 +1,5 @@
+import type { TrackInfo } from "./types.js";
+
 // reuse static DOMParser instance instead of allocating DOM elements per string parse
 const parser = new DOMParser();
 
@@ -34,6 +36,21 @@ export const capitalizeFirstLetter = (str: string) => str.charAt(0).toUpperCase(
 export function escapeHtml(str: string): string {
   const map: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
   return str.replace(/[&<>"']/g, (c) => map[c] ?? c);
+}
+
+const PL_MONTHS = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
+
+export function formatFavDateTime(timestampMs: number): string {
+  const d = new Date(timestampMs);
+  const day = d.getDate();
+  const month = PL_MONTHS[d.getMonth()];
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mm = String(d.getMinutes()).padStart(2, "0");
+  return `${day} ${month} ${hh}:${mm}`;
+}
+
+export function getTrackKey(t: TrackInfo): string {
+  return t.timestamp ? `ts_${t.timestamp}` : `key_${t.start || ""}_${t.artist}_${t.title}_${t.label || ""}`;
 }
 
 export function resolveProtocolRelativeUrl(url: string, base: string): string {

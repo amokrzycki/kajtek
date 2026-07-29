@@ -1,7 +1,7 @@
 declare const APP_VERSION: string;
 
 import { DEFAULT_VERSION, STORAGE_KEYS } from "./consts.js";
-import type { AppState, TrackInfo } from "./types.js";
+import type { AppState, FavTrack, TrackInfo } from "./types.js";
 
 function getStoredFavs(): string[] {
   try {
@@ -10,6 +10,19 @@ function getStoredFavs(): string[] {
   } catch (_) {
     return [];
   }
+}
+
+function getStoredFavTracks(): FavTrack[] {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAV_TRACKS) || "[]");
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+export function persistFavTracks(): void {
+  localStorage.setItem(STORAGE_KEYS.FAV_TRACKS, JSON.stringify(state.favTracks));
 }
 
 export const state: AppState = {
@@ -26,6 +39,8 @@ export const state: AppState = {
   liveTrack: null,
   history: [],
   showHistory: false,
+  historyTab: "program",
+  favTracks: getStoredFavTracks(),
   viewMode: (localStorage.getItem(STORAGE_KEYS.VIEW_MODE) as "list" | "grid") || "list",
   version: typeof APP_VERSION !== "undefined" ? APP_VERSION : DEFAULT_VERSION,
 };

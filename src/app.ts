@@ -2,7 +2,17 @@ import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.j
 import { currentTrack, selectStation, togglePlay } from "./player.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { notifyState, state, subscribeState } from "./state.js";
-import { els, initVolumeControlUI, initVU, startHistoryClock, triggerHistorySlideIn, updateUI } from "./ui.js";
+import { removeFavTrackByKey } from "./ui/favorites.js";
+import {
+  els,
+  initVolumeControlUI,
+  initVU,
+  startHistoryClock,
+  toggleFavTrack,
+  triggerHistorySlideIn,
+  updateUI,
+} from "./ui.js";
+import { getTrackKey } from "./utils.js";
 
 function refresh() {
   updateUI(currentTrack(), selectStation, toggleFav);
@@ -40,6 +50,31 @@ function attachEvents() {
 
   els.sleepKeys.forEach((btn) => {
     btn.addEventListener("click", () => setSleepTimer(Number(btn.getAttribute("data-min"))));
+  });
+
+  els.historyTabProgram.addEventListener("click", () => {
+    state.historyTab = "program";
+    notifyState();
+  });
+
+  els.historyTabFavorites.addEventListener("click", () => {
+    state.historyTab = "favorites";
+    notifyState();
+  });
+
+  els.historyList.addEventListener("click", (e: Event) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".pl-fav-star");
+    if (!btn) return;
+    const key = btn.getAttribute("data-key");
+    const track = state.history.find((t) => getTrackKey(t) === key);
+    if (track) toggleFavTrack(track, state.station);
+  });
+
+  els.favoritesList.addEventListener("click", (e: Event) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".fav-star");
+    if (!btn) return;
+    const key = btn.getAttribute("data-key");
+    if (key) removeFavTrackByKey(key);
   });
 }
 
