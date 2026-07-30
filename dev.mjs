@@ -14,6 +14,7 @@ const ctx = await context({
   ],
   bundle: true,
   sourcemap: true,
+  splitting: true,
   outdir: "dist",
   format: "esm",
   define: {

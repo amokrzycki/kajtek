@@ -1,3 +1,4 @@
+import type Hls from "hls.js";
 import { getOrderedStations } from "./catalog.js";
 import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
@@ -14,15 +15,71 @@ import {
 import { getFactsLabel, resolveProtocolRelativeUrl } from "./utils.js";
 
 let failoverTimestamps: number[] = [];
+let hlsInstance: Hls | null = null;
 
 function getCurrentStreamUrl(station: Station): string {
   const streams = station._streams || [station.stream];
   return streams[station._currentStreamIndex || 0] || station.stream;
 }
 
-function playStreamUrl(url: string | undefined): void {
+function destroyHls(): void {
+  hlsInstance?.destroy();
+  hlsInstance = null;
+}
+
+function isHlsStream(url: string): boolean {
+  return url.includes(".m3u8");
+}
+
+const MAX_HLS_RECOVERY_ATTEMPTS = 3;
+
+async function attachHlsStream(url: string): Promise<void> {
+  const { default: Hls } = await import("hls.js");
+  if (!Hls.isSupported()) {
+    // Real native HLS support (Safari/iOS) — MediaSource-based hls.js isn't needed there.
+    radioAudio.src = url;
+    return;
+  }
+  const hls = new Hls();
+  hlsInstance = hls;
+  let recoveryAttempts = 0;
+
+  hls.on(Hls.Events.FRAG_LOADED, () => {
+    recoveryAttempts = 0;
+  });
+
+  hls.on(Hls.Events.ERROR, (_event, data) => {
+    if (!data.fatal) return;
+    console.warn("[HLS] fatal error", data.type, data.details);
+    if (recoveryAttempts >= MAX_HLS_RECOVERY_ATTEMPTS) {
+      handleAudioFailover();
+      return;
+    }
+    recoveryAttempts++;
+    switch (data.type) {
+      case Hls.ErrorTypes.NETWORK_ERROR:
+        hls.startLoad();
+        break;
+      case Hls.ErrorTypes.MEDIA_ERROR:
+        hls.recoverMediaError();
+        break;
+      default:
+        handleAudioFailover();
+        break;
+    }
+  });
+  hls.loadSource(url);
+  hls.attachMedia(radioAudio);
+}
+
+async function playStreamUrl(url: string | undefined): Promise<void> {
   if (!url) return;
-  radioAudio.src = url;
+  destroyHls();
+  if (isHlsStream(url)) {
+    await attachHlsStream(url);
+  } else {
+    radioAudio.src = url;
+  }
   applyAudioVolume();
   radioAudio.play().catch(() => {
     // Ignore autoplay restriction errors
@@ -56,8 +113,12 @@ function handleAudioFailover() {
   playStreamUrl(streams[nextIdx]);
 }
 
-radioAudio.addEventListener("error", handleAudioFailover);
-radioAudio.addEventListener("stalled", handleAudioFailover);
+radioAudio.addEventListener("error", () => {
+  if (!hlsInstance) handleAudioFailover();
+});
+radioAudio.addEventListener("stalled", () => {
+  if (!hlsInstance) handleAudioFailover();
+});
 
 function navigateStation(direction: 1 | -1) {
   const current = state.station;
