@@ -84,6 +84,7 @@
 
 .history-view.active {
   display: block;
+  animation: history-view-in 220ms var(--k-ease-mech) both;
 }
 
 .history-clock {
@@ -171,7 +172,7 @@
   opacity: 0.85;
 }
 
-.history-panel.slide-in .pl-item {
+.history-panel.slide-in #history-list .pl-item {
   animation: pl-slide-in 280ms var(--k-ease-mech) both;
 }
 
@@ -397,7 +398,12 @@
 /* ——— wiersz ulubionych ——— */
 
 .fav-item {
-  grid-template-columns: 12ch 14px 1fr auto auto;
+  grid-template-columns: 12ch 14px 1fr auto;
+}
+
+.fav-item .pl-track {
+  flex-direction: column;
+  gap: 1px;
 }
 
 .fav-time {
@@ -415,6 +421,22 @@
   white-space: nowrap;
 }
 
+.fav-goto {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 2px;
+  color: var(--k-disp-dim);
+  cursor: pointer;
+  transition: color var(--k-tr);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.fav-goto:hover {
+  color: var(--k-disp-accent);
+}
+
 .fav-star.sc-star {
   padding: 2px;
   color: var(--k-led-active);
@@ -422,6 +444,17 @@
 
 .fav-star.sc-star:not(:disabled):hover {
   color: var(--k-disp-accent);
+}
+
+@keyframes history-view-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @keyframes pl-slide-in {

@@ -21,6 +21,7 @@ export function toggleFavTrack(t: TrackInfo, station: Station | null): void {
       artist: t.artist,
       title: t.title,
       stationTag: station?.name || "",
+      stationId: station?.id || "",
     });
     state.favTracks.sort((a, b) => b.timestamp - a.timestamp);
   }
@@ -45,9 +46,12 @@ function favRowHtml(f: FavTrack): string {
           <span class="pl-sep">·</span>
           <span class="pl-title">${escapeHtml(f.title)}</span>
         </div>
+        <span class="fav-station">${escapeHtml(f.stationTag)}</span>
       </div>
-      <span class="fav-station">${escapeHtml(f.stationTag)}</span>
-      <button type="button" class="sc-star fav-star on" data-key="${f.key}" aria-label="Usuń z ulubionych">${ICONS.star(true)}</button>
+      <div class="pl-actions">
+        <button type="button" class="fav-goto" data-station-id="${escapeHtml(f.stationId)}" aria-label="Przejdź do stacji ${escapeHtml(f.stationTag)}">${ICONS.chevron}</button>
+        <button type="button" class="sc-star fav-star on" data-key="${f.key}" aria-label="Usuń z ulubionych">${ICONS.star(true)}</button>
+      </div>
     </div>
   `;
 }

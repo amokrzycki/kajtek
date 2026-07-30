@@ -1,3 +1,4 @@
+import { getAllKnownStations } from "./catalog.js";
 import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
 import { currentTrack, selectStation, togglePlay } from "./player.js";
 import { genericProvider, getProvider } from "./providers.js";
@@ -71,10 +72,21 @@ function attachEvents() {
   });
 
   els.favoritesList.addEventListener("click", (e: Event) => {
-    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".fav-star");
-    if (!btn) return;
-    const key = btn.getAttribute("data-key");
-    if (key) removeFavTrackByKey(key);
+    const target = e.target as HTMLElement;
+
+    const starBtn = target.closest<HTMLButtonElement>(".fav-star");
+    if (starBtn) {
+      const key = starBtn.getAttribute("data-key");
+      if (key) removeFavTrackByKey(key);
+      return;
+    }
+
+    const gotoBtn = target.closest<HTMLButtonElement>(".fav-goto");
+    if (gotoBtn) {
+      const stationId = gotoBtn.getAttribute("data-station-id");
+      const station = getAllKnownStations().find((s) => s.id === stationId);
+      if (station) selectStation(station);
+    }
   });
 }
 

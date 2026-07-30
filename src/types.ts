@@ -93,6 +93,7 @@ export interface FavTrack {
   artist: string;
   title: string;
   stationTag: string;
+  stationId: string;
 }
 
 export interface AppState {
