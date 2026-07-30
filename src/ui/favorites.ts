@@ -37,7 +37,7 @@ export function removeFavTrackByKey(key: string): void {
 
 function favRowHtml(f: FavTrack): string {
   return `
-    <div class="pl-item fav-item" data-key="${f.key}">
+    <div class="pl-item fav-item" data-key="${escapeHtml(f.key)}">
       <span class="pl-time fav-time">${formatFavDateTime(f.timestamp)}</span>
       <span class="pl-dot fav-dot"></span>
       <div class="pl-track">
@@ -50,7 +50,7 @@ function favRowHtml(f: FavTrack): string {
       </div>
       <div class="pl-actions">
         <button type="button" class="fav-goto" data-station-id="${escapeHtml(f.stationId)}" aria-label="Przejdź do stacji ${escapeHtml(f.stationTag)}">${ICONS.chevron}</button>
-        <button type="button" class="sc-star fav-star on" data-key="${f.key}" aria-label="Usuń z ulubionych">${ICONS.star(true)}</button>
+        <button type="button" class="sc-star fav-star on" data-key="${escapeHtml(f.key)}" aria-label="Usuń z ulubionych">${ICONS.star(true)}</button>
       </div>
     </div>
   `;

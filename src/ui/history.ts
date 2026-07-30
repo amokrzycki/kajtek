@@ -2,7 +2,7 @@ import { TIMERS } from "@/consts.js";
 import { ICONS } from "@/icons.js";
 import { state } from "@/state.js";
 import type { TrackInfo } from "@/types.js";
-import { formatDuration, getTrackKey } from "@/utils.js";
+import { escapeHtml, formatDuration, getTrackKey } from "@/utils.js";
 import { els } from "./elements.js";
 import { isTrackFavorited } from "./favorites.js";
 
@@ -74,7 +74,7 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
       isPast || isCurrent
         ? `<div class="pl-actions">
             <span class="pl-dur">${durStr}</span>
-            <button type="button" class="sc-star pl-fav-star${isTrackFavorited(t) ? " on" : ""}" data-key="${getTrackKey(t)}" aria-label="${isTrackFavorited(t) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">${ICONS.star(isTrackFavorited(t))}</button>
+            <button type="button" class="sc-star pl-fav-star${isTrackFavorited(t) ? " on" : ""}" data-key="${escapeHtml(getTrackKey(t))}" aria-label="${isTrackFavorited(t) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">${ICONS.star(isTrackFavorited(t))}</button>
           </div>`
         : `<span class="pl-dur">${durStr}</span>`
     }
