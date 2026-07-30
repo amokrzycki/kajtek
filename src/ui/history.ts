@@ -2,8 +2,9 @@ import { TIMERS } from "@/consts.js";
 import { ICONS } from "@/icons.js";
 import { state } from "@/state.js";
 import type { TrackInfo } from "@/types.js";
-import { formatDuration } from "@/utils.js";
+import { escapeHtml, formatDuration, getTrackKey } from "@/utils.js";
 import { els } from "./elements.js";
+import { isTrackFavorited } from "./favorites.js";
 
 let slideTimer: number | undefined;
 let clearTimer: number | undefined;
@@ -31,11 +32,7 @@ export function setHistoryLoadingState(loading: boolean): void {
   els.historyList.classList.toggle("is-loading", loading);
 }
 
-function getTrackKey(t: TrackInfo): string {
-  return t.timestamp ? `ts_${t.timestamp}` : `key_${t.start || ""}_${t.artist}_${t.title}_${t.label || ""}`;
-}
-
-function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean): string {
+function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean, isPast: boolean): string {
   if (t.isBreak) {
     const breakDur = t.gapSec
       ? t.gapSec >= 60
@@ -73,7 +70,14 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
         <span class="pl-title">${t.title}</span>
       </div>
     </div>
-    <span class="pl-dur">${durStr}</span>
+    ${
+      isPast || isCurrent
+        ? `<div class="pl-actions">
+            <span class="pl-dur">${durStr}</span>
+            <button type="button" class="sc-star pl-fav-star${isTrackFavorited(t) ? " on" : ""}" data-key="${escapeHtml(getTrackKey(t))}" aria-label="${isTrackFavorited(t) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">${ICONS.star(isTrackFavorited(t))}</button>
+          </div>`
+        : `<span class="pl-dur">${durStr}</span>`
+    }
   `;
 }
 
@@ -169,6 +173,7 @@ export function updateHistoryUI(animateSlideIn = false): void {
       isCurrent,
       isNext,
       isPast,
+      isPast || isCurrent ? isTrackFavorited(t) : false,
     ]),
   );
 
@@ -216,7 +221,7 @@ export function updateHistoryUI(animateSlideIn = false): void {
         child.style.viewTransitionName = vtName;
         child.style.animationDelay = delayStr;
         child.className = `pl-item ${item.statusCls}${breakCls}`;
-        child.innerHTML = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext);
+        child.innerHTML = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext, item.isPast);
 
         const currentNodes = Array.from(els.historyList.children);
         if (idx < currentNodes.length && currentNodes[idx]) {
@@ -233,7 +238,7 @@ export function updateHistoryUI(animateSlideIn = false): void {
           child.className = newClass;
         }
 
-        const newInner = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext);
+        const newInner = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext, item.isPast);
         if (child.innerHTML !== newInner) {
           child.innerHTML = newInner;
         }

@@ -3,6 +3,7 @@ import type { Station } from "./types.js";
 export const STORAGE_KEYS = {
   THEME: "kajtek_theme",
   FAVS: "kajtek_favs",
+  FAV_TRACKS: "kajtek_fav_tracks",
   STATION_PREFS: "kajtek_station_prefs",
   RMF_CATALOG_CACHE: "kajtek_rmf_catalog",
   CUSTOM_STATIONS: "kajtek_custom_stations",

@@ -87,6 +87,15 @@ export interface TrackInfo {
   coverUrl?: string;
 }
 
+export interface FavTrack {
+  key: string;
+  timestamp: number;
+  artist: string;
+  title: string;
+  stationTag: string;
+  stationId: string;
+}
+
 export interface AppState {
   dark: boolean;
   station: Station | null;
@@ -99,6 +108,8 @@ export interface AppState {
   liveTrack: TrackInfo | null;
   history: TrackInfo[];
   showHistory: boolean;
+  historyTab: "program" | "favorites";
+  favTracks: FavTrack[];
   viewMode: "list" | "grid";
   version: string;
 }

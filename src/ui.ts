@@ -6,6 +6,7 @@ import { genericProvider, getProvider } from "./providers.js";
 import { state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import { els, initVolumeControlUI, initVU, renderVolLadder } from "./ui/elements.js";
+import { applyHistoryTabVisibility, renderFavoritesUI } from "./ui/favorites.js";
 import { setHistoryLoadingState, triggerHistorySlideIn, updateHistoryUI } from "./ui/history.js";
 import { renderStationList } from "./ui/stations.js";
 import { triggerFade } from "./utils.js";
@@ -17,6 +18,14 @@ const ART_V: Record<string, string> = {
   "rmf-classic": "2",
 };
 
+let historyPanelWasOpen = false;
+els.historyPanel.addEventListener("transitionend", (e: TransitionEvent) => {
+  if (e.target === els.historyPanel && e.propertyName === "max-height" && state.showHistory) {
+    els.historyPanel.style.maxHeight = "none";
+  }
+});
+
+export { toggleFavTrack } from "./ui/favorites.js";
 export {
   els,
   initVolumeControlUI,
@@ -201,8 +210,23 @@ export function updateUI(
   els.historyToggleBtn.disabled = isGeneric;
   els.historyToggleBtn.classList.toggle("disabled", isGeneric);
   els.historyToggleBtn.setAttribute("aria-expanded", String(state.showHistory));
-  els.historyPanel.classList.toggle("open", state.showHistory);
+  const willOpenHistory = state.showHistory;
+  if (!willOpenHistory && historyPanelWasOpen) {
+    els.historyPanel.style.maxHeight = `${els.historyPanel.scrollHeight}px`;
+    void els.historyPanel.offsetHeight;
+  }
+
+  els.historyPanel.classList.toggle("open", willOpenHistory);
   updateHistoryUI();
+  renderFavoritesUI();
+  applyHistoryTabVisibility();
+
+  if (willOpenHistory && !historyPanelWasOpen) {
+    els.historyPanel.style.maxHeight = `${els.historyPanel.scrollHeight}px`;
+  } else if (!willOpenHistory) {
+    els.historyPanel.style.maxHeight = "0px";
+  }
+  historyPanelWasOpen = willOpenHistory;
 
   if (shouldRenderStationList()) {
     renderStationList(onSelect, onToggleFav);
