@@ -216,6 +216,11 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  transition: opacity 140ms ease;
+}
+
+.k-modal-list.is-switching {
+  opacity: 0;
 }
 
 .k-catalog-row {
@@ -415,7 +420,7 @@
 .catalog-tabbar {
   display: flex;
   gap: 0;
-  padding: 0 1rem;
+  padding: 5px 1rem 0;
   border-bottom: 1px solid var(--k-border);
   background: var(--k-bg-panel);
 }

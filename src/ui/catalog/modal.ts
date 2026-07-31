@@ -29,6 +29,7 @@ let errorMessage: string | null = null;
 let showCustomForm = false;
 let previousActiveElement: HTMLElement | null = null;
 let activeTab: CatalogTab = "all";
+let tabSwitchTimer: number | undefined;
 
 export function openCatalogModal(): void {
   previousActiveElement = document.activeElement as HTMLElement | null;
@@ -204,6 +205,7 @@ function createModalElements(): void {
 }
 
 function setActiveTab(tab: CatalogTab): void {
+  if (tab === activeTab) return;
   activeTab = tab;
   const buttons = modalEl?.querySelectorAll<HTMLButtonElement>(".catalog-tab");
   let activeBtnId = "catalog-tab-all";
@@ -214,7 +216,36 @@ function setActiveTab(tab: CatalogTab): void {
     if (isActive) activeBtnId = btn.id;
   });
   modalEl?.querySelector("#catalog-list-container")?.setAttribute("aria-labelledby", activeBtnId);
-  renderModalBody();
+
+  const listContainer = modalEl?.querySelector<HTMLElement>("#catalog-list-container");
+  const modalBox = modalEl?.querySelector<HTMLElement>(".k-modal");
+  if (!listContainer || !modalBox) {
+    renderModalBody();
+    return;
+  }
+
+  if (tabSwitchTimer) window.clearTimeout(tabSwitchTimer);
+  const prevHeight = modalBox.getBoundingClientRect().height;
+  listContainer.classList.add("is-switching");
+
+  tabSwitchTimer = window.setTimeout(() => {
+    renderModalBody();
+
+    const newHeight = modalBox.getBoundingClientRect().height;
+    if (Math.abs(newHeight - prevHeight) > 1) {
+      modalBox.style.height = `${prevHeight}px`;
+      modalBox.style.transition = "height 220ms cubic-bezier(0.2, 0, 0, 1)";
+      requestAnimationFrame(() => {
+        modalBox.style.height = `${newHeight}px`;
+      });
+      window.setTimeout(() => {
+        modalBox.style.height = "";
+        modalBox.style.transition = "";
+      }, 240);
+    }
+
+    requestAnimationFrame(() => listContainer.classList.remove("is-switching"));
+  }, 140);
 }
 
 async function handleRefreshCatalog(): Promise<void> {

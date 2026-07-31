@@ -38,12 +38,10 @@ export function escapeHtml(str: string): string {
   return str.replace(/[&<>"']/g, (c) => map[c] ?? c);
 }
 
-const PL_MONTHS = ["sty", "lut", "mar", "kwi", "maj", "cze", "lip", "sie", "wrz", "paź", "lis", "gru"];
-
 export function formatFavDateTime(timestampMs: number): string {
   const d = new Date(timestampMs);
   const day = d.getDate();
-  const month = PL_MONTHS[d.getMonth()];
+  const month = Intl.DateTimeFormat("pl-PL", { month: "short" }).format(d);
   const hh = String(d.getHours()).padStart(2, "0");
   const mm = String(d.getMinutes()).padStart(2, "0");
   return `${day} ${month} ${hh}:${mm}`;
