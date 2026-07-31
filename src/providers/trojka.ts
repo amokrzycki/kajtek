@@ -6,6 +6,9 @@ let trojkaBuildIdCache: string | null = null;
 let trojkaScheduleCache: { day: string; items: RamowkaItem[] } | null = null;
 let trojkaPlaylistCache: { fetchedAt: number; items: PlaylistaBlock[] } | null = null;
 
+const TROJKA_UPCOMING_COUNT = 5;
+const TROJKA_PAST_COUNT = 4;
+
 async function getTrojkaBuildId(station: Station): Promise<string | null> {
   if (trojkaBuildIdCache) return trojkaBuildIdCache;
   try {
@@ -78,8 +81,6 @@ function findActiveProgram(schedule: RamowkaItem[], nowMs: number): RamowkaItem 
   );
 }
 
-const TROJKA_UPCOMING_COUNT = 5;
-
 function buildUpcomingProgramItems(schedule: RamowkaItem[], nowMs: number): TrackInfo[] {
   return schedule
     .filter((p) => new Date(p.fullStartTime).getTime() > nowMs)
@@ -150,7 +151,7 @@ export const trojkaProvider: Provider = {
 
     return {
       current,
-      all: [...songs, ...buildUpcomingProgramItems(schedule, nowMs)],
+      all: [...songs.slice(-TROJKA_PAST_COUNT), ...buildUpcomingProgramItems(schedule, nowMs)],
     };
   },
 };
