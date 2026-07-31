@@ -8,5 +8,6 @@ export const LOCAL_STATIONS: Station[] = [
     cat: "local",
     provider: "generic",
     stream: "https://stream13.polskieradio.pl/pr3/pr3.sdp/playlist.m3u8",
+    coverUrl: "/covers/trojka.webp",
   },
 ];

@@ -60,7 +60,7 @@ export function notifyState(): void {
 }
 
 export const radioAudio = new Audio();
-radioAudio.crossOrigin = "anonymous";
+radioAudio.crossOrigin = "use-credentials";
 
 if ("mediaSession" in navigator) {
   radioAudio.addEventListener("play", () => {

@@ -279,7 +279,7 @@
   font-family: var(--k-font-mono);
   font-size: 0.56rem;
   letter-spacing: 0.06em;
-  opacity: 0.7;
+  opacity: 1;
 }
 
 .sleep-count {
@@ -357,6 +357,7 @@
 }
 
 .dark .btn-key.active {
+  background: color-mix(in srgb, var(--k-accent) 15%, var(--k-bg-inset));
   box-shadow:
     var(--k-sh-inset),
     0 0 10px var(--k-accent-ring);
