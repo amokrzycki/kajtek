@@ -1,4 +1,5 @@
 import { API_ENDPOINTS, INIT_STATIONS, STORAGE_KEYS, TIMERS } from "./consts.js";
+import { LOCAL_STATIONS } from "./localStations.js";
 import { state } from "./state.js";
 import type { CustomStation, RawRmfStation, RmfCatalogCache, Station, StationPref } from "./types.js";
 import { capitalizeFirstLetter, resolveProtocolRelativeUrl } from "./utils.js";
@@ -203,6 +204,7 @@ export function getAllKnownStations(): Station[] {
     const existingIds = new Set([
       ...INIT_STATIONS.map((s) => s.id),
       ...INIT_STATIONS.map((s) => s.apiBaseUrl?.split("/").pop()),
+      ...LOCAL_STATIONS.map((s) => s.id),
       ...customStations.map((s) => s.id),
     ]);
 
@@ -225,7 +227,7 @@ export function getAllKnownStations(): Station[] {
     });
   }
 
-  return [...INIT_STATIONS, ...customStations, ...catalogStations];
+  return [...INIT_STATIONS, ...LOCAL_STATIONS, ...customStations, ...catalogStations];
 }
 
 export function getEnabledStations(): Station[] {

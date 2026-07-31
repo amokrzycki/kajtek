@@ -122,4 +122,28 @@ export interface PlaylistResult {
 export interface Provider {
   name: string;
   parse(data: unknown, station?: Station | null): PlaylistResult | null;
+  fetch?(station: Station): Promise<PlaylistResult | null>;
+}
+
+export interface RamowkaItem {
+  id: number;
+  title: string;
+  startTime: string;
+  fullStartTime: string;
+  fullStopTime: string;
+}
+
+export interface PlaylistaItem {
+  title: string;
+  artist: string;
+  startTime: string;
+  duration: number;
+}
+
+export interface PlaylistaBlock {
+  id: number;
+  title: string;
+  startTime: string;
+  stopTime: string;
+  playlistItems: PlaylistaItem[];
 }

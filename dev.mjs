@@ -14,6 +14,7 @@ const ctx = await context({
   ],
   bundle: true,
   sourcemap: true,
+  splitting: true,
   outdir: "dist",
   format: "esm",
   define: {
@@ -37,6 +38,39 @@ http
         headers: {
           ...req.headers,
           host: "api.rmfon.pl",
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        },
+      };
+
+      const proxyReq = https.request(options, (proxyRes) => {
+        const headers = {
+          ...proxyRes.headers,
+          "access-control-allow-origin": "*",
+        };
+        res.writeHead(proxyRes.statusCode || 200, headers);
+        proxyRes.pipe(res);
+      });
+
+      proxyReq.on("error", (err) => {
+        res.writeHead(502);
+        res.end(`Proxy error: ${err.message}`);
+      });
+
+      req.pipe(proxyReq);
+      return;
+    }
+
+    if (req.url?.startsWith("/api/trojka/")) {
+      const targetPath = req.url.replace(/^\/api\/trojka/, "");
+
+      const options = {
+        hostname: "trojka.polskieradio.pl",
+        port: 443,
+        path: targetPath,
+        method: req.method,
+        headers: {
+          ...req.headers,
+          host: "trojka.polskieradio.pl",
           "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
         },
       };
@@ -83,6 +117,11 @@ http
         ".js": "text/javascript",
         ".css": "text/css",
         ".json": "application/json",
+        ".webp": "image/webp",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".jpeg": "image/jpeg",
+        ".svg": "image/svg+xml",
       };
       res.writeHead(200, {
         "Content-Type": mimeMap[ext] || "text/plain",

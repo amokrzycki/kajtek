@@ -106,8 +106,6 @@
   view-transition-name: history-list;
 }
 
-/* ponytail: bez tego root snapshot łapie całą stronę (w tym .history-panel),
-   przez co crossfade zjada max-height transition przy rozwijaniu panelu */
 ::view-transition-group(root) {
   animation: none;
 }

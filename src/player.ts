@@ -1,6 +1,9 @@
+import type Hls from "hls.js";
 import { getOrderedStations } from "./catalog.js";
 import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
+import { rmfProvider } from "./providers/rmf.js";
+import { trojkaProvider } from "./providers/trojka.js";
 import { genericProvider, getFactsInfo, getProvider } from "./providers.js";
 import { intervals, notifyState, radioAudio, state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
@@ -14,15 +17,72 @@ import {
 import { getFactsLabel, resolveProtocolRelativeUrl } from "./utils.js";
 
 let failoverTimestamps: number[] = [];
+let hlsInstance: Hls | null = null;
 
 function getCurrentStreamUrl(station: Station): string {
   const streams = station._streams || [station.stream];
   return streams[station._currentStreamIndex || 0] || station.stream;
 }
 
-function playStreamUrl(url: string | undefined): void {
+function destroyHls(): void {
+  hlsInstance?.destroy();
+  hlsInstance = null;
+}
+
+function isHlsStream(url: string): boolean {
+  return url.includes(".m3u8");
+}
+
+const MAX_HLS_RECOVERY_ATTEMPTS = 3;
+
+async function attachHlsStream(url: string): Promise<void> {
+  const { default: Hls } = await import("hls.js");
+  if (!Hls.isSupported()) {
+    // Real native HLS support (Safari/iOS) — MediaSource-based hls.js isn't needed there.
+    radioAudio.src = url;
+    return;
+  }
+  const hls = new Hls();
+  hlsInstance = hls;
+  let recoveryAttempts = 0;
+
+  hls.on(Hls.Events.FRAG_LOADED, () => {
+    recoveryAttempts = 0;
+  });
+
+  hls.on(Hls.Events.ERROR, (_event, data) => {
+    if (!data.fatal) return;
+    console.warn("[HLS] fatal error", data.type, data.details);
+    if (recoveryAttempts >= MAX_HLS_RECOVERY_ATTEMPTS) {
+      handleAudioFailover();
+      return;
+    }
+    recoveryAttempts++;
+    switch (data.type) {
+      case Hls.ErrorTypes.NETWORK_ERROR:
+        hls.startLoad();
+        break;
+      case Hls.ErrorTypes.MEDIA_ERROR:
+        hls.recoverMediaError();
+        break;
+      default:
+        handleAudioFailover();
+        break;
+    }
+  });
+  hls.loadSource(url);
+  hls.attachMedia(radioAudio);
+}
+
+async function playStreamUrl(url: string | undefined): Promise<void> {
   if (!url) return;
-  radioAudio.src = url;
+  destroyHls();
+  radioAudio.crossOrigin = getProvider(state.station) === rmfProvider ? "use-credentials" : "anonymous";
+  if (isHlsStream(url)) {
+    await attachHlsStream(url);
+  } else {
+    radioAudio.src = url;
+  }
   applyAudioVolume();
   radioAudio.play().catch(() => {
     // Ignore autoplay restriction errors
@@ -56,8 +116,12 @@ function handleAudioFailover() {
   playStreamUrl(streams[nextIdx]);
 }
 
-radioAudio.addEventListener("error", handleAudioFailover);
-radioAudio.addEventListener("stalled", handleAudioFailover);
+radioAudio.addEventListener("error", () => {
+  if (!hlsInstance) handleAudioFailover();
+});
+radioAudio.addEventListener("stalled", () => {
+  if (!hlsInstance) handleAudioFailover();
+});
 
 function navigateStation(direction: 1 | -1) {
   const current = state.station;
@@ -91,7 +155,7 @@ async function parseJsonFromRes(res: Response): Promise<unknown> {
 }
 
 async function ensureStationMetadata(station: Station) {
-  if (!station.apiBaseUrl) return;
+  if (!station.apiBaseUrl || getProvider(station) !== rmfProvider) return;
 
   const stationBaseUrl = station.apiBaseUrl;
 
@@ -130,18 +194,21 @@ export async function fetchPlaylist(station: Station) {
   if (!station?.apiBaseUrl || (station._consecutiveFailures || 0) > MAX_CONSECUTIVE_FAILURES) return null;
 
   const provider = getProvider(station);
-  const target = `${station.apiBaseUrl}/playlist`;
 
   try {
-    const res = await fetch(target, { signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS) });
-    const data = await parseJsonFromRes(res);
+    const parsed = provider.fetch
+      ? await provider.fetch(station)
+      : await (async () => {
+          const res = await fetch(`${station.apiBaseUrl}/playlist`, {
+            signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS),
+          });
+          const data = await parseJsonFromRes(res);
+          return data ? provider.parse(data, station) : null;
+        })();
 
-    if (data) {
-      const parsed = provider.parse(data, station);
-      if (parsed) {
-        station._consecutiveFailures = 0;
-        return parsed;
-      }
+    if (parsed) {
+      station._consecutiveFailures = 0;
+      return parsed;
     }
   } catch (_) {
     // Ignore network or parse failures
@@ -155,6 +222,9 @@ function checkRealtimeTrackState() {
   if (!state.playing || !state.station?.apiBaseUrl || !state.history || state.history.length === 0) {
     return;
   }
+  // Trójka's history is purely chronological, not RMF's order:0-tagged convention this function
+  // assumes; it already recomputes "current" itself every fetch tick, so skip this reconciliation.
+  if (getProvider(state.station) === trojkaProvider) return;
 
   const nowSec = Math.floor(Date.now() / 1000);
   const activeItem = state.history.find(
