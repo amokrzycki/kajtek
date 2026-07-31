@@ -9,8 +9,18 @@ import {
 } from "@/catalog.js";
 import { ICONS } from "@/icons.js";
 import { notifyState } from "@/state.js";
+import type { RmfCatalogCache, Station } from "@/types.js";
 import { escapeHtml, renderStationThumbHtml } from "@/utils.js";
 import { handleCustomStationSubmit } from "./form.js";
+
+type CatalogTab = "all" | "local" | "custom";
+
+const PROVIDER_LABELS: Record<string, string> = {
+  rmf: "RMF",
+};
+
+const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const IDXRAIL_SYMBOLS = ["#", ...ALPHABET];
 
 let modalEl: HTMLElement | null = null;
 let searchQuery = "";
@@ -18,6 +28,8 @@ let isFetching = false;
 let errorMessage: string | null = null;
 let showCustomForm = false;
 let previousActiveElement: HTMLElement | null = null;
+let activeTab: CatalogTab = "all";
+let tabSwitchTimer: number | undefined;
 
 export function openCatalogModal(): void {
   previousActiveElement = document.activeElement as HTMLElement | null;
@@ -76,9 +88,9 @@ function createModalElements(): void {
       <div class="k-modal-toolbar">
         <div class="search-input-wrap">
           <span class="search-icon">${ICONS.search}</span>
-          <input type="search" id="catalog-search-input" class="k-input catalog-search" placeholder="Szukaj stacji (nazwa, gatunek, tag)..." autocomplete="off" />
+          <input type="search" id="catalog-search-input" class="k-input catalog-search" placeholder="Szukaj stacji…" autocomplete="off" />
         </div>
-        <div class="k-modal-actions">
+        <div class="k-modal-actions-row">
           <button type="button" id="catalog-refresh-btn" class="btn-secondary">
             Odśwież listę
           </button>
@@ -101,9 +113,15 @@ function createModalElements(): void {
         </div>
       </div>
 
+      <div class="catalog-tabbar" role="tablist" aria-label="Kategorie stacji">
+        <button type="button" id="catalog-tab-all" class="catalog-tab active" role="tab" aria-selected="true" aria-controls="catalog-list-container" data-tab="all">WSZYSTKIE A–Z</button>
+        <button type="button" id="catalog-tab-local" class="catalog-tab" role="tab" aria-selected="false" aria-controls="catalog-list-container" data-tab="local">LOKALNE <span class="catalog-tab-count">0</span></button>
+        <button type="button" id="catalog-tab-custom" class="catalog-tab" role="tab" aria-selected="false" aria-controls="catalog-list-container" data-tab="custom">WŁASNE <span class="catalog-tab-count">0</span></button>
+      </div>
+
       <div id="catalog-error-banner" class="k-modal-error" style="display: none;"></div>
 
-      <div id="catalog-list-container" class="k-modal-list"></div>
+      <div id="catalog-list-container" class="k-modal-list" role="tabpanel" aria-labelledby="catalog-tab-all"></div>
     </div>
   `;
 
@@ -167,6 +185,67 @@ function createModalElements(): void {
       },
     );
   });
+
+  const tabbar = modalEl.querySelector<HTMLElement>(".catalog-tabbar");
+  tabbar?.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-tab]");
+    const tab = btn?.dataset.tab as CatalogTab | undefined;
+    if (tab) setActiveTab(tab);
+  });
+
+  const idxrail = modalEl.querySelector<HTMLElement>("#catalog-list-container");
+  idxrail?.addEventListener("click", (e) => {
+    const link = (e.target as HTMLElement).closest<HTMLAnchorElement>(".catalog-idxrail a");
+    if (!link) return;
+    e.preventDefault();
+    const targetId = link.getAttribute("href")?.slice(1);
+    if (!targetId) return;
+    modalEl?.querySelector(`#${CSS.escape(targetId)}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  });
+}
+
+function setActiveTab(tab: CatalogTab): void {
+  if (tab === activeTab) return;
+  activeTab = tab;
+  const buttons = modalEl?.querySelectorAll<HTMLButtonElement>(".catalog-tab");
+  let activeBtnId = "catalog-tab-all";
+  buttons?.forEach((btn) => {
+    const isActive = btn.dataset.tab === tab;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-selected", String(isActive));
+    if (isActive) activeBtnId = btn.id;
+  });
+  modalEl?.querySelector("#catalog-list-container")?.setAttribute("aria-labelledby", activeBtnId);
+
+  const listContainer = modalEl?.querySelector<HTMLElement>("#catalog-list-container");
+  const modalBox = modalEl?.querySelector<HTMLElement>(".k-modal");
+  if (!listContainer || !modalBox) {
+    renderModalBody();
+    return;
+  }
+
+  if (tabSwitchTimer) window.clearTimeout(tabSwitchTimer);
+  const prevHeight = modalBox.getBoundingClientRect().height;
+  listContainer.classList.add("is-switching");
+
+  tabSwitchTimer = window.setTimeout(() => {
+    renderModalBody();
+
+    const newHeight = modalBox.getBoundingClientRect().height;
+    if (Math.abs(newHeight - prevHeight) > 1) {
+      modalBox.style.height = `${prevHeight}px`;
+      modalBox.style.transition = "height 220ms cubic-bezier(0.2, 0, 0, 1)";
+      requestAnimationFrame(() => {
+        modalBox.style.height = `${newHeight}px`;
+      });
+      window.setTimeout(() => {
+        modalBox.style.height = "";
+        modalBox.style.transition = "";
+      }, 240);
+    }
+
+    requestAnimationFrame(() => listContainer.classList.remove("is-switching"));
+  }, 140);
 }
 
 async function handleRefreshCatalog(): Promise<void> {
@@ -200,6 +279,253 @@ function formatDate(ts: number): string {
   return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
+function matchesQuery(station: Station, q: string, cache: RmfCatalogCache | null): boolean {
+  if (!q) return true;
+  if (station.name.toLowerCase().includes(q)) return true;
+  if (station.short.toLowerCase().includes(q)) return true;
+
+  if (cache?.stations) {
+    const raw = cache.stations.find((r) => String(r.id) === station.id);
+    if (raw?.search) {
+      const keywords = raw.search
+        .toLowerCase()
+        .split(",")
+        .map((k) => k.trim());
+      if (keywords.some((k) => k.includes(q))) return true;
+    }
+  }
+  return false;
+}
+
+// Almost every RMF station name starts with "RMF" or "Radio", which would dump 3/4 of the
+// catalog into a single "R" bucket — index by the first significant word instead.
+const GENERIC_NAME_PREFIX = /^(RMF|Radio)\s+/i;
+
+// Ł doesn't decompose under NFD, so it needs an explicit swap before diacritics are stripped.
+function indexLetter(name: string): string {
+  const trimmed = name.trim();
+  const significant = trimmed.replace(GENERIC_NAME_PREFIX, "") || trimmed;
+  const first = significant.charAt(0).toUpperCase().replace(/Ł/g, "L");
+  const stripped = first.normalize("NFD").replace(/\p{Diacritic}/gu, "");
+  return /[A-Z]/.test(stripped) ? stripped : "#";
+}
+
+function buildSecHeadEl(title: string, count?: number): HTMLElement {
+  const head = document.createElement("div");
+  head.className = "catalog-sec-head";
+  head.innerHTML = `<span class="catalog-sec-title">${escapeHtml(title)}</span><span class="catalog-sec-rule"></span>${
+    count !== undefined ? `<span class="catalog-sec-count">${count}</span>` : ""
+  }`;
+  return head;
+}
+
+function buildEmptyStateEl(message: string): HTMLElement {
+  const empty = document.createElement("div");
+  empty.className = "k-catalog-empty";
+  empty.textContent = message;
+  return empty;
+}
+
+function buildNoteEl(text: string): HTMLElement {
+  const note = document.createElement("p");
+  note.className = "catalog-empty-note";
+  note.textContent = text;
+  return note;
+}
+
+function createStationRow(
+  station: Station,
+  opts: { isCustom: boolean; showProviderTag: boolean; showLocalPill: boolean },
+): HTMLElement {
+  const enabled = isStationEnabled(station.id);
+  const row = document.createElement("div");
+  row.className = `k-catalog-row${enabled ? " enabled" : ""}`;
+
+  const safeName = escapeHtml(station.name);
+  const logoHtml = renderStationThumbHtml(station.coverUrl, station.name, "catalog-thumb", "catalog-thumb-placeholder");
+  const providerLabel = opts.showProviderTag && !opts.isCustom ? PROVIDER_LABELS[station.provider] : undefined;
+  const localPillHtml = opts.showLocalPill ? '<span class="catalog-local-pill">● lokalna</span> ' : "";
+
+  row.innerHTML = `
+    <div class="catalog-col-info">
+      ${logoHtml}
+      <div class="catalog-details">
+        <div class="catalog-name">
+          ${safeName}
+          ${opts.isCustom ? '<span class="badge-custom">Własna</span>' : ""}
+          ${providerLabel ? `<span class="catalog-provider-tag">${escapeHtml(providerLabel)}</span>` : ""}
+        </div>
+        <div class="catalog-sub">${localPillHtml}${escapeHtml(station.short)}</div>
+      </div>
+    </div>
+
+    <div class="catalog-col-actions">
+      ${
+        opts.isCustom
+          ? `<button type="button" class="btn-delete-custom" title="Usuń własną stację" aria-label="Usuń ${safeName}">${ICONS.trash}</button>`
+          : ""
+      }
+      <label class="catalog-toggle-switch" title="${enabled ? "Wyłącz stację" : "Włącz stację"}">
+        <input type="checkbox" class="catalog-checkbox" ${enabled ? "checked" : ""} aria-label="Włącz stację" />
+      </label>
+    </div>
+  `;
+
+  const checkbox = row.querySelector<HTMLInputElement>(".catalog-checkbox");
+  const toggleSwitch = row.querySelector<HTMLLabelElement>(".catalog-toggle-switch");
+
+  checkbox?.addEventListener("change", (e) => {
+    const isChecked = (e.target as HTMLInputElement).checked;
+    setStationEnabled(station.id, isChecked);
+    notifyState();
+    if (toggleSwitch) {
+      toggleSwitch.title = isChecked ? "Wyłącz stację" : "Włącz stację";
+    }
+  });
+
+  const deleteBtn = row.querySelector<HTMLButtonElement>(".btn-delete-custom");
+  deleteBtn?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (confirm(`Czy na pewno chcesz usunąć stację "${station.name}"?`)) {
+      deleteCustomStation(station.id);
+      notifyState();
+      renderModalBody();
+    }
+  });
+
+  row.addEventListener("click", (e) => {
+    if ((e.target as HTMLElement).closest(".catalog-toggle-switch, .btn-delete-custom")) return;
+    checkbox?.click();
+  });
+
+  return row;
+}
+
+function renderAllTab(
+  container: HTMLElement,
+  allStations: Station[],
+  customIds: Set<string>,
+  q: string,
+  cache: RmfCatalogCache | null,
+): void {
+  const stations = allStations.filter((s) => s.cat !== "local").filter((s) => matchesQuery(s, q, cache));
+
+  if (stations.length === 0) {
+    if (isFetching) {
+      container.appendChild(buildEmptyStateEl("Pobieranie stacji..."));
+    } else if (!cache && errorMessage) {
+      const empty = document.createElement("div");
+      empty.className = "k-catalog-empty";
+      empty.innerHTML = `
+        <div>Brak zapisanych stacji w pamięci podręcznej.</div>
+        <button type="button" class="btn-primary" style="margin-top: 10px;" id="catalog-retry-btn">Spróbuj ponownie</button>
+      `;
+      container.appendChild(empty);
+      empty.querySelector("#catalog-retry-btn")?.addEventListener("click", () => handleRefreshCatalog());
+    } else {
+      container.appendChild(buildEmptyStateEl(q ? "Brak stacji pasujących do wyszukiwania" : "Brak stacji"));
+    }
+    return;
+  }
+
+  stations.sort((a, b) => a.name.localeCompare(b.name, "pl"));
+
+  const groups = new Map<string, Station[]>();
+  stations.forEach((s) => {
+    const letter = indexLetter(s.name);
+    if (!groups.has(letter)) groups.set(letter, []);
+    groups.get(letter)?.push(s);
+  });
+
+  const azPanel = document.createElement("div");
+  azPanel.className = "catalog-az-panel";
+
+  const azList = document.createElement("div");
+  azList.className = "catalog-az-list";
+  groups.forEach((groupStations, letter) => {
+    const head = buildSecHeadEl(letter);
+    head.id = `catalog-sec-${letter}`;
+    azList.appendChild(head);
+    groupStations.forEach((station) => {
+      azList.appendChild(
+        createStationRow(station, {
+          isCustom: customIds.has(station.id),
+          showProviderTag: true,
+          showLocalPill: false,
+        }),
+      );
+    });
+  });
+
+  const idxrail = document.createElement("div");
+  idxrail.className = "catalog-idxrail";
+  idxrail.setAttribute("aria-label", "Indeks alfabetyczny");
+  IDXRAIL_SYMBOLS.forEach((letter) => {
+    const span = document.createElement("span");
+    if (groups.has(letter)) {
+      span.className = "has";
+      span.innerHTML = `<a href="#catalog-sec-${letter}">${letter}</a>`;
+    } else {
+      span.textContent = letter;
+    }
+    idxrail.appendChild(span);
+  });
+
+  azPanel.appendChild(azList);
+  azPanel.appendChild(idxrail);
+  container.appendChild(azPanel);
+}
+
+function renderLocalTab(
+  container: HTMLElement,
+  allStations: Station[],
+  q: string,
+  cache: RmfCatalogCache | null,
+): void {
+  const stations = allStations.filter((s) => s.cat === "local").filter((s) => matchesQuery(s, q, cache));
+
+  if (stations.length === 0) {
+    container.appendChild(buildEmptyStateEl(q ? "Brak stacji pasujących do wyszukiwania" : "Brak stacji"));
+    return;
+  }
+
+  container.appendChild(buildSecHeadEl("Stacje lokalne", stations.length));
+  stations.forEach((station) => {
+    container.appendChild(createStationRow(station, { isCustom: false, showProviderTag: false, showLocalPill: true }));
+  });
+  container.appendChild(
+    buildNoteEl("Stacje oznaczone ręcznie jako lokalne (przy dodawaniu do katalogu), niezależnie od Twojej pozycji."),
+  );
+}
+
+function renderCustomTab(
+  container: HTMLElement,
+  allStations: Station[],
+  customIds: Set<string>,
+  q: string,
+  cache: RmfCatalogCache | null,
+): void {
+  const stations = allStations.filter((s) => customIds.has(s.id)).filter((s) => matchesQuery(s, q, cache));
+
+  if (stations.length === 0) {
+    container.appendChild(buildEmptyStateEl(q ? "Brak stacji pasujących do wyszukiwania" : "Brak stacji"));
+    return;
+  }
+
+  container.appendChild(buildSecHeadEl("Własne stacje", stations.length));
+  stations.forEach((station) => {
+    container.appendChild(createStationRow(station, { isCustom: true, showProviderTag: false, showLocalPill: false }));
+  });
+  container.appendChild(buildNoteEl("Stacje dodane ręcznie przez „+ Własna stacja”."));
+}
+
+function updateTabCounts(localCount: number, customCount: number): void {
+  const localCountEl = modalEl?.querySelector<HTMLElement>('[data-tab="local"] .catalog-tab-count');
+  const customCountEl = modalEl?.querySelector<HTMLElement>('[data-tab="custom"] .catalog-tab-count');
+  if (localCountEl) localCountEl.textContent = String(localCount);
+  if (customCountEl) customCountEl.textContent = String(customCount);
+}
+
 function renderModalBody(): void {
   if (!modalEl) return;
 
@@ -224,119 +550,21 @@ function renderModalBody(): void {
     }
   }
 
+  const allStations = getAllKnownStations();
+  const customIds = new Set(getCustomStations().map((c) => c.id));
+  updateTabCounts(
+    allStations.filter((s) => s.cat === "local").length,
+    allStations.filter((s) => customIds.has(s.id)).length,
+  );
+
+  const q = searchQuery.toLowerCase().trim();
   listContainer.innerHTML = "";
 
-  const allStations = getAllKnownStations();
-  const q = searchQuery.toLowerCase().trim();
-
-  // Filter stations by name or search tags
-  const filtered = allStations.filter((s) => {
-    if (!q) return true;
-    if (s.name.toLowerCase().includes(q)) return true;
-    if (s.short.toLowerCase().includes(q)) return true;
-
-    if (cache?.stations) {
-      const raw = cache.stations.find((r) => String(r.id) === s.id);
-      if (raw?.search) {
-        const keywords = raw.search
-          .toLowerCase()
-          .split(",")
-          .map((k) => k.trim());
-        if (keywords.some((k) => k.includes(q))) return true;
-      }
-    }
-    return false;
-  });
-
-  if (filtered.length === 0) {
-    const empty = document.createElement("div");
-    empty.className = "k-catalog-empty";
-    if (isFetching) {
-      empty.textContent = "Pobieranie stacji...";
-    } else if (!cache && errorMessage) {
-      empty.innerHTML = `
-        <div>Brak zapisanych stacji w pamięci podręcznej.</div>
-        <button type="button" class="btn-primary" style="margin-top: 10px;" id="catalog-retry-btn">Spróbuj ponownie</button>
-      `;
-      setTimeout(() => {
-        empty.querySelector("#catalog-retry-btn")?.addEventListener("click", () => handleRefreshCatalog());
-      }, 0);
-    } else {
-      empty.textContent = q ? "Brak stacji pasujących do wyszukiwania" : "Brak stacji";
-    }
-    listContainer.appendChild(empty);
-    return;
+  if (activeTab === "local") {
+    renderLocalTab(listContainer, allStations, q, cache);
+  } else if (activeTab === "custom") {
+    renderCustomTab(listContainer, allStations, customIds, q, cache);
+  } else {
+    renderAllTab(listContainer, allStations, customIds, q, cache);
   }
-
-  const customStations = getCustomStations();
-  const customIds = new Set(customStations.map((c) => c.id));
-
-  filtered.forEach((station) => {
-    const enabled = isStationEnabled(station.id);
-    const isCustom = customIds.has(station.id);
-
-    const row = document.createElement("div");
-    row.className = `k-catalog-row${enabled ? " enabled" : ""}`;
-
-    const safeName = escapeHtml(station.name);
-    const logoHtml = renderStationThumbHtml(
-      station.coverUrl,
-      station.name,
-      "catalog-thumb",
-      "catalog-thumb-placeholder",
-    );
-
-    row.innerHTML = `
-      <div class="catalog-col-info">
-        ${logoHtml}
-        <div class="catalog-details">
-          <div class="catalog-name">
-            ${safeName}
-            ${isCustom ? '<span class="badge-custom">Własna</span>' : ""}
-          </div>
-          <div class="catalog-sub">${escapeHtml(station.short)}</div>
-        </div>
-      </div>
-
-      <div class="catalog-col-actions">
-        ${
-          isCustom
-            ? `<button type="button" class="btn-delete-custom" title="Usuń własną stację" aria-label="Usuń">${ICONS.trash}</button>`
-            : ""
-        }
-        <label class="catalog-toggle-switch" title="${enabled ? "Wyłącz stację" : "Włącz stację"}">
-          <input type="checkbox" class="catalog-checkbox" ${enabled ? "checked" : ""} aria-label="Włącz stację" />
-        </label>
-      </div>
-    `;
-
-    const checkbox = row.querySelector<HTMLInputElement>(".catalog-checkbox");
-    const toggleSwitch = row.querySelector<HTMLLabelElement>(".catalog-toggle-switch");
-
-    checkbox?.addEventListener("change", (e) => {
-      const isChecked = (e.target as HTMLInputElement).checked;
-      setStationEnabled(station.id, isChecked);
-      notifyState();
-      if (toggleSwitch) {
-        toggleSwitch.title = isChecked ? "Wyłącz stację" : "Włącz stację";
-      }
-    });
-
-    const deleteBtn = row.querySelector<HTMLButtonElement>(".btn-delete-custom");
-    deleteBtn?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (confirm(`Czy na pewno chcesz usunąć stację "${station.name}"?`)) {
-        deleteCustomStation(station.id);
-        notifyState();
-        renderModalBody();
-      }
-    });
-
-    row.addEventListener("click", (e) => {
-      if ((e.target as HTMLElement).closest(".catalog-toggle-switch, .btn-delete-custom")) return;
-      checkbox?.click();
-    });
-
-    listContainer.appendChild(row);
-  });
 }

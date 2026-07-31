@@ -102,6 +102,21 @@ function buildUpcomingProgramItems(schedule: RamowkaItem[], nowMs: number): Trac
     });
 }
 
+function buildProgramHistoryItem(program: RamowkaItem): TrackInfo {
+  const startSec = Math.floor(new Date(program.fullStartTime).getTime() / 1000);
+  const stopSec = Math.floor(new Date(program.fullStopTime).getTime() / 1000);
+  return {
+    artist: "",
+    title: program.title,
+    isBreak: true,
+    label: program.title,
+    start: program.startTime,
+    timestamp: startSec,
+    endTimestamp: stopSec,
+    gapSec: stopSec - startSec,
+  };
+}
+
 export const trojkaProvider: Provider = {
   name: "Trójka Provider",
   parse(): PlaylistResult | null {
@@ -135,7 +150,7 @@ export const trojkaProvider: Provider = {
     // Last song is only trusted as "still probably playing" within one playlist-poll's worth of
     // slack past its own end — beyond that, playlist is just stale and we genuinely don't know
     // the song, so fall through to the program-title fallback below instead of showing it forever.
-    const stalenessToleranceSec = (TROJKA_PLAYLIST_REFRESH_MS / 1000) * 2;
+    const stalenessToleranceSec = (TROJKA_PLAYLIST_REFRESH_MS / 1000) * 1;
     const currentSong =
       songs.find((t) => t.timestamp && t.endTimestamp && nowSec >= t.timestamp && nowSec < t.endTimestamp) ||
       (lastSong?.endTimestamp && nowSec - lastSong.endTimestamp <= stalenessToleranceSec ? lastSong : null);
@@ -149,9 +164,16 @@ export const trojkaProvider: Provider = {
         ? { artist: station.name, title: program.title, isLiveBreak: true }
         : null;
 
+    // No playlist items at all and we're showing the ramówka fallback as "current" —
+    // surface that same program in history too, so past isn't left empty next to a live current.
+    const pastSongs =
+      songs.length === 0 && !currentSong && program
+        ? [buildProgramHistoryItem(program)]
+        : songs.slice(-TROJKA_PAST_COUNT);
+
     return {
       current,
-      all: [...songs.slice(-TROJKA_PAST_COUNT), ...buildUpcomingProgramItems(schedule, nowMs)],
+      all: [...pastSongs, ...buildUpcomingProgramItems(schedule, nowMs)],
     };
   },
 };
