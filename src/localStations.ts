@@ -9,7 +9,6 @@ export const LOCAL_STATIONS: Station[] = [
     provider: "trojka",
     stream: "https://stream13.polskieradio.pl/pr3/pr3.sdp/playlist.m3u8",
     apiBaseUrl: "/api/trojka",
-    coverUrl: "/covers/trojka.webp",
   },
   {
     id: "rzeszow",
@@ -18,7 +17,6 @@ export const LOCAL_STATIONS: Station[] = [
     cat: "local",
     provider: "generic",
     stream: "https://streaming.g-news.pl:8040/rzeszow",
-    coverUrl: "/covers/rzeszow.webp",
   },
   {
     id: "leliwa",
@@ -27,6 +25,5 @@ export const LOCAL_STATIONS: Station[] = [
     cat: "local",
     provider: "generic",
     stream: "http://streaming.g-news.pl:8050/leliwa",
-    coverUrl: "/covers/leliwa.webp",
   },
 ];
