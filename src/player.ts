@@ -2,6 +2,8 @@ import type Hls from "hls.js";
 import { getOrderedStations } from "./catalog.js";
 import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
+import { rmfProvider } from "./providers/rmf.js";
+import { trojkaProvider } from "./providers/trojka.js";
 import { genericProvider, getFactsInfo, getProvider } from "./providers.js";
 import { intervals, notifyState, radioAudio, state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
@@ -75,6 +77,7 @@ async function attachHlsStream(url: string): Promise<void> {
 async function playStreamUrl(url: string | undefined): Promise<void> {
   if (!url) return;
   destroyHls();
+  radioAudio.crossOrigin = getProvider(state.station) === rmfProvider ? "use-credentials" : "anonymous";
   if (isHlsStream(url)) {
     await attachHlsStream(url);
   } else {
@@ -152,7 +155,7 @@ async function parseJsonFromRes(res: Response): Promise<unknown> {
 }
 
 async function ensureStationMetadata(station: Station) {
-  if (!station.apiBaseUrl) return;
+  if (!station.apiBaseUrl || getProvider(station) !== rmfProvider) return;
 
   const stationBaseUrl = station.apiBaseUrl;
 
@@ -191,18 +194,21 @@ export async function fetchPlaylist(station: Station) {
   if (!station?.apiBaseUrl || (station._consecutiveFailures || 0) > MAX_CONSECUTIVE_FAILURES) return null;
 
   const provider = getProvider(station);
-  const target = `${station.apiBaseUrl}/playlist`;
 
   try {
-    const res = await fetch(target, { signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS) });
-    const data = await parseJsonFromRes(res);
+    const parsed = provider.fetch
+      ? await provider.fetch(station)
+      : await (async () => {
+          const res = await fetch(`${station.apiBaseUrl}/playlist`, {
+            signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS),
+          });
+          const data = await parseJsonFromRes(res);
+          return data ? provider.parse(data, station) : null;
+        })();
 
-    if (data) {
-      const parsed = provider.parse(data, station);
-      if (parsed) {
-        station._consecutiveFailures = 0;
-        return parsed;
-      }
+    if (parsed) {
+      station._consecutiveFailures = 0;
+      return parsed;
     }
   } catch (_) {
     // Ignore network or parse failures
@@ -216,6 +222,9 @@ function checkRealtimeTrackState() {
   if (!state.playing || !state.station?.apiBaseUrl || !state.history || state.history.length === 0) {
     return;
   }
+  // Trójka's history is purely chronological, not RMF's order:0-tagged convention this function
+  // assumes; it already recomputes "current" itself every fetch tick, so skip this reconciliation.
+  if (getProvider(state.station) === trojkaProvider) return;
 
   const nowSec = Math.floor(Date.now() / 1000);
   const activeItem = state.history.find(
