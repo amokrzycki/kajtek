@@ -9,6 +9,7 @@ type BlacklistTab = "list" | "add";
 let modalEl: HTMLElement | null = null;
 let previousActiveElement: HTMLElement | null = null;
 let activeTab: BlacklistTab = "list";
+let tabSwitchTimer: number | undefined;
 
 export function openBlacklistModal(): void {
   previousActiveElement = document.activeElement as HTMLElement | null;
@@ -35,7 +36,36 @@ function setActiveTab(tab: BlacklistTab): void {
     btn.classList.toggle("active", isActive);
     btn.setAttribute("aria-selected", String(isActive));
   });
-  renderModalBody();
+
+  const listContainer = modalEl?.querySelector<HTMLElement>("#blacklist-body");
+  const modalBox = modalEl?.querySelector<HTMLElement>(".k-modal");
+  if (!listContainer || !modalBox) {
+    renderModalBody();
+    return;
+  }
+
+  if (tabSwitchTimer) window.clearTimeout(tabSwitchTimer);
+  const prevHeight = modalBox.getBoundingClientRect().height;
+  listContainer.classList.add("is-switching");
+
+  tabSwitchTimer = window.setTimeout(() => {
+    renderModalBody();
+
+    const newHeight = modalBox.getBoundingClientRect().height;
+    if (Math.abs(newHeight - prevHeight) > 1) {
+      modalBox.style.height = `${prevHeight}px`;
+      modalBox.style.transition = "height 220ms cubic-bezier(0.2, 0, 0, 1)";
+      requestAnimationFrame(() => {
+        modalBox.style.height = `${newHeight}px`;
+      });
+      window.setTimeout(() => {
+        modalBox.style.height = "";
+        modalBox.style.transition = "";
+      }, 240);
+    }
+
+    requestAnimationFrame(() => listContainer.classList.remove("is-switching"));
+  }, 140);
 }
 
 function createModalElements(): void {
