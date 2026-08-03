@@ -119,7 +119,11 @@ function armBlacklistWarning(track: TrackInfo, origin: Station, immediate: boole
 function detectBlacklistedUpcoming() {
   if (!state.station || blacklistWarning) return;
 
-  if (state.liveTrack && !state.liveTrack.isLiveBreak && isBlacklisted(state.liveTrack)) {
+  if (
+    state.liveTrack &&
+    (!state.liveTrack.isLiveBreak || state.liveTrack.isFacts) &&
+    isBlacklisted(state.liveTrack)
+  ) {
     const key = getTrackKey(state.liveTrack);
     if (key !== dismissedTrackKey) armBlacklistWarning(state.liveTrack, state.station, true);
     return;
@@ -413,6 +417,7 @@ function checkRealtimeTrackState() {
         artist: state.station.name,
         title: label,
         isLiveBreak: true,
+        isFacts: factsInfo.isFacts,
       };
     } else {
       evaluated = {
@@ -433,6 +438,7 @@ function checkRealtimeTrackState() {
         artist: state.station.name,
         title: label,
         isLiveBreak: true,
+        isFacts: factsInfo.isFacts,
       };
     }
   }

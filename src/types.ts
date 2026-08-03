@@ -90,6 +90,7 @@ export interface TrackInfo {
   gapMin?: number;
   label?: string;
   isLiveBreak?: boolean;
+  isFacts?: boolean;
   coverUrl?: string;
 }
 
