@@ -650,6 +650,10 @@
     font-size: 0.6rem;
   }
 
+  .pl-time-sec {
+    display: none;
+  }
+
   .pl-line {
     flex-direction: column;
     align-items: flex-start;

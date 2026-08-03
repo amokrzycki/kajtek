@@ -33,6 +33,13 @@ export function setHistoryLoadingState(loading: boolean): void {
   els.historyList.classList.toggle("is-loading", loading);
 }
 
+function formatPlTime(start: string | null | undefined): string {
+  if (!start) return "";
+  const parts = start.split(":");
+  if (parts.length < 3) return escapeHtml(start);
+  return `${escapeHtml(`${parts[0]}:${parts[1]}`)}<span class="pl-time-sec">:${escapeHtml(parts[2] as string)}</span>`;
+}
+
 function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean, isPast: boolean): string {
   if (t.isBreak) {
     const breakDur = t.gapSec
@@ -43,7 +50,7 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
         ? `${t.gapMin} min`
         : "";
     return `
-      <span class="pl-time">${t.start || ""}</span>
+      <span class="pl-time">${formatPlTime(t.start)}</span>
       <span class="pl-dot"></span>
       <span class="pl-break-label">
         <span class="pl-tape-icon">${ICONS.tape}</span>
@@ -57,7 +64,7 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
   const hasTag = isCurrent || isNext;
 
   return `
-    <span class="pl-time">${t.start || ""}</span>
+    <span class="pl-time">${formatPlTime(t.start)}</span>
     <span class="pl-dot"></span>
     <div class="pl-track">
       ${

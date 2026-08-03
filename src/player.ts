@@ -362,7 +362,7 @@ async function ensureStationMetadata(station: Station) {
     }
 
     if (state.station?.id === station.id) {
-      updateAlbumArt(resolveAlbumCoverUrl(state.liveTrack, state.station));
+      updateAlbumArt(resolveAlbumCoverUrl(state.liveTrack, state.station), state.liveTrack);
     }
   }
 }
@@ -451,7 +451,7 @@ function checkRealtimeTrackState() {
   if (evaluated && (state.liveTrack?.artist !== evaluated.artist || state.liveTrack?.title !== evaluated.title)) {
     state.liveTrack = evaluated;
     updateNowPlayingTrack(state.liveTrack);
-    updateAlbumArt(resolveAlbumCoverUrl(state.liveTrack, state.station));
+    updateAlbumArt(resolveAlbumCoverUrl(state.liveTrack, state.station), state.liveTrack);
   }
 }
 
@@ -470,7 +470,7 @@ async function refreshTrackInfo() {
       state.history = data.all || [];
       checkRealtimeTrackState();
       updateNowPlayingTrack(state.liveTrack);
-      updateAlbumArt(resolveAlbumCoverUrl(state.liveTrack, state.station));
+      updateAlbumArt(resolveAlbumCoverUrl(state.liveTrack, state.station), state.liveTrack);
       const doFullSlide = pendingStationSlideIn;
       pendingStationSlideIn = false;
       updateHistoryUI(doFullSlide);
@@ -480,7 +480,7 @@ async function refreshTrackInfo() {
     state.liveTrack = null;
     state.history = [];
     updateNowPlayingTrack(null);
-    updateAlbumArt(resolveAlbumCoverUrl(null, state.station));
+    updateAlbumArt(resolveAlbumCoverUrl(null, state.station), null);
     const doFullSlide = pendingStationSlideIn;
     pendingStationSlideIn = false;
     updateHistoryUI(doFullSlide);

@@ -8,6 +8,8 @@ export const els = {
   reelLeft: document.getElementById("reel-left") as HTMLDivElement,
   reelRight: document.getElementById("reel-right") as HTMLDivElement,
   albumArt: document.getElementById("album-art") as HTMLDivElement,
+  npFavStar: document.getElementById("np-fav-star") as HTMLButtonElement,
+  npBlockBtn: document.getElementById("np-block-btn") as HTMLButtonElement,
   npShortRow: document.getElementById("np-short-row") as HTMLDivElement,
   npShort: document.getElementById("np-short") as HTMLSpanElement,
   npLiveDot: document.getElementById("np-live-dot") as HTMLSpanElement,

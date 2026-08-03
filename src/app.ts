@@ -96,6 +96,22 @@ function attachEvents() {
     }
   });
 
+  els.npFavStar.addEventListener("click", () => {
+    const track = currentTrack();
+    if (track) toggleFavTrack(track, state.station);
+  });
+
+  els.npBlockBtn.addEventListener("click", () => {
+    const track = currentTrack();
+    if (!track) return;
+    if (isBlacklisted(track)) {
+      removeFromBlacklist(normalizeTrackKey(track.artist, track.title));
+    } else {
+      addToBlacklist(track.artist, track.title);
+    }
+    notifyState();
+  });
+
   els.blacklistWarning.addEventListener("click", (e: Event) => {
     const target = e.target as HTMLElement;
     if (target.closest(".bl-warn-switch")) switchBlacklistCandidateNow();
