@@ -62,7 +62,7 @@ function pickBlacklistCandidate(
   if (origin.provider === "rmf") {
     const catalog = getStoredRmfCatalog()?.stations ?? [];
     const raw = catalog.find((r) => r.idname === origin.id || String(r.id) === origin.id);
-    const similarNumericIds = new Set(raw?.similar_stations.id_list.map(String));
+    const similarNumericIds = new Set(raw?.similar_stations?.id_list.map(String));
     const similarIdnames = new Set(catalog.filter((r) => similarNumericIds.has(String(r.id))).map((r) => r.idname));
     // ponytail: ranking hint only, not a guarantee — doesn't verify the candidate's own live
     // track isn't blacklisted (would need an extra fetch per candidate); the switch-cap below

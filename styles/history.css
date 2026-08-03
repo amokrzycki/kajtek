@@ -393,6 +393,19 @@
   color: var(--k-disp-accent);
 }
 
+.pl-block-btn.sc-star {
+  padding: 2px;
+  color: var(--k-disp-dim);
+}
+
+.pl-block-btn.sc-star.on {
+  color: var(--k-led-active);
+}
+
+.pl-block-btn.sc-star:not(:disabled):hover {
+  color: var(--k-led-active);
+}
+
 /* ——— wiersz ulubionych ——— */
 
 .fav-item {

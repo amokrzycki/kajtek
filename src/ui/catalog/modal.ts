@@ -68,7 +68,7 @@ function createModalElements(): void {
           <h2 id="catalog-modal-title" class="k-modal-title">Katalog stacji radiowych</h2>
           <div class="k-modal-updated-row">
             <span id="catalog-updated-time" class="k-modal-updated"></span>
-            <button type="button" id="open-blacklist-btn" class="k-modal-icon-btn" title="Blacklista utworów" aria-label="Blacklista utworów">${ICONS.ban}</button>
+            <button type="button" id="open-blacklist-btn" class="k-modal-icon-btn" title="Blacklista utworów" aria-label="Blacklista utworów">Czarna lista utworów</button>
           </div>
         </div>
         <button type="button" id="catalog-modal-close" class="k-modal-close" aria-label="Zamknij">&times;</button>
@@ -392,7 +392,7 @@ function renderAllTab(
   q: string,
   cache: RmfCatalogCache | null,
 ): void {
-  const stations = allStations.filter((s) => s.cat !== "local").filter((s) => matchesQuery(s, q, cache));
+  const stations = allStations.filter((s) => matchesQuery(s, q, cache));
 
   if (stations.length === 0) {
     if (isFetching) {
@@ -435,7 +435,7 @@ function renderAllTab(
         createStationRow(station, {
           isCustom: customIds.has(station.id),
           showProviderTag: true,
-          showLocalPill: false,
+          showLocalPill: station.cat === "local",
         }),
       );
     });

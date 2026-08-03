@@ -1,3 +1,4 @@
+import { isBlacklisted } from "@/blacklist.js";
 import { TIMERS } from "@/consts.js";
 import { ICONS } from "@/icons.js";
 import { state } from "@/state.js";
@@ -70,14 +71,15 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
         <span class="pl-title">${t.title}</span>
       </div>
     </div>
-    ${
-      isPast || isCurrent
-        ? `<div class="pl-actions">
-            <span class="pl-dur">${durStr}</span>
-            <button type="button" class="sc-star pl-fav-star${isTrackFavorited(t) ? " on" : ""}" data-key="${escapeHtml(getTrackKey(t))}" aria-label="${isTrackFavorited(t) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">${ICONS.star(isTrackFavorited(t))}</button>
-          </div>`
-        : `<span class="pl-dur">${durStr}</span>`
-    }
+    <div class="pl-actions">
+      <span class="pl-dur">${durStr}</span>
+      ${
+        isPast || isCurrent
+          ? `<button type="button" class="sc-star pl-fav-star${isTrackFavorited(t) ? " on" : ""}" data-key="${escapeHtml(getTrackKey(t))}" aria-label="${isTrackFavorited(t) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">${ICONS.star(isTrackFavorited(t))}</button>`
+          : ""
+      }
+      <button type="button" class="sc-star pl-block-btn${isBlacklisted(t) ? " on" : ""}" data-artist="${escapeHtml(t.artist)}" data-title="${escapeHtml(t.title)}" aria-label="${isBlacklisted(t) ? "Odblokuj utwór" : "Zablokuj utwór"}" title="${isBlacklisted(t) ? "Odblokuj utwór" : "Zablokuj utwór"}">${ICONS.ban}</button>
+    </div>
   `;
 }
 
@@ -174,6 +176,7 @@ export function updateHistoryUI(animateSlideIn = false): void {
       isNext,
       isPast,
       isPast || isCurrent ? isTrackFavorited(t) : false,
+      t.isBreak ? false : isBlacklisted(t),
     ]),
   );
 

@@ -1,3 +1,4 @@
+import { addToBlacklist, isBlacklisted, normalizeTrackKey, removeFromBlacklist } from "./blacklist.js";
 import { getAllKnownStations } from "./catalog.js";
 import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
 import {
@@ -71,11 +72,28 @@ function attachEvents() {
   });
 
   els.historyList.addEventListener("click", (e: Event) => {
-    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".pl-fav-star");
-    if (!btn) return;
-    const key = btn.getAttribute("data-key");
-    const track = state.history.find((t) => getTrackKey(t) === key);
-    if (track) toggleFavTrack(track, state.station);
+    const target = e.target as HTMLElement;
+
+    const favBtn = target.closest<HTMLButtonElement>(".pl-fav-star");
+    if (favBtn) {
+      const key = favBtn.getAttribute("data-key");
+      const track = state.history.find((t) => getTrackKey(t) === key);
+      if (track) toggleFavTrack(track, state.station);
+      return;
+    }
+
+    const blockBtn = target.closest<HTMLButtonElement>(".pl-block-btn");
+    if (blockBtn) {
+      const artist = blockBtn.getAttribute("data-artist") || "";
+      const title = blockBtn.getAttribute("data-title") || "";
+      if (!artist || !title) return;
+      if (isBlacklisted({ artist, title })) {
+        removeFromBlacklist(normalizeTrackKey(artist, title));
+      } else {
+        addToBlacklist(artist, title);
+      }
+      notifyState();
+    }
   });
 
   els.blacklistWarning.addEventListener("click", (e: Event) => {
