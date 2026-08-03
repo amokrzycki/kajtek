@@ -20,6 +20,20 @@ import { getFactsLabel, getTrackKey, resolveProtocolRelativeUrl } from "./utils.
 let failoverTimestamps: number[] = [];
 let hlsInstance: Hls | null = null;
 
+const RATE_LIMIT_WINDOW_MS = 30000;
+const RATE_LIMIT_MAX = 3;
+
+function withinRateLimit(
+  timestamps: number[],
+  windowMs: number,
+  max: number,
+): { timestamps: number[]; limited: boolean } {
+  const now = Date.now();
+  const recent = timestamps.filter((t) => now - t < windowMs);
+  if (recent.length >= max) return { timestamps: recent, limited: true };
+  return { timestamps: [...recent, now], limited: false };
+}
+
 interface BlacklistWarning {
   phase: "warning" | "switched";
   track: TrackInfo;
@@ -49,9 +63,7 @@ function pickBlacklistCandidate(
     const catalog = getStoredRmfCatalog()?.stations ?? [];
     const raw = catalog.find((r) => r.idname === origin.id || String(r.id) === origin.id);
     const similarNumericIds = new Set(raw?.similar_stations.id_list.map(String));
-    const similarIdnames = new Set(
-      catalog.filter((r) => similarNumericIds.has(String(r.id))).map((r) => r.idname),
-    );
+    const similarIdnames = new Set(catalog.filter((r) => similarNumericIds.has(String(r.id))).map((r) => r.idname));
     // ponytail: ranking hint only, not a guarantee — doesn't verify the candidate's own live
     // track isn't blacklisted (would need an extra fetch per candidate); the switch-cap below
     // self-corrects on the next detection pass if it turns out bad.
@@ -67,18 +79,16 @@ function pickBlacklistCandidate(
 }
 
 function performBlacklistSwitch(track: TrackInfo, originStation: Station, candidate: Station, reason: string) {
-  const NOW = Date.now();
-  blacklistSwitchTimestamps = blacklistSwitchTimestamps.filter((t) => NOW - t < 30000);
+  const rateLimit = withinRateLimit(blacklistSwitchTimestamps, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX);
+  blacklistSwitchTimestamps = rateLimit.timestamps;
 
-  if (blacklistSwitchTimestamps.length >= 3) {
-    // ponytail: same rolling cap as handleAudioFailover — avoid switching forever if every
-    // candidate keeps landing on another blacklisted song.
+  if (rateLimit.limited) {
+    // avoid switching forever if every candidate keeps landing on another blacklisted song.
     dismissedTrackKey = getTrackKey(track);
     blacklistWarning = null;
     return;
   }
 
-  blacklistSwitchTimestamps.push(NOW);
   selectStation(candidate);
   blacklistWarning = {
     phase: "switched",
@@ -119,11 +129,7 @@ function armBlacklistWarning(track: TrackInfo, origin: Station, immediate: boole
 function detectBlacklistedUpcoming() {
   if (!state.station || blacklistWarning) return;
 
-  if (
-    state.liveTrack &&
-    (!state.liveTrack.isLiveBreak || state.liveTrack.isFacts) &&
-    isBlacklisted(state.liveTrack)
-  ) {
+  if (state.liveTrack && (!state.liveTrack.isLiveBreak || state.liveTrack.isFacts) && isBlacklisted(state.liveTrack)) {
     const key = getTrackKey(state.liveTrack);
     if (key !== dismissedTrackKey) armBlacklistWarning(state.liveTrack, state.station, true);
     return;
@@ -264,12 +270,12 @@ async function playStreamUrl(url: string | undefined): Promise<void> {
 function handleAudioFailover() {
   if (!state.playing || !state.station) return;
 
-  const NOW = Date.now();
-  failoverTimestamps = failoverTimestamps.filter((t) => NOW - t < 30000);
+  const rateLimit = withinRateLimit(failoverTimestamps, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX);
+  failoverTimestamps = rateLimit.timestamps;
 
   const streams = state.station._streams || [state.station.stream];
 
-  if (failoverTimestamps.length >= 3) {
+  if (rateLimit.limited) {
     // max 3 stream switches in 30s limit to avoid infinite retry loop during outage.
     state.playing = false;
     radioAudio.pause();
@@ -281,7 +287,6 @@ function handleAudioFailover() {
     return;
   }
 
-  failoverTimestamps.push(NOW);
   const currentIdx = state.station._currentStreamIndex || 0;
   const nextIdx = (currentIdx + 1) % streams.length;
   state.station._currentStreamIndex = nextIdx;

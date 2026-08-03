@@ -2,6 +2,7 @@ import { addToBlacklist, getBlacklist, removeFromBlacklist } from "@/blacklist.j
 import { ICONS } from "@/icons.js";
 import { currentTrack } from "@/player.js";
 import { escapeHtml } from "@/utils.js";
+import { bindModalDismiss, closeModal, openModal } from "../modal.js";
 
 type BlacklistTab = "list" | "add";
 
@@ -15,31 +16,15 @@ export function openBlacklistModal(): void {
   if (!modalEl) {
     createModalElements();
   }
-  if (modalEl) {
-    modalEl.removeAttribute("aria-hidden");
-    document.body.style.overflow = "hidden";
-    requestAnimationFrame(() => {
-      modalEl?.classList.add("is-open");
-    });
-  }
+  if (modalEl) openModal(modalEl);
 
   renderModalBody();
 }
 
 export function closeBlacklistModal(): void {
-  if (modalEl?.classList.contains("is-open")) {
-    if (document.activeElement && modalEl.contains(document.activeElement)) {
-      (document.activeElement as HTMLElement).blur();
-    }
-    if (previousActiveElement && typeof previousActiveElement.focus === "function") {
-      previousActiveElement.focus();
-      previousActiveElement = null;
-    }
-
-    modalEl.classList.remove("is-open");
-    modalEl.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
-  }
+  if (!modalEl) return;
+  closeModal(modalEl, previousActiveElement);
+  previousActiveElement = null;
 }
 
 function setActiveTab(tab: BlacklistTab): void {
@@ -78,15 +63,7 @@ function createModalElements(): void {
 
   document.body.appendChild(modalEl);
 
-  modalEl.addEventListener("click", (e) => {
-    if (e.target === modalEl) closeBlacklistModal();
-  });
-
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && modalEl && modalEl.classList.contains("is-open")) {
-      closeBlacklistModal();
-    }
-  });
+  bindModalDismiss(modalEl, closeBlacklistModal);
 
   modalEl.querySelector("#blacklist-modal-close")?.addEventListener("click", closeBlacklistModal);
 

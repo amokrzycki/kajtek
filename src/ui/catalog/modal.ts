@@ -12,6 +12,7 @@ import { notifyState } from "@/state.js";
 import type { RmfCatalogCache, Station } from "@/types.js";
 import { escapeHtml, renderStationThumbHtml } from "@/utils.js";
 import { openBlacklistModal } from "../blacklist/modal.js";
+import { bindModalDismiss, closeModal, openModal } from "../modal.js";
 import { handleCustomStationSubmit } from "./form.js";
 
 type CatalogTab = "all" | "local" | "custom";
@@ -38,13 +39,7 @@ export function openCatalogModal(): void {
   if (!modalEl) {
     createModalElements();
   }
-  if (modalEl) {
-    modalEl.removeAttribute("aria-hidden");
-    document.body.style.overflow = "hidden";
-    requestAnimationFrame(() => {
-      modalEl?.classList.add("is-open");
-    });
-  }
+  if (modalEl) openModal(modalEl);
 
   // Load catalog cache or fetch if missing
   const cache = getStoredRmfCatalog();
@@ -56,19 +51,9 @@ export function openCatalogModal(): void {
 }
 
 export function closeCatalogModal(): void {
-  if (modalEl?.classList.contains("is-open")) {
-    if (document.activeElement && modalEl.contains(document.activeElement)) {
-      (document.activeElement as HTMLElement).blur();
-    }
-    if (previousActiveElement && typeof previousActiveElement.focus === "function") {
-      previousActiveElement.focus();
-      previousActiveElement = null;
-    }
-
-    modalEl.classList.remove("is-open");
-    modalEl.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
-  }
+  if (!modalEl) return;
+  closeModal(modalEl, previousActiveElement);
+  previousActiveElement = null;
 }
 
 function createModalElements(): void {
@@ -131,15 +116,7 @@ function createModalElements(): void {
 
   document.body.appendChild(modalEl);
 
-  modalEl.addEventListener("click", (e) => {
-    if (e.target === modalEl) closeCatalogModal();
-  });
-
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && modalEl && modalEl.classList.contains("is-open")) {
-      closeCatalogModal();
-    }
-  });
+  bindModalDismiss(modalEl, closeCatalogModal);
 
   const closeBtn = modalEl.querySelector("#catalog-modal-close");
   closeBtn?.addEventListener("click", closeCatalogModal);

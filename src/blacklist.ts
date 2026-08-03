@@ -4,7 +4,6 @@ export interface BlacklistEntry {
   key: string;
   artist: string;
   title: string;
-  addedAt: number;
 }
 
 export function normalizeTrackKey(artist: string, title: string): string {
@@ -36,7 +35,7 @@ export function addToBlacklist(artist: string, title: string): void {
   const key = normalizeTrackKey(artist, title);
   const list = getBlacklist();
   if (list.some((e) => e.key === key)) return;
-  list.unshift({ key, artist: artist.trim(), title: title.trim(), addedAt: Date.now() });
+  list.unshift({ key, artist: artist.trim(), title: title.trim() });
   saveBlacklist(list);
 }
 

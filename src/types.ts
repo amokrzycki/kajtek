@@ -45,7 +45,6 @@ export interface RawRmfStation {
 
 interface SimilarStations {
   id_list: number[];
-  station_list: Omit<Station, "station_category">[];
 }
 
 export interface RmfCatalogCache {
