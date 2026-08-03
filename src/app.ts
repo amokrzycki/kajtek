@@ -1,6 +1,14 @@
+import { addToBlacklist, isBlacklisted, normalizeTrackKey, removeFromBlacklist } from "./blacklist.js";
 import { getAllKnownStations } from "./catalog.js";
 import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
-import { currentTrack, selectStation, togglePlay } from "./player.js";
+import {
+  currentTrack,
+  dismissBlacklistWarning,
+  returnToPreviousStation,
+  selectStation,
+  switchBlacklistCandidateNow,
+  togglePlay,
+} from "./player.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { notifyState, state, subscribeState } from "./state.js";
 import { removeFavTrackByKey } from "./ui/favorites.js";
@@ -64,11 +72,51 @@ function attachEvents() {
   });
 
   els.historyList.addEventListener("click", (e: Event) => {
-    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".pl-fav-star");
-    if (!btn) return;
-    const key = btn.getAttribute("data-key");
-    const track = state.history.find((t) => getTrackKey(t) === key);
+    const target = e.target as HTMLElement;
+
+    const favBtn = target.closest<HTMLButtonElement>(".pl-fav-star");
+    if (favBtn) {
+      const key = favBtn.getAttribute("data-key");
+      const track = state.history.find((t) => getTrackKey(t) === key);
+      if (track) toggleFavTrack(track, state.station);
+      return;
+    }
+
+    const blockBtn = target.closest<HTMLButtonElement>(".pl-block-btn");
+    if (blockBtn) {
+      const artist = blockBtn.getAttribute("data-artist") || "";
+      const title = blockBtn.getAttribute("data-title") || "";
+      if (!artist || !title) return;
+      if (isBlacklisted({ artist, title })) {
+        removeFromBlacklist(normalizeTrackKey(artist, title));
+      } else {
+        addToBlacklist(artist, title);
+      }
+      notifyState();
+    }
+  });
+
+  els.npFavStar.addEventListener("click", () => {
+    const track = currentTrack();
     if (track) toggleFavTrack(track, state.station);
+  });
+
+  els.npBlockBtn.addEventListener("click", () => {
+    const track = currentTrack();
+    if (!track) return;
+    if (isBlacklisted(track)) {
+      removeFromBlacklist(normalizeTrackKey(track.artist, track.title));
+    } else {
+      addToBlacklist(track.artist, track.title);
+    }
+    notifyState();
+  });
+
+  els.blacklistWarning.addEventListener("click", (e: Event) => {
+    const target = e.target as HTMLElement;
+    if (target.closest(".bl-warn-switch")) switchBlacklistCandidateNow();
+    else if (target.closest(".bl-warn-play-anyway")) dismissBlacklistWarning();
+    else if (target.closest(".bl-warn-revert")) returnToPreviousStation();
   });
 
   els.favoritesList.addEventListener("click", (e: Event) => {

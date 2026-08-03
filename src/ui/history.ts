@@ -1,3 +1,4 @@
+import { isBlacklisted } from "@/blacklist.js";
 import { TIMERS } from "@/consts.js";
 import { ICONS } from "@/icons.js";
 import { state } from "@/state.js";
@@ -32,6 +33,13 @@ export function setHistoryLoadingState(loading: boolean): void {
   els.historyList.classList.toggle("is-loading", loading);
 }
 
+function formatPlTime(start: string | null | undefined): string {
+  if (!start) return "";
+  const parts = start.split(":");
+  if (parts.length < 3) return escapeHtml(start);
+  return `${escapeHtml(`${parts[0]}:${parts[1]}`)}<span class="pl-time-sec">:${escapeHtml(parts[2] as string)}</span>`;
+}
+
 function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean, isPast: boolean): string {
   if (t.isBreak) {
     const breakDur = t.gapSec
@@ -42,7 +50,7 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
         ? `${t.gapMin} min`
         : "";
     return `
-      <span class="pl-time">${t.start || ""}</span>
+      <span class="pl-time">${formatPlTime(t.start)}</span>
       <span class="pl-dot"></span>
       <span class="pl-break-label">
         <span class="pl-tape-icon">${ICONS.tape}</span>
@@ -56,7 +64,7 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
   const hasTag = isCurrent || isNext;
 
   return `
-    <span class="pl-time">${t.start || ""}</span>
+    <span class="pl-time">${formatPlTime(t.start)}</span>
     <span class="pl-dot"></span>
     <div class="pl-track">
       ${
@@ -70,14 +78,15 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
         <span class="pl-title">${t.title}</span>
       </div>
     </div>
-    ${
-      isPast || isCurrent
-        ? `<div class="pl-actions">
-            <span class="pl-dur">${durStr}</span>
-            <button type="button" class="sc-star pl-fav-star${isTrackFavorited(t) ? " on" : ""}" data-key="${escapeHtml(getTrackKey(t))}" aria-label="${isTrackFavorited(t) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">${ICONS.star(isTrackFavorited(t))}</button>
-          </div>`
-        : `<span class="pl-dur">${durStr}</span>`
-    }
+    <div class="pl-actions">
+      <span class="pl-dur">${durStr}</span>
+      ${
+        isPast || isCurrent
+          ? `<button type="button" class="sc-star pl-fav-star${isTrackFavorited(t) ? " on" : ""}" data-key="${escapeHtml(getTrackKey(t))}" aria-label="${isTrackFavorited(t) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">${ICONS.star(isTrackFavorited(t))}</button>`
+          : ""
+      }
+      <button type="button" class="sc-star pl-block-btn${isBlacklisted(t) ? " on" : ""}" data-artist="${escapeHtml(t.artist)}" data-title="${escapeHtml(t.title)}" aria-label="${isBlacklisted(t) ? "Odblokuj utwór" : "Zablokuj utwór"}" title="${isBlacklisted(t) ? "Odblokuj utwór" : "Zablokuj utwór"}">${ICONS.ban}</button>
+    </div>
   `;
 }
 
@@ -174,6 +183,7 @@ export function updateHistoryUI(animateSlideIn = false): void {
       isNext,
       isPast,
       isPast || isCurrent ? isTrackFavorited(t) : false,
+      t.isBreak ? false : isBlacklisted(t),
     ]),
   );
 

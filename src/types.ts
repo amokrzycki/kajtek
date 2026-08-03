@@ -40,6 +40,11 @@ export interface RawRmfStation {
   search?: string;
   in_premium: number;
   station_category: Array<{ name: string; slug: string }>;
+  similar_stations: SimilarStations;
+}
+
+interface SimilarStations {
+  id_list: number[];
 }
 
 export interface RmfCatalogCache {
@@ -84,6 +89,7 @@ export interface TrackInfo {
   gapMin?: number;
   label?: string;
   isLiveBreak?: boolean;
+  isFacts?: boolean;
   coverUrl?: string;
 }
 

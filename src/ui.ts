@@ -1,3 +1,4 @@
+import { isBlacklisted } from "./blacklist.js";
 import { getEnabledStations } from "./catalog.js";
 import { STORAGE_KEYS } from "./consts.js";
 import { isVolAnimating } from "./controls.js";
@@ -5,8 +6,9 @@ import { ICONS } from "./icons.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
+import { renderBlacklistWarning } from "./ui/blacklistWarning.js";
 import { els, initVolumeControlUI, initVU, renderVolLadder } from "./ui/elements.js";
-import { applyHistoryTabVisibility, renderFavoritesUI } from "./ui/favorites.js";
+import { applyHistoryTabVisibility, isTrackFavorited, renderFavoritesUI } from "./ui/favorites.js";
 import { setHistoryLoadingState, triggerHistorySlideIn, updateHistoryUI } from "./ui/history.js";
 import { renderStationList } from "./ui/stations.js";
 import { triggerFade } from "./utils.js";
@@ -100,7 +102,7 @@ export function resolveAlbumCoverUrl(track: TrackInfo | null, station: Station |
   return station?.coverUrl || "";
 }
 
-export function updateAlbumArt(coverUrl: string | undefined): void {
+export function updateAlbumArt(coverUrl: string | undefined, track: TrackInfo | null): void {
   const art = els.albumArt;
   let img = art.querySelector<HTMLImageElement>(".album-art-img");
   const initial = art.querySelector<HTMLElement>(".album-art-initial");
@@ -136,6 +138,18 @@ export function updateAlbumArt(coverUrl: string | undefined): void {
     }
     if (initial) initial.style.opacity = "";
     if (label) label.style.opacity = "";
+  }
+
+  if (track) {
+    els.npFavStar.hidden = false;
+    els.npFavStar.innerHTML = ICONS.star(isTrackFavorited(track));
+    els.npFavStar.classList.toggle("on", isTrackFavorited(track));
+    els.npBlockBtn.hidden = false;
+    els.npBlockBtn.innerHTML = ICONS.ban;
+    els.npBlockBtn.classList.toggle("on", isBlacklisted(track));
+  } else {
+    els.npFavStar.hidden = true;
+    els.npBlockBtn.hidden = true;
   }
 }
 
@@ -176,7 +190,7 @@ export function updateUI(
     const label = els.albumArt.querySelector(".album-art-label");
     if (initial) initial.textContent = state.station.name.charAt(0);
     if (label) label.textContent = state.station.name;
-    updateAlbumArt(resolveAlbumCoverUrl(currentTrack, state.station));
+    updateAlbumArt(resolveAlbumCoverUrl(currentTrack, state.station), currentTrack);
   } else {
     els.npShortRow.classList.add("hidden");
     els.npShort.textContent = "—";
@@ -189,6 +203,8 @@ export function updateUI(
     const label = els.albumArt.querySelector(".album-art-label");
     if (initial) initial.textContent = "?";
     if (label) label.textContent = "— —";
+    els.npFavStar.hidden = true;
+    els.npBlockBtn.hidden = true;
   }
 
   if (!isVolAnimating()) {
@@ -218,6 +234,7 @@ export function updateUI(
 
   els.historyPanel.classList.toggle("open", willOpenHistory);
   updateHistoryUI();
+  renderBlacklistWarning();
   renderFavoritesUI();
   applyHistoryTabVisibility();
 

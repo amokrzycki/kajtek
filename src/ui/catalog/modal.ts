@@ -11,6 +11,8 @@ import { ICONS } from "@/icons.js";
 import { notifyState } from "@/state.js";
 import type { RmfCatalogCache, Station } from "@/types.js";
 import { escapeHtml, renderStationThumbHtml } from "@/utils.js";
+import { openBlacklistModal } from "../blacklist/modal.js";
+import { bindModalDismiss, closeModal, openModal } from "../modal.js";
 import { handleCustomStationSubmit } from "./form.js";
 
 type CatalogTab = "all" | "local" | "custom";
@@ -37,13 +39,7 @@ export function openCatalogModal(): void {
   if (!modalEl) {
     createModalElements();
   }
-  if (modalEl) {
-    modalEl.removeAttribute("aria-hidden");
-    document.body.style.overflow = "hidden";
-    requestAnimationFrame(() => {
-      modalEl?.classList.add("is-open");
-    });
-  }
+  if (modalEl) openModal(modalEl);
 
   // Load catalog cache or fetch if missing
   const cache = getStoredRmfCatalog();
@@ -55,19 +51,9 @@ export function openCatalogModal(): void {
 }
 
 export function closeCatalogModal(): void {
-  if (modalEl?.classList.contains("is-open")) {
-    if (document.activeElement && modalEl.contains(document.activeElement)) {
-      (document.activeElement as HTMLElement).blur();
-    }
-    if (previousActiveElement && typeof previousActiveElement.focus === "function") {
-      previousActiveElement.focus();
-      previousActiveElement = null;
-    }
-
-    modalEl.classList.remove("is-open");
-    modalEl.setAttribute("aria-hidden", "true");
-    document.body.style.overflow = "";
-  }
+  if (!modalEl) return;
+  closeModal(modalEl, previousActiveElement);
+  previousActiveElement = null;
 }
 
 function createModalElements(): void {
@@ -80,7 +66,10 @@ function createModalElements(): void {
       <div class="k-modal-header">
         <div class="k-modal-title-group">
           <h2 id="catalog-modal-title" class="k-modal-title">Katalog stacji radiowych</h2>
-          <span id="catalog-updated-time" class="k-modal-updated"></span>
+          <div class="k-modal-updated-row">
+            <span id="catalog-updated-time" class="k-modal-updated"></span>
+            <button type="button" id="open-blacklist-btn" class="k-modal-icon-btn" title="Blacklista utworów" aria-label="Blacklista utworów">Czarna lista utworów</button>
+          </div>
         </div>
         <button type="button" id="catalog-modal-close" class="k-modal-close" aria-label="Zamknij">&times;</button>
       </div>
@@ -127,18 +116,13 @@ function createModalElements(): void {
 
   document.body.appendChild(modalEl);
 
-  modalEl.addEventListener("click", (e) => {
-    if (e.target === modalEl) closeCatalogModal();
-  });
-
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && modalEl && modalEl.classList.contains("is-open")) {
-      closeCatalogModal();
-    }
-  });
+  bindModalDismiss(modalEl, closeCatalogModal);
 
   const closeBtn = modalEl.querySelector("#catalog-modal-close");
   closeBtn?.addEventListener("click", closeCatalogModal);
+
+  const blacklistBtn = modalEl.querySelector("#open-blacklist-btn");
+  blacklistBtn?.addEventListener("click", () => openBlacklistModal());
 
   const searchInput = modalEl.querySelector<HTMLInputElement>("#catalog-search-input");
   searchInput?.addEventListener("input", (e) => {
@@ -408,7 +392,7 @@ function renderAllTab(
   q: string,
   cache: RmfCatalogCache | null,
 ): void {
-  const stations = allStations.filter((s) => s.cat !== "local").filter((s) => matchesQuery(s, q, cache));
+  const stations = allStations.filter((s) => matchesQuery(s, q, cache));
 
   if (stations.length === 0) {
     if (isFetching) {
@@ -451,7 +435,7 @@ function renderAllTab(
         createStationRow(station, {
           isCustom: customIds.has(station.id),
           showProviderTag: true,
-          showLocalPill: false,
+          showLocalPill: station.cat === "local",
         }),
       );
     });

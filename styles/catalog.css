@@ -69,7 +69,6 @@
   font-size: var(--k-fs-label);
   color: var(--k-text-faint);
   display: block;
-  margin-top: 2px;
 }
 
 .k-modal-close {
@@ -84,6 +83,30 @@
 
 .k-modal-close:hover {
   color: var(--k-text);
+}
+
+.k-modal-updated-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.k-modal-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: var(--k-text-faint);
+  cursor: pointer;
+  transition: color var(--k-tr);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-label);
+}
+
+.k-modal-icon-btn:hover {
+  color: var(--k-accent);
 }
 
 .k-modal-toolbar {

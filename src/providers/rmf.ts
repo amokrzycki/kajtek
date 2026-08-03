@@ -121,6 +121,7 @@ export const rmfProvider: Provider = {
           artist: station?.name || "Radio",
           title: label,
           isLiveBreak: true,
+          isFacts: factsInfo.isFacts,
         };
       } else {
         activeTrack = {
@@ -136,6 +137,7 @@ export const rmfProvider: Provider = {
         artist: station?.name || "Radio",
         title: breakTitle,
         isLiveBreak: true,
+        isFacts: factsInfo.isFacts,
       };
     } else if (curItem) {
       activeTrack = {
