@@ -86,6 +86,28 @@
   color: var(--k-text);
 }
 
+.k-modal-updated-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.k-modal-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 2px;
+  color: var(--k-text-faint);
+  cursor: pointer;
+  transition: color var(--k-tr);
+}
+
+.k-modal-icon-btn:hover {
+  color: var(--k-accent);
+}
+
 .k-modal-toolbar {
   padding: 0.75rem 1rem;
   display: flex;

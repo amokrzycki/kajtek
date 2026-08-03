@@ -1,6 +1,13 @@
 import { getAllKnownStations } from "./catalog.js";
 import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
-import { currentTrack, selectStation, togglePlay } from "./player.js";
+import {
+  currentTrack,
+  dismissBlacklistWarning,
+  returnToPreviousStation,
+  selectStation,
+  switchBlacklistCandidateNow,
+  togglePlay,
+} from "./player.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { notifyState, state, subscribeState } from "./state.js";
 import { removeFavTrackByKey } from "./ui/favorites.js";
@@ -69,6 +76,13 @@ function attachEvents() {
     const key = btn.getAttribute("data-key");
     const track = state.history.find((t) => getTrackKey(t) === key);
     if (track) toggleFavTrack(track, state.station);
+  });
+
+  els.blacklistWarning.addEventListener("click", (e: Event) => {
+    const target = e.target as HTMLElement;
+    if (target.closest(".bl-warn-switch")) switchBlacklistCandidateNow();
+    else if (target.closest(".bl-warn-play-anyway")) dismissBlacklistWarning();
+    else if (target.closest(".bl-warn-revert")) returnToPreviousStation();
   });
 
   els.favoritesList.addEventListener("click", (e: Event) => {

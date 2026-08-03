@@ -1,0 +1,45 @@
+import { STORAGE_KEYS } from "./consts.js";
+
+export interface BlacklistEntry {
+  key: string;
+  artist: string;
+  title: string;
+  addedAt: number;
+}
+
+export function normalizeTrackKey(artist: string, title: string): string {
+  return `${artist.trim().toLowerCase()}::${title.trim().toLowerCase()}`;
+}
+
+export function getBlacklist(): BlacklistEntry[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.BLACKLIST);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? (parsed as BlacklistEntry[]) : [];
+  } catch (_) {
+    return [];
+  }
+}
+
+function saveBlacklist(list: BlacklistEntry[]): void {
+  localStorage.setItem(STORAGE_KEYS.BLACKLIST, JSON.stringify(list));
+}
+
+export function isBlacklisted(t: { artist?: string; title?: string } | null | undefined): boolean {
+  if (!t?.artist || !t.title) return false;
+  const key = normalizeTrackKey(t.artist, t.title);
+  return getBlacklist().some((e) => e.key === key);
+}
+
+export function addToBlacklist(artist: string, title: string): void {
+  const key = normalizeTrackKey(artist, title);
+  const list = getBlacklist();
+  if (list.some((e) => e.key === key)) return;
+  list.unshift({ key, artist: artist.trim(), title: title.trim(), addedAt: Date.now() });
+  saveBlacklist(list);
+}
+
+export function removeFromBlacklist(key: string): void {
+  saveBlacklist(getBlacklist().filter((e) => e.key !== key));
+}

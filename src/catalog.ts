@@ -50,6 +50,21 @@ export async function fetchRmfCatalog(): Promise<RmfCatalogCache> {
               img,
               in_premium: typeof item.in_premium === "number" ? item.in_premium : 0,
               station_category: Array.isArray(item.station_category) ? item.station_category : [],
+              similar_stations: {
+                id_list: Array.isArray(item.similar_stations?.id_list)
+                  ? item.similar_stations.id_list.map((id) => Number(id)).filter((id) => !Number.isNaN(id))
+                  : [],
+                station_list: Array.isArray(item.similar_stations?.station_list)
+                  ? item.similar_stations.station_list.map((s) => ({
+                      id: String(s.id),
+                      name: String(s.name),
+                      short: String(s.short),
+                      cat: String(s.cat),
+                      provider: String(s.provider),
+                      stream: String(s.stream),
+                    }))
+                  : [],
+              },
             };
             if (item.description) st.description = String(item.description);
             if (item.search) st.search = String(item.search);

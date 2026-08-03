@@ -1,5 +1,6 @@
 import type Hls from "hls.js";
-import { getOrderedStations } from "./catalog.js";
+import { isBlacklisted } from "./blacklist.js";
+import { getOrderedStations, getStoredRmfCatalog } from "./catalog.js";
 import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
 import { rmfProvider } from "./providers/rmf.js";
@@ -14,10 +15,172 @@ import {
   updateHistoryUI,
   updateNowPlayingTrack,
 } from "./ui.js";
-import { getFactsLabel, resolveProtocolRelativeUrl } from "./utils.js";
+import { getFactsLabel, getTrackKey, resolveProtocolRelativeUrl } from "./utils.js";
 
 let failoverTimestamps: number[] = [];
 let hlsInstance: Hls | null = null;
+
+interface BlacklistWarning {
+  phase: "warning" | "switched";
+  track: TrackInfo;
+  trackKey: string;
+  originStation: Station;
+  candidate: Station;
+  candidateReason: "favorite" | "similar" | "other";
+  secondsLeft: number;
+  switchedAt?: number;
+}
+
+let blacklistWarning: BlacklistWarning | null = null;
+let dismissedTrackKey: string | null = null;
+let blacklistSwitchTimestamps: number[] = [];
+
+export function getBlacklistWarningState(): BlacklistWarning | null {
+  return blacklistWarning;
+}
+
+function pickBlacklistCandidate(
+  origin: Station,
+): { station: Station; reason: "favorite" | "similar" | "other" } | null {
+  const pool = getOrderedStations().filter((s) => s.id !== origin.id);
+  if (pool.length === 0) return null;
+
+  if (origin.provider === "rmf") {
+    const raw = getStoredRmfCatalog()?.stations.find((r) => r.idname === origin.id || String(r.id) === origin.id);
+    const similarIds = new Set(raw?.similar_stations.station_list.map((s) => s.id));
+    // ponytail: ranking hint only, not a guarantee — doesn't verify the candidate's own live
+    // track isn't blacklisted (would need an extra fetch per candidate); the switch-cap below
+    // self-corrects on the next detection pass if it turns out bad.
+    const similar = pool.find((s) => similarIds.has(s.id));
+    if (similar) return { station: similar, reason: state.favs.has(similar.id) ? "favorite" : "similar" };
+  }
+
+  const fav = pool.find((s) => state.favs.has(s.id));
+  if (fav) return { station: fav, reason: "favorite" };
+
+  const first = pool[0];
+  return first ? { station: first, reason: "other" } : null;
+}
+
+function performBlacklistSwitch(track: TrackInfo, originStation: Station, candidate: Station, reason: string) {
+  const NOW = Date.now();
+  blacklistSwitchTimestamps = blacklistSwitchTimestamps.filter((t) => NOW - t < 30000);
+
+  if (blacklistSwitchTimestamps.length >= 3) {
+    // ponytail: same rolling cap as handleAudioFailover — avoid switching forever if every
+    // candidate keeps landing on another blacklisted song.
+    dismissedTrackKey = getTrackKey(track);
+    blacklistWarning = null;
+    return;
+  }
+
+  blacklistSwitchTimestamps.push(NOW);
+  selectStation(candidate);
+  blacklistWarning = {
+    phase: "switched",
+    track,
+    trackKey: getTrackKey(track),
+    originStation,
+    candidate,
+    candidateReason: reason as "favorite" | "similar" | "other",
+    secondsLeft: 0,
+    switchedAt: Date.now(),
+  };
+}
+
+function armBlacklistWarning(track: TrackInfo, origin: Station, immediate: boolean) {
+  const picked = pickBlacklistCandidate(origin);
+  if (!picked) return;
+
+  state.showHistory = true;
+  state.historyTab = "program";
+
+  if (immediate) {
+    performBlacklistSwitch(track, origin, picked.station, picked.reason);
+  } else {
+    const nowSec = Math.floor(Date.now() / 1000);
+    blacklistWarning = {
+      phase: "warning",
+      track,
+      trackKey: getTrackKey(track),
+      originStation: origin,
+      candidate: picked.station,
+      candidateReason: picked.reason,
+      secondsLeft: (track.timestamp ?? nowSec) - nowSec,
+    };
+  }
+  notifyState();
+}
+
+function detectBlacklistedUpcoming() {
+  if (!state.station || blacklistWarning) return;
+
+  if (state.liveTrack && !state.liveTrack.isBreak && isBlacklisted(state.liveTrack)) {
+    const key = getTrackKey(state.liveTrack);
+    if (key !== dismissedTrackKey) armBlacklistWarning(state.liveTrack, state.station, true);
+    return;
+  }
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const upcoming = state.history
+    .filter((t) => !t.isBreak && t.artist && t.title && t.timestamp && t.timestamp > nowSec)
+    .sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0))[0];
+
+  if (upcoming && isBlacklisted(upcoming) && getTrackKey(upcoming) !== dismissedTrackKey) {
+    armBlacklistWarning(upcoming, state.station, false);
+  }
+}
+
+export function switchBlacklistCandidateNow(): void {
+  if (blacklistWarning?.phase !== "warning") return;
+  performBlacklistSwitch(
+    blacklistWarning.track,
+    blacklistWarning.originStation,
+    blacklistWarning.candidate,
+    blacklistWarning.candidateReason,
+  );
+  notifyState();
+}
+
+export function dismissBlacklistWarning(): void {
+  if (!blacklistWarning) return;
+  dismissedTrackKey = blacklistWarning.trackKey;
+  blacklistWarning = null;
+  notifyState();
+}
+
+export function returnToPreviousStation(): void {
+  if (blacklistWarning?.phase !== "switched") return;
+  const { originStation } = blacklistWarning;
+  blacklistWarning = null;
+  selectStation(originStation);
+}
+
+setInterval(() => {
+  if (!blacklistWarning) return;
+
+  if (blacklistWarning.phase === "warning") {
+    const nowSec = Math.floor(Date.now() / 1000);
+    const secondsLeft = (blacklistWarning.track.timestamp ?? nowSec) - nowSec;
+    if (secondsLeft <= 0) {
+      performBlacklistSwitch(
+        blacklistWarning.track,
+        blacklistWarning.originStation,
+        blacklistWarning.candidate,
+        blacklistWarning.candidateReason,
+      );
+      notifyState();
+    } else if (secondsLeft !== blacklistWarning.secondsLeft) {
+      blacklistWarning.secondsLeft = secondsLeft;
+      notifyState();
+    }
+  } else if (blacklistWarning.phase === "switched") {
+    if (Date.now() - (blacklistWarning.switchedAt ?? 0) > 8000) {
+      blacklistWarning = null;
+      notifyState();
+    }
+  }
+}, 1000);
 
 function getCurrentStreamUrl(station: Station): string {
   const streams = station._streams || [station.stream];
@@ -295,6 +458,7 @@ async function refreshTrackInfo() {
       const doFullSlide = pendingStationSlideIn;
       pendingStationSlideIn = false;
       updateHistoryUI(doFullSlide);
+      detectBlacklistedUpcoming();
     }
   } else {
     state.liveTrack = null;
@@ -338,6 +502,8 @@ export function selectStation(s: Station) {
   state.liveTrack = null;
   pendingStationSlideIn = true;
   failoverTimestamps = [];
+  blacklistWarning = null;
+  dismissedTrackKey = null;
   setHistoryLoadingState(true);
 
   ensureStationMetadata(s);

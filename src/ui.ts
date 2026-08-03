@@ -5,6 +5,7 @@ import { ICONS } from "./icons.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
+import { renderBlacklistWarning } from "./ui/blacklistWarning.js";
 import { els, initVolumeControlUI, initVU, renderVolLadder } from "./ui/elements.js";
 import { applyHistoryTabVisibility, renderFavoritesUI } from "./ui/favorites.js";
 import { setHistoryLoadingState, triggerHistorySlideIn, updateHistoryUI } from "./ui/history.js";
@@ -218,6 +219,7 @@ export function updateUI(
 
   els.historyPanel.classList.toggle("open", willOpenHistory);
   updateHistoryUI();
+  renderBlacklistWarning();
   renderFavoritesUI();
   applyHistoryTabVisibility();
 

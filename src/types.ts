@@ -40,6 +40,12 @@ export interface RawRmfStation {
   search?: string;
   in_premium: number;
   station_category: Array<{ name: string; slug: string }>;
+  similar_stations: SimilarStations;
+}
+
+interface SimilarStations {
+  id_list: number[];
+  station_list: Omit<Station, "station_category">[];
 }
 
 export interface RmfCatalogCache {

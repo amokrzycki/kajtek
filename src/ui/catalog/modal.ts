@@ -11,6 +11,7 @@ import { ICONS } from "@/icons.js";
 import { notifyState } from "@/state.js";
 import type { RmfCatalogCache, Station } from "@/types.js";
 import { escapeHtml, renderStationThumbHtml } from "@/utils.js";
+import { openBlacklistModal } from "../blacklist/modal.js";
 import { handleCustomStationSubmit } from "./form.js";
 
 type CatalogTab = "all" | "local" | "custom";
@@ -80,7 +81,10 @@ function createModalElements(): void {
       <div class="k-modal-header">
         <div class="k-modal-title-group">
           <h2 id="catalog-modal-title" class="k-modal-title">Katalog stacji radiowych</h2>
-          <span id="catalog-updated-time" class="k-modal-updated"></span>
+          <div class="k-modal-updated-row">
+            <span id="catalog-updated-time" class="k-modal-updated"></span>
+            <button type="button" id="open-blacklist-btn" class="k-modal-icon-btn" title="Blacklista utworów" aria-label="Blacklista utworów">${ICONS.ban}</button>
+          </div>
         </div>
         <button type="button" id="catalog-modal-close" class="k-modal-close" aria-label="Zamknij">&times;</button>
       </div>
@@ -139,6 +143,9 @@ function createModalElements(): void {
 
   const closeBtn = modalEl.querySelector("#catalog-modal-close");
   closeBtn?.addEventListener("click", closeCatalogModal);
+
+  const blacklistBtn = modalEl.querySelector("#open-blacklist-btn");
+  blacklistBtn?.addEventListener("click", () => openBlacklistModal());
 
   const searchInput = modalEl.querySelector<HTMLInputElement>("#catalog-search-input");
   searchInput?.addEventListener("input", (e) => {
