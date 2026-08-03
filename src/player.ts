@@ -46,12 +46,16 @@ function pickBlacklistCandidate(
   if (pool.length === 0) return null;
 
   if (origin.provider === "rmf") {
-    const raw = getStoredRmfCatalog()?.stations.find((r) => r.idname === origin.id || String(r.id) === origin.id);
-    const similarIds = new Set(raw?.similar_stations.station_list.map((s) => s.id));
+    const catalog = getStoredRmfCatalog()?.stations ?? [];
+    const raw = catalog.find((r) => r.idname === origin.id || String(r.id) === origin.id);
+    const similarNumericIds = new Set(raw?.similar_stations.id_list.map(String));
+    const similarIdnames = new Set(
+      catalog.filter((r) => similarNumericIds.has(String(r.id))).map((r) => r.idname),
+    );
     // ponytail: ranking hint only, not a guarantee — doesn't verify the candidate's own live
     // track isn't blacklisted (would need an extra fetch per candidate); the switch-cap below
     // self-corrects on the next detection pass if it turns out bad.
-    const similar = pool.find((s) => similarIds.has(s.id));
+    const similar = pool.find((s) => similarIdnames.has(s.id));
     if (similar) return { station: similar, reason: state.favs.has(similar.id) ? "favorite" : "similar" };
   }
 
@@ -115,7 +119,7 @@ function armBlacklistWarning(track: TrackInfo, origin: Station, immediate: boole
 function detectBlacklistedUpcoming() {
   if (!state.station || blacklistWarning) return;
 
-  if (state.liveTrack && !state.liveTrack.isBreak && isBlacklisted(state.liveTrack)) {
+  if (state.liveTrack && !state.liveTrack.isLiveBreak && isBlacklisted(state.liveTrack)) {
     const key = getTrackKey(state.liveTrack);
     if (key !== dismissedTrackKey) armBlacklistWarning(state.liveTrack, state.station, true);
     return;
@@ -151,9 +155,10 @@ export function dismissBlacklistWarning(): void {
 
 export function returnToPreviousStation(): void {
   if (blacklistWarning?.phase !== "switched") return;
-  const { originStation } = blacklistWarning;
+  const { originStation, trackKey } = blacklistWarning;
   blacklistWarning = null;
   selectStation(originStation);
+  dismissedTrackKey = trackKey;
 }
 
 setInterval(() => {
