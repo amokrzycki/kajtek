@@ -54,6 +54,7 @@ function createModalElements(): void {
         <div class="k-modal-title-group">
           <h2 id="settings-modal-title" class="k-modal-title">Ustawienia</h2>
         </div>
+        <span class="k-rule"></span>
         <button type="button" id="settings-modal-close" class="k-modal-close" aria-label="Zamknij">&times;</button>
       </div>
 
