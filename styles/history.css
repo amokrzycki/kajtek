@@ -511,6 +511,30 @@
 
 /* ——— ostrzeżenie o zablokowanym utworze ——— */
 
+.bl-warn {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--k-tr-panel);
+}
+
+.bl-warn.open {
+  grid-template-rows: 1fr;
+}
+
+.bl-warn-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.bl-warn-content {
+  opacity: 1;
+  transition: opacity 140ms ease;
+}
+
+.bl-warn-content.is-switching {
+  opacity: 0;
+}
+
 .bl-warn-head {
   display: flex;
   align-items: center;

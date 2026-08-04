@@ -24,6 +24,7 @@ export const els = {
   historyEmpty: document.getElementById("history-empty") as HTMLDivElement,
   historyList: document.getElementById("history-list") as HTMLDivElement,
   blacklistWarning: document.getElementById("blacklist-warning") as HTMLDivElement,
+  blacklistWarningContent: document.getElementById("blacklist-warning-content") as HTMLDivElement,
   historyTabProgram: document.querySelector('.history-tab[data-history-tab="program"]') as HTMLButtonElement,
   historyTabFavorites: document.querySelector('.history-tab[data-history-tab="favorites"]') as HTMLButtonElement,
   favTabCount: document.getElementById("fav-tab-count") as HTMLSpanElement,

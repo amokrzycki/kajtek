@@ -45,10 +45,10 @@ export function updateSleepUI(): void {
   if (state.sleepMin !== null && state.sleepSec !== null) {
     const m = Math.floor(state.sleepSec / 60);
     const s = String(state.sleepSec % 60).padStart(2, "0");
-    els.sleepCount.style.display = "block";
     els.sleepCount.innerHTML = `wyłącza się za <strong>${m}:${s}</strong>`;
+    els.sleepCount.classList.add("on");
   } else {
-    els.sleepCount.style.display = "none";
+    els.sleepCount.classList.remove("on");
   }
   els.sleepKeys.forEach((btn) => {
     btn.classList.toggle("active", state.sleepMin === Number(btn.getAttribute("data-min")));

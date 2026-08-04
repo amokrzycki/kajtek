@@ -233,10 +233,21 @@
 
 .k-form-error,
 .k-modal-error {
-  padding: 0.5rem 1rem;
+  display: grid;
+  grid-template-rows: 0fr;
+  padding: 0 1rem;
   background: var(--k-accent-dim);
   color: var(--k-accent-text);
   font-size: 0.75rem;
+  overflow: hidden;
+  transition:
+    grid-template-rows var(--k-tr-panel),
+    padding var(--k-tr-panel);
+}
+
+.k-modal-error.is-visible {
+  grid-template-rows: 1fr;
+  padding: 0.5rem 1rem;
   border-bottom: 1px solid var(--k-border);
 }
 

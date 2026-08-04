@@ -285,7 +285,7 @@
 }
 
 .sleep-count {
-  margin-top: 0.7rem;
+  margin-top: 0;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -294,7 +294,20 @@
   font-variant-numeric: tabular-nums;
   color: var(--k-accent-text);
   letter-spacing: 0.05em;
-  transition: color var(--k-tr);
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition:
+    color var(--k-tr),
+    opacity var(--k-tr),
+    max-height var(--k-tr-panel),
+    margin-top var(--k-tr-panel);
+}
+
+.sleep-count.on {
+  margin-top: 0.7rem;
+  max-height: 40px;
+  opacity: 1;
 }
 
 .sleep-count strong {
