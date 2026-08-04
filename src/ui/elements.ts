@@ -4,6 +4,7 @@ import { isIOS } from "../utils.js";
 
 export const els = {
   darkToggle: document.getElementById("dark-toggle") as HTMLButtonElement,
+  settingsToggle: document.getElementById("settings-toggle") as HTMLButtonElement,
   vuStrip: document.getElementById("vu-strip") as HTMLDivElement,
   reelLeft: document.getElementById("reel-left") as HTMLDivElement,
   reelRight: document.getElementById("reel-right") as HTMLDivElement,

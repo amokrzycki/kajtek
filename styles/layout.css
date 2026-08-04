@@ -57,7 +57,14 @@
   transition: color var(--k-tr);
 }
 
-.dark-toggle {
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--k-s2);
+}
+
+.dark-toggle,
+.settings-toggle {
   background: none;
   border: none;
   padding: 0;
@@ -68,7 +75,8 @@
   justify-content: center;
 }
 
-.dark-toggle .dark-toggle-knob {
+.dark-toggle .dark-toggle-knob,
+.settings-toggle .settings-toggle-knob {
   position: relative;
   width: 36px;
   height: 36px;
@@ -87,12 +95,14 @@
     color var(--k-tr);
 }
 
-.dark-toggle:active .dark-toggle-knob {
+.dark-toggle:active .dark-toggle-knob,
+.settings-toggle:active .settings-toggle-knob {
   transform: translateY(1px);
   box-shadow: var(--k-sh-inset);
 }
 
-.dark-toggle .dark-toggle-icon {
+.dark-toggle .dark-toggle-icon,
+.settings-toggle .settings-toggle-icon {
   position: relative;
   width: 20px;
   height: 20px;
@@ -104,9 +114,23 @@
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .dark-toggle:hover .dark-toggle-icon {
+  .dark-toggle:hover .dark-toggle-icon,
+  .settings-toggle:hover .settings-toggle-icon {
     color: var(--k-text);
   }
+}
+
+@keyframes settings-gear-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(150deg);
+  }
+}
+
+.settings-toggle-icon.is-spinning {
+  animation: settings-gear-spin 320ms var(--k-ease-mech);
 }
 
 .dark-toggle .dark-toggle-icon svg {

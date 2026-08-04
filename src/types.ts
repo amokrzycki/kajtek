@@ -118,6 +118,7 @@ export interface AppState {
   favTracks: FavTrack[];
   viewMode: "list" | "grid";
   version: string;
+  blacklistEnabled: boolean;
 }
 
 export interface PlaylistResult {

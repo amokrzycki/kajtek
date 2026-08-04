@@ -6,6 +6,7 @@ import { currentTrack, selectStation, togglePlay } from "./player.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { notifyState, state, subscribeState } from "./state.js";
 import { removeFavTrackByKey } from "./ui/favorites.js";
+import { openSettingsModal } from "./ui/settings/modal.js";
 import {
   els,
   initVolumeControlUI,
@@ -32,6 +33,13 @@ function attachEvents() {
   els.darkToggle.addEventListener("click", () => {
     state.dark = !state.dark;
     notifyState();
+  });
+
+  els.settingsToggle.addEventListener("click", () => {
+    const icon = els.settingsToggle.querySelector(".settings-toggle-icon");
+    icon?.classList.remove("is-spinning");
+    requestAnimationFrame(() => icon?.classList.add("is-spinning"));
+    openSettingsModal();
   });
 
   els.playBtn.addEventListener("click", () => togglePlay());

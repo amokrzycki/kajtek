@@ -104,7 +104,7 @@ function armBlacklistWarning(track: TrackInfo, origin: Station, immediate: boole
 }
 
 export function detectBlacklistedUpcoming() {
-  if (!state.station || blacklistWarning) return;
+  if (!state.station || blacklistWarning || !state.blacklistEnabled) return;
 
   if (state.liveTrack && (!state.liveTrack.isLiveBreak || state.liveTrack.isFacts) && isBlacklisted(state.liveTrack)) {
     const key = getTrackKey(state.liveTrack);
