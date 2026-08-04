@@ -180,7 +180,8 @@ function applyPhysics(
     }
 
     const renderCell = currentCells[idx] ?? 0;
-    fill.style.setProperty("--vu-level", `${(renderCell / cellCount) * 100}%`);
+    const steppedCell = Math.floor(renderCell);
+    fill.style.setProperty("--vu-level", `${(steppedCell / cellCount) * 100}%`);
 
     const cap = caps[idx];
     if (!cap) return;
@@ -194,7 +195,8 @@ function applyPhysics(
       peakVelocity[idx] = (peakVelocity[idx] ?? 0) + PEAK_GRAVITY * dt;
       peakCells[idx] = Math.max(renderCell, curPeak - (peakVelocity[idx] ?? 0) * dt);
     }
-    cap.style.bottom = `${((peakCells[idx] ?? 0) / cellCount) * 100}%`;
+    const steppedPeak = Math.floor(peakCells[idx] ?? 0);
+    cap.style.bottom = `${(steppedPeak / cellCount) * 100}%`;
   });
 }
 
