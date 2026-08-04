@@ -164,12 +164,14 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
 
           if (deltaX !== 0 || deltaY !== 0) {
             card.style.zIndex = "10";
-            const anim = card.animate(
-              [{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: "none" }],
-              { duration: 280, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
-            );
+            const anim = card.animate([{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: "none" }], {
+              duration: 280,
+              easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+            });
             anim.finished
-              .catch(() => {})
+              .catch(() => {
+                // Ignore errors, e.g., if the animation was canceled
+              })
               .finally(() => {
                 card.style.zIndex = "";
               });

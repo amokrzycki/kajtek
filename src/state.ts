@@ -2,27 +2,10 @@ declare const APP_VERSION: string;
 
 import { DEFAULT_VERSION, STORAGE_KEYS } from "./consts.js";
 import type { AppState, FavTrack, TrackInfo } from "./types.js";
-
-function getStoredFavs(): string[] {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAVS) || "[]");
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (_) {
-    return [];
-  }
-}
-
-function getStoredFavTracks(): FavTrack[] {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEYS.FAV_TRACKS) || "[]");
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (_) {
-    return [];
-  }
-}
+import { getStoredJSON, setStoredJSON } from "./utils.js";
 
 export function persistFavTracks(): void {
-  localStorage.setItem(STORAGE_KEYS.FAV_TRACKS, JSON.stringify(state.favTracks));
+  setStoredJSON(STORAGE_KEYS.FAV_TRACKS, state.favTracks);
 }
 
 export const state: AppState = {
@@ -33,14 +16,14 @@ export const state: AppState = {
   playing: false,
   vol: 10,
   muted: false,
-  favs: new Set<string>(getStoredFavs()),
+  favs: new Set<string>(getStoredJSON<string[]>(STORAGE_KEYS.FAVS, [], Array.isArray)),
   sleepMin: null,
   sleepSec: null,
   liveTrack: null,
   history: [],
   showHistory: false,
   historyTab: "program",
-  favTracks: getStoredFavTracks(),
+  favTracks: getStoredJSON<FavTrack[]>(STORAGE_KEYS.FAV_TRACKS, [], Array.isArray),
   viewMode: (localStorage.getItem(STORAGE_KEYS.VIEW_MODE) as "list" | "grid") || "list",
   version: typeof APP_VERSION !== "undefined" ? APP_VERSION : DEFAULT_VERSION,
 };

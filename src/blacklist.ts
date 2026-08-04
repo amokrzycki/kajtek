@@ -1,4 +1,5 @@
 import { STORAGE_KEYS } from "./consts.js";
+import { getStoredJSON, setStoredJSON } from "./utils.js";
 
 export interface BlacklistEntry {
   key: string;
@@ -11,18 +12,11 @@ export function normalizeTrackKey(artist: string, title: string): string {
 }
 
 export function getBlacklist(): BlacklistEntry[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.BLACKLIST);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as BlacklistEntry[]) : [];
-  } catch (_) {
-    return [];
-  }
+  return getStoredJSON<BlacklistEntry[]>(STORAGE_KEYS.BLACKLIST, [], Array.isArray);
 }
 
 function saveBlacklist(list: BlacklistEntry[]): void {
-  localStorage.setItem(STORAGE_KEYS.BLACKLIST, JSON.stringify(list));
+  setStoredJSON(STORAGE_KEYS.BLACKLIST, list);
 }
 
 export function isBlacklisted(t: { artist?: string; title?: string } | null | undefined): boolean {

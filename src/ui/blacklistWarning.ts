@@ -1,4 +1,4 @@
-import { getBlacklistWarningState } from "@/player.js";
+import { getBlacklistWarningState } from "@/blacklistWarning.js";
 import { escapeHtml } from "@/utils.js";
 import { els } from "./elements.js";
 
