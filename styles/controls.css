@@ -1,7 +1,3 @@
-/* KAJTEK · controls.css — blat: głośność, sleep timer (strefa 3)
-   Patch v1 wchłonięty: .k-head z przerywaną linijką, drabinka LED głośności,
-   akcent tekstowy --k-accent-text na stanach aktywnych, tabular-nums. */
-
 .controls-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -49,7 +45,8 @@
 }
 
 .k-head .k-rule,
-.section-header .k-rule {
+.section-header .k-rule,
+.k-modal-header .k-rule {
   flex: 1;
   height: 1px;
   background: repeating-linear-gradient(90deg, var(--k-border-3) 0 4px, transparent 4px 8px);
