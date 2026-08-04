@@ -43,7 +43,8 @@ async function attachHlsStream(url: string): Promise<void> {
     radioAudio.src = url;
     return;
   }
-  const hls = new Hls();
+  // old buffered audio segments would otherwise accumulate in memory for the whole session.
+  const hls = new Hls({ backBufferLength: 90 });
   hlsInstance = hls;
   let recoveryAttempts = 0;
 
