@@ -1,10 +1,12 @@
 import { addToBlacklist, isBlacklisted, normalizeTrackKey, removeFromBlacklist } from "./blacklist.js";
 import { dismissBlacklistWarning, returnToPreviousStation, switchBlacklistCandidateNow } from "./blacklistWarning.js";
 import { getAllKnownStations } from "./catalog.js";
+import { checkForNewChangelog } from "./changelog.js";
 import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
 import { currentTrack, selectStation, togglePlay } from "./player.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { notifyState, state, subscribeState } from "./state.js";
+import { openChangelogModal } from "./ui/changelog/modal.js";
 import { removeFavTrackByKey } from "./ui/favorites.js";
 import { openSettingsModal } from "./ui/settings/modal.js";
 import {
@@ -148,6 +150,9 @@ function init() {
   attachEvents();
   subscribeState(refresh);
   refresh();
+
+  const newEntries = checkForNewChangelog();
+  if (newEntries) openChangelogModal(newEntries);
 }
 
 document.addEventListener("DOMContentLoaded", init);

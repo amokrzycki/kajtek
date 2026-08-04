@@ -1,7 +1,7 @@
 import { isBlacklisted } from "./blacklist.js";
 import { getOrderedStations, getStoredRmfCatalog } from "./catalog.js";
-import { DEFAULT_BREAK_LABEL, SWITCH_RATE_LIMIT } from "./consts.js";
-import { selectStation } from "./player.js";
+import { DEFAULT_BREAK_LABEL, SWITCH_RATE_LIMIT, TIMERS } from "./consts.js";
+import { fetchPlaylist, selectStation } from "./player.js";
 import { notifyState, state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import { getTrackKey, withinRateLimit } from "./utils.js";
@@ -20,9 +20,16 @@ interface BlacklistWarning {
   switchedAt?: number;
 }
 
+interface ActiveAdSkip {
+  originStation: Station;
+  trackKey: string;
+}
+
 let blacklistWarning: BlacklistWarning | null = null;
 let dismissedTrackKey: string | null = null;
 let blacklistSwitchTimestamps: number[] = [];
+let activeAdSkip: ActiveAdSkip | null = null;
+let lastAdReturnPollAt = 0;
 
 export function getBlacklistWarningState(): BlacklistWarning | null {
   return blacklistWarning;
@@ -31,6 +38,7 @@ export function getBlacklistWarningState(): BlacklistWarning | null {
 export function resetBlacklistWarningState(): void {
   blacklistWarning = null;
   dismissedTrackKey = null;
+  activeAdSkip = null;
 }
 
 function pickSwitchCandidate(origin: Station): { station: Station; reason: "favorite" | "similar" | "other" } | null {
@@ -74,17 +82,21 @@ function performStationSwitch(
   }
 
   selectStation(candidate);
+  const trackKey = getTrackKey(track);
   blacklistWarning = {
     kind,
     phase: "switched",
     track,
-    trackKey: getTrackKey(track),
+    trackKey,
     originStation,
     candidate,
     candidateReason: reason as "favorite" | "similar" | "other",
     secondsLeft: 0,
     switchedAt: Date.now(),
   };
+  if (kind === "adSkip") {
+    activeAdSkip = { originStation, trackKey };
+  }
 }
 
 function armSwitchWarning(kind: WarningKind, track: TrackInfo, origin: Station, immediate: boolean) {
@@ -173,11 +185,30 @@ export function returnToPreviousStation(): void {
   if (blacklistWarning?.phase !== "switched") return;
   const { originStation, trackKey } = blacklistWarning;
   blacklistWarning = null;
+  activeAdSkip = null;
   selectStation(originStation);
   dismissedTrackKey = trackKey;
 }
 
+async function checkAdBreakEnded(): Promise<void> {
+  if (!activeAdSkip) return;
+  const { originStation, trackKey } = activeAdSkip;
+  const data = await fetchPlaylist(originStation);
+  if (!activeAdSkip || data?.current == null || data.current.isLiveBreak) return;
+
+  activeAdSkip = null;
+  blacklistWarning = null;
+  selectStation(originStation);
+  dismissedTrackKey = trackKey;
+  notifyState();
+}
+
 setInterval(() => {
+  if (activeAdSkip && Date.now() - lastAdReturnPollAt >= TIMERS.TRACK_POLL_MS) {
+    lastAdReturnPollAt = Date.now();
+    void checkAdBreakEnded();
+  }
+
   if (!blacklistWarning) return;
 
   if (blacklistWarning.phase === "warning") {

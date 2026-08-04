@@ -12,6 +12,7 @@ export const STORAGE_KEYS = {
   BLACKLIST_ENABLED: "kajtek_blacklist_enabled",
   AD_SKIP_ENABLED: "kajtek_ad_skip_enabled",
   VOLUME: "kajtek_volume",
+  LAST_SEEN_VERSION: "kajtek_last_seen_version",
 } as const;
 
 export const API_ENDPOINTS = {

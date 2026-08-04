@@ -17,6 +17,9 @@ const ctx = await context({
   splitting: true,
   outdir: "dist",
   format: "esm",
+  loader: {
+    ".md": "text",
+  },
   define: {
     APP_VERSION: JSON.stringify(pkg.version),
   },
