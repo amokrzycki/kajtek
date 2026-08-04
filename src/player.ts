@@ -1,4 +1,5 @@
 import type Hls from "hls.js";
+import { detectBlacklistedUpcoming, resetBlacklistWarningState } from "./blacklistWarning.js";
 import { getOrderedStations } from "./catalog.js";
 import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, SWITCH_RATE_LIMIT, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
@@ -7,7 +8,6 @@ import { trojkaProvider } from "./providers/trojka.js";
 import { genericProvider, getFactsInfo, getProvider } from "./providers.js";
 import { intervals, notifyState, radioAudio, state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
-import { detectBlacklistedUpcoming, resetBlacklistWarningState } from "./ui/blacklist/warning.js";
 import {
   resolveAlbumCoverUrl,
   setHistoryLoadingState,
