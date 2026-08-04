@@ -27,6 +27,7 @@ export const state: AppState = {
   viewMode: (localStorage.getItem(STORAGE_KEYS.VIEW_MODE) as "list" | "grid") || "list",
   version: typeof APP_VERSION !== "undefined" ? APP_VERSION : DEFAULT_VERSION,
   blacklistEnabled: localStorage.getItem(STORAGE_KEYS.BLACKLIST_ENABLED) !== "false",
+  adSkipEnabled: localStorage.getItem(STORAGE_KEYS.AD_SKIP_ENABLED) === "true",
 };
 
 type StateListener = (state: AppState) => void;

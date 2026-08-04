@@ -1,5 +1,5 @@
 import type Hls from "hls.js";
-import { detectBlacklistedUpcoming, resetBlacklistWarningState } from "./blacklistWarning.js";
+import { detectBlacklistedUpcoming, detectUpcomingAdBreak, resetBlacklistWarningState } from "./blacklistWarning.js";
 import { getOrderedStations } from "./catalog.js";
 import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, SWITCH_RATE_LIMIT, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
@@ -43,7 +43,8 @@ async function attachHlsStream(url: string): Promise<void> {
     radioAudio.src = url;
     return;
   }
-  const hls = new Hls();
+  // old buffered audio segments would otherwise accumulate in memory for the whole session.
+  const hls = new Hls({ backBufferLength: 90 });
   hlsInstance = hls;
   let recoveryAttempts = 0;
 
@@ -298,6 +299,7 @@ async function refreshTrackInfo() {
       pendingStationSlideIn = false;
       updateHistoryUI(doFullSlide);
       detectBlacklistedUpcoming();
+      detectUpcomingAdBreak();
     }
   } else {
     state.liveTrack = null;
