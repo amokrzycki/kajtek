@@ -1,8 +1,9 @@
 import { setStationFavorite } from "./catalog.js";
+import { STORAGE_KEYS } from "./consts.js";
 import { ICONS } from "./icons.js";
 import { intervals, notifyState, radioAudio, state } from "./state.js";
 import { els, renderVolLadder, updateSleepUI } from "./ui.js";
-import { isIOS } from "./utils.js";
+import { isIOS, setStoredJSON } from "./utils.js";
 
 let volAnimFrame: number | null = null;
 
@@ -28,6 +29,7 @@ export function updateVolume(val: number): void {
   state.vol = val;
   if (state.muted && val > 0) state.muted = false;
   applyAudioVolume();
+  setStoredJSON(STORAGE_KEYS.VOLUME, val);
   // update volume UI directly to avoid firing global notifyState & re-rendering station list on every slider frame
   if (els.volSlider) {
     els.volSlider.value = String(val);

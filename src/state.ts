@@ -14,7 +14,7 @@ export const state: AppState = {
     : window.matchMedia("(prefers-color-scheme: dark)").matches,
   station: null,
   playing: false,
-  vol: 10,
+  vol: getStoredJSON<number>(STORAGE_KEYS.VOLUME, 10, (v) => typeof v === "number"),
   muted: false,
   favs: new Set<string>(getStoredJSON<string[]>(STORAGE_KEYS.FAVS, [], Array.isArray)),
   sleepMin: null,
