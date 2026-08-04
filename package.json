@@ -1,11 +1,11 @@
 {
-  "version": "0.7",
+  "version": "0.8",
   "scripts": {
     "dev": "node dev.mjs",
     "check": "tsc --noEmit",
     "lint": "biome check",
     "build": "npm run check && npm run lint && rm -rf dist && npm run build:js && npm run build:css && npm run build:assets && npm run build:hash",
-    "build:js": "esbuild src/app.ts --bundle --minify --sourcemap --splitting --outdir=dist --entry-names=app-[hash] --chunk-names=chunk-[hash] --format=esm '--define:APP_VERSION=\"'\"$npm_package_version\"'\"'",
+    "build:js": "esbuild src/app.ts --bundle --minify --sourcemap --splitting --outdir=dist --entry-names=app-[hash] --chunk-names=chunk-[hash] --format=esm --loader:.md=text '--define:APP_VERSION=\"'\"$npm_package_version\"'\"'",
     "build:css": "esbuild styles/index.css --bundle --minify --sourcemap --outdir=dist --entry-names=style-[hash]",
     "build:assets": "cp index.html dist/ && rsync -a --exclude='.DS_Store' public/ dist/",
     "build:hash": "node scripts/inject-hashes.mjs"
