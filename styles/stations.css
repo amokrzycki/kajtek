@@ -80,7 +80,7 @@
     box-shadow var(--k-tr),
     padding 280ms var(--k-ease-mech),
     gap 280ms var(--k-ease-mech),
-    transform 150ms ease;
+    transform 150ms var(--k-ease-mech);
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -294,7 +294,7 @@
   background: var(--k-bg-inset);
   border-radius: var(--k-rb);
   box-shadow: var(--k-sh-inset);
-  transition: transform 380ms var(--k-ease-mech);
+  transition: transform 260ms var(--k-ease-mech);
   pointer-events: none;
   z-index: 0;
 }

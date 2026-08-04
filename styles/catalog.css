@@ -199,8 +199,8 @@
   grid-template-rows: 0fr;
   opacity: 0;
   transition:
-    grid-template-rows 0.25s ease,
-    opacity 0.25s ease;
+    grid-template-rows 0.25s var(--k-ease-mech),
+    opacity 0.25s var(--k-ease-mech);
 }
 
 .k-custom-form-wrap.is-open {
@@ -386,7 +386,7 @@
   border: 1px solid var(--k-text-disabled);
   box-shadow: var(--k-sh-btn);
   transition:
-    transform var(--k-tr),
+    transform 230ms var(--k-ease-mech),
     background var(--k-tr),
     border-color var(--k-tr),
     box-shadow var(--k-tr);
