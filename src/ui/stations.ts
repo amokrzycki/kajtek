@@ -168,13 +168,13 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
             card.style.zIndex = "10";
 
             requestAnimationFrame(() => {
-              card.style.transition = "transform 480ms cubic-bezier(0.16, 1, 0.3, 1)";
+              card.style.transition = "transform 280ms cubic-bezier(0.16, 1, 0.3, 1)";
               card.style.transform = "";
 
               setTimeout(() => {
                 card.style.transition = "";
                 card.style.zIndex = "";
-              }, 480);
+              }, 280);
             });
           }
         }

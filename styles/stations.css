@@ -72,20 +72,24 @@
   text-align: left;
   font: inherit;
   color: inherit;
+  /* ponytail: padding/gap animate layout (non-GPU), only fires on the rare
+     list/grid view-toggle click — a FLIP rewrite isn't worth it for that frequency */
   transition:
     background var(--k-tr),
     border-color var(--k-tr),
     box-shadow var(--k-tr),
-    padding 480ms var(--k-ease-mech),
-    gap 480ms var(--k-ease-mech),
+    padding 280ms var(--k-ease-mech),
+    gap 280ms var(--k-ease-mech),
     transform 150ms ease;
   -webkit-tap-highlight-color: transparent;
 }
 
-.station-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--k-sh-md);
-  border-color: var(--k-border-2);
+@media (hover: hover) and (pointer: fine) {
+  .station-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--k-sh-md);
+    border-color: var(--k-border-2);
+  }
 }
 
 .station-card:active {
@@ -135,10 +139,12 @@
   height: 34px;
   border-radius: var(--k-rb);
   flex-shrink: 0;
+  /* ponytail: same non-GPU tradeoff as .station-card above — transform: scale()
+     would desync from the flex reflow around it on the same list/grid toggle */
   transition:
-    width 480ms var(--k-ease-mech),
-    height 480ms var(--k-ease-mech),
-    margin 480ms var(--k-ease-mech);
+    width 280ms var(--k-ease-mech),
+    height 280ms var(--k-ease-mech),
+    margin 280ms var(--k-ease-mech);
 }
 
 .sc-thumb {
@@ -214,9 +220,11 @@
   cursor: default;
 }
 
-.sc-star:not(:disabled):hover {
-  color: var(--k-accent-text);
-  transform: scale(1.22);
+@media (hover: hover) and (pointer: fine) {
+  .sc-star:not(:disabled):hover {
+    color: var(--k-accent-text);
+    transform: scale(1.08);
+  }
 }
 
 .sc-star:not(:disabled):active {
@@ -258,9 +266,11 @@
     border-color var(--k-tr);
 }
 
-.btn-catalog-trigger:hover {
-  background: var(--k-bg-inset);
-  border-color: var(--k-accent);
+@media (hover: hover) and (pointer: fine) {
+  .btn-catalog-trigger:hover {
+    background: var(--k-bg-inset);
+    border-color: var(--k-accent);
+  }
 }
 
 .view-toggle-group {
@@ -309,8 +319,10 @@
   transition: color var(--k-tr);
 }
 
-.btn-view-toggle:hover {
-  color: var(--k-text);
+@media (hover: hover) and (pointer: fine) {
+  .btn-view-toggle:hover {
+    color: var(--k-text);
+  }
 }
 
 .btn-view-toggle.active {

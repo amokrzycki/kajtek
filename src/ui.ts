@@ -92,11 +92,14 @@ export function updateNowPlayingTrack(track: TrackInfo | null): void {
   }
 }
 
+// RMF sometimes returns its generic placeholder logo (empty) instead of a real cover; treat it as "no cover"
+const RMF_PLACEHOLDER_COVER = "/assets/images/logo200x200.png";
+
 export function resolveAlbumCoverUrl(track: TrackInfo | null, station: Station | null): string {
   if (track?.isLiveBreak) {
     return station?.coverUrl || "";
   }
-  if (track?.coverUrl && track.coverUrl.trim().length > 0) {
+  if (track?.coverUrl && track.coverUrl.trim().length > 0 && !track.coverUrl.includes(RMF_PLACEHOLDER_COVER)) {
     return track.coverUrl;
   }
   return station?.coverUrl || "";

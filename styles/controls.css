@@ -84,8 +84,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.mute-btn:hover {
-  color: var(--k-text);
+@media (hover: hover) and (pointer: fine) {
+  .mute-btn:hover {
+    color: var(--k-text);
+  }
 }
 
 .mute-btn:active {
@@ -314,8 +316,10 @@
   transition: color var(--k-tr);
 }
 
-.sleep-cancel:hover {
-  color: var(--k-text);
+@media (hover: hover) and (pointer: fine) {
+  .sleep-cancel:hover {
+    color: var(--k-text);
+  }
 }
 
 /* ——— wspólny klawisz ——— */
@@ -336,8 +340,10 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.btn-key:hover {
-  color: var(--k-text);
+@media (hover: hover) and (pointer: fine) {
+  .btn-key:hover {
+    color: var(--k-text);
+  }
 }
 
 .btn-key:active {

@@ -9,6 +9,7 @@ import { isTrackFavorited } from "./favorites.js";
 
 let slideTimer: number | undefined;
 let clearTimer: number | undefined;
+let heightTimer: number | undefined;
 
 function clearHistoryContent(): void {
   if (els.historyList.dataset.signature !== "empty") {
@@ -94,6 +95,14 @@ export function updateHistoryUI(animateSlideIn = false): void {
   if (clearTimer) {
     window.clearTimeout(clearTimer);
     clearTimer = undefined;
+  }
+
+  if (heightTimer) {
+    window.clearTimeout(heightTimer);
+    heightTimer = undefined;
+    els.historyList.style.height = "";
+    els.historyList.style.overflow = "";
+    els.historyList.style.transition = "";
   }
 
   const isPanelOpen = state.showHistory && els.historyPanel.classList.contains("open");
@@ -286,10 +295,11 @@ export function updateHistoryUI(animateSlideIn = false): void {
       requestAnimationFrame(() => {
         els.historyList.style.height = `${newHeight}px`;
       });
-      setTimeout(() => {
+      heightTimer = window.setTimeout(() => {
         els.historyList.style.height = "";
         els.historyList.style.overflow = "";
         els.historyList.style.transition = "";
+        heightTimer = undefined;
       }, 340);
     }
   }

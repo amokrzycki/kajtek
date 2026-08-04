@@ -51,7 +51,8 @@ export function toggleMute(): void {
   const startVal = targetMuted ? state.vol : 0;
   const endVal = targetMuted ? 0 : state.vol;
   const startTime = performance.now();
-  const duration = 240; // ms
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const duration = reduceMotion ? 1 : 240; // ms
 
   radioAudio.muted = false;
 

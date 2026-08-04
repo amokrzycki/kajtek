@@ -281,9 +281,9 @@ function matchesQuery(station: Station, q: string, cache: RmfCatalogCache | null
   return false;
 }
 
-// Almost every RMF station name starts with "RMF" or "Radio", which would dump 3/4 of the
+// Almost every RMF station name starts with "RMF", which would dump 3/4 of the
 // catalog into a single "R" bucket — index by the first significant word instead.
-const GENERIC_NAME_PREFIX = /^(RMF|Radio)\s+/i;
+const GENERIC_NAME_PREFIX = /^RMF\s+/i;
 
 // Ł doesn't decompose under NFD, so it needs an explicit swap before diacritics are stripped.
 function indexLetter(name: string): string {
@@ -426,7 +426,9 @@ function renderAllTab(
 
   const azList = document.createElement("div");
   azList.className = "catalog-az-list";
-  groups.forEach((groupStations, letter) => {
+  IDXRAIL_SYMBOLS.forEach((letter) => {
+    const groupStations = groups.get(letter);
+    if (!groupStations) return;
     const head = buildSecHeadEl(letter);
     head.id = `catalog-sec-${letter}`;
     azList.appendChild(head);

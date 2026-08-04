@@ -98,7 +98,7 @@ function resetVisuals() {
     fill.style.setProperty("--vu-level", "0%");
   });
   caps.forEach((cap) => {
-    cap.style.bottom = "0%";
+    cap.style.transform = "translateY(0)";
   });
 }
 
@@ -196,7 +196,7 @@ function applyPhysics(
       peakCells[idx] = Math.max(renderCell, curPeak - (peakVelocity[idx] ?? 0) * dt);
     }
     const steppedPeak = Math.floor(peakCells[idx] ?? 0);
-    cap.style.bottom = `${(steppedPeak / cellCount) * 100}%`;
+    cap.style.transform = `translateY(-${steppedPeak * CELL_PX}px)`;
   });
 }
 

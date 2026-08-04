@@ -103,8 +103,10 @@
   transition: color var(--k-tr);
 }
 
-.dark-toggle:hover .dark-toggle-icon {
-  color: var(--k-text);
+@media (hover: hover) and (pointer: fine) {
+  .dark-toggle:hover .dark-toggle-icon {
+    color: var(--k-text);
+  }
 }
 
 .dark-toggle .dark-toggle-icon svg {
