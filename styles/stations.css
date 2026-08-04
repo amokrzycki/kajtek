@@ -72,7 +72,7 @@
   text-align: left;
   font: inherit;
   color: inherit;
-  /* ponytail: padding/gap animate layout (non-GPU), only fires on the rare
+  /* padding/gap animate layout (non-GPU), only fires on the rare
      list/grid view-toggle click — a FLIP rewrite isn't worth it for that frequency */
   transition:
     background var(--k-tr),
@@ -139,7 +139,7 @@
   height: 34px;
   border-radius: var(--k-rb);
   flex-shrink: 0;
-  /* ponytail: same non-GPU tradeoff as .station-card above — transform: scale()
+  /* same non-GPU tradeoff as .station-card above — transform: scale()
      would desync from the flex reflow around it on the same list/grid toggle */
   transition:
     width 280ms var(--k-ease-mech),

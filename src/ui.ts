@@ -6,7 +6,7 @@ import { ICONS } from "./icons.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
-import { renderBlacklistWarning } from "./ui/blacklistWarning.js";
+import { renderBlacklistWarning } from "./ui/blacklist/warning.js";
 import { els, initVolumeControlUI, initVU, renderVolLadder } from "./ui/elements.js";
 import { applyHistoryTabVisibility, isTrackFavorited, renderFavoritesUI } from "./ui/favorites.js";
 import { setHistoryLoadingState, triggerHistorySlideIn, updateHistoryUI } from "./ui/history.js";
@@ -234,7 +234,7 @@ export function updateUI(
   }
 }
 
-/* ponytail: memoize station list render triggers so volume/sleep/playing updates don't touch station DOM */
+/* memoize station list render triggers so volume/sleep/playing updates don't touch station DOM */
 let lastStationId: string | null = null;
 let lastFavsKey = "";
 let lastViewMode = "";

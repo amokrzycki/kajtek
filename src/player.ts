@@ -1,13 +1,13 @@
 import type Hls from "hls.js";
-import { detectBlacklistedUpcoming, resetBlacklistWarningState } from "./blacklistWarning.js";
 import { getOrderedStations } from "./catalog.js";
-import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, TIMERS } from "./consts.js";
+import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, SWITCH_RATE_LIMIT, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
 import { rmfProvider } from "./providers/rmf.js";
 import { trojkaProvider } from "./providers/trojka.js";
 import { genericProvider, getFactsInfo, getProvider } from "./providers.js";
 import { intervals, notifyState, radioAudio, state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
+import { detectBlacklistedUpcoming, resetBlacklistWarningState } from "./ui/blacklist/warning.js";
 import {
   resolveAlbumCoverUrl,
   setHistoryLoadingState,
@@ -19,9 +19,6 @@ import { getFactsLabel, resolveProtocolRelativeUrl, withinRateLimit } from "./ut
 
 let failoverTimestamps: number[] = [];
 let hlsInstance: Hls | null = null;
-
-const RATE_LIMIT_WINDOW_MS = 30000;
-const RATE_LIMIT_MAX = 3;
 
 function getCurrentStreamUrl(station: Station): string {
   const streams = station._streams || [station.stream];
@@ -96,7 +93,7 @@ async function playStreamUrl(url: string | undefined): Promise<void> {
 function handleAudioFailover() {
   if (!state.playing || !state.station) return;
 
-  const rateLimit = withinRateLimit(failoverTimestamps, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX);
+  const rateLimit = withinRateLimit(failoverTimestamps, SWITCH_RATE_LIMIT.WINDOW_MS, SWITCH_RATE_LIMIT.MAX);
   failoverTimestamps = rateLimit.timestamps;
 
   const streams = state.station._streams || [state.station.stream];

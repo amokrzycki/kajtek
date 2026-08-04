@@ -1,6 +1,6 @@
-import { TIMERS, TROJKA_PLAYLIST_REFRESH_MS } from "@/consts";
-import type { PlaylistaBlock, PlaylistResult, Provider, RamowkaItem, Station, TrackInfo } from "@/types";
-import { decodeEntities } from "@/utils";
+import { TIMERS, TROJKA_PLAYLIST_REFRESH_MS } from "../consts.js";
+import type { PlaylistaBlock, PlaylistResult, Provider, RamowkaItem, Station, TrackInfo } from "../types.js";
+import { decodeEntities } from "../utils.js";
 
 let trojkaBuildIdCache: string | null = null;
 let trojkaScheduleCache: { day: string; items: RamowkaItem[] } | null = null;
@@ -33,7 +33,7 @@ async function fetchTrojkaJson<T>(station: Station, file: "ramowka.json" | "play
       signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS),
     });
     if (res.status === 404) {
-      // ponytail: build id rotates on Polskie Radio redeploys, re-resolve next call
+      // build id rotates on Polskie Radio redeploys, re-resolve next call
       trojkaBuildIdCache = null;
       return null;
     }

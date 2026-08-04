@@ -6,13 +6,13 @@ import {
   getStoredRmfCatalog,
   isStationEnabled,
   setStationEnabled,
-} from "@/catalog.js";
-import { ICONS } from "@/icons.js";
-import { notifyState } from "@/state.js";
-import type { RmfCatalogCache, Station } from "@/types.js";
-import { escapeHtml, renderStationThumbHtml } from "@/utils.js";
+} from "../../catalog.js";
+import { ICONS } from "../../icons.js";
+import { notifyState } from "../../state.js";
+import type { RmfCatalogCache, Station } from "../../types.js";
+import { escapeHtml, renderStationThumbHtml } from "../../utils.js";
 import { openBlacklistModal } from "../blacklist/modal.js";
-import { bindModalDismiss, closeModal, openModal } from "../modal.js";
+import { animateTabSwitch, bindModalDismiss, closeModal, openModal } from "../modal.js";
 import { handleCustomStationSubmit } from "./form.js";
 
 type CatalogTab = "all" | "local" | "custom";
@@ -208,28 +208,7 @@ function setActiveTab(tab: CatalogTab): void {
     return;
   }
 
-  if (tabSwitchTimer) window.clearTimeout(tabSwitchTimer);
-  const prevHeight = modalBox.getBoundingClientRect().height;
-  listContainer.classList.add("is-switching");
-
-  tabSwitchTimer = window.setTimeout(() => {
-    renderModalBody();
-
-    const newHeight = modalBox.getBoundingClientRect().height;
-    if (Math.abs(newHeight - prevHeight) > 1) {
-      modalBox.style.height = `${prevHeight}px`;
-      modalBox.style.transition = "height 220ms cubic-bezier(0.2, 0, 0, 1)";
-      requestAnimationFrame(() => {
-        modalBox.style.height = `${newHeight}px`;
-      });
-      window.setTimeout(() => {
-        modalBox.style.height = "";
-        modalBox.style.transition = "";
-      }, 240);
-    }
-
-    requestAnimationFrame(() => listContainer.classList.remove("is-switching"));
-  }, 140);
+  tabSwitchTimer = animateTabSwitch(listContainer, modalBox, renderModalBody, tabSwitchTimer);
 }
 
 async function handleRefreshCatalog(): Promise<void> {

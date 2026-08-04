@@ -25,3 +25,33 @@ export function bindModalDismiss(modalEl: HTMLElement, close: () => void): void 
     if (e.key === "Escape" && modalEl.classList.contains("is-open")) close();
   });
 }
+
+export function animateTabSwitch(
+  listContainer: HTMLElement,
+  modalBox: HTMLElement,
+  render: () => void,
+  pendingTimer: number | undefined,
+): number {
+  if (pendingTimer) window.clearTimeout(pendingTimer);
+  const prevHeight = modalBox.getBoundingClientRect().height;
+  listContainer.classList.add("is-switching");
+
+  return window.setTimeout(() => {
+    render();
+
+    const newHeight = modalBox.getBoundingClientRect().height;
+    if (Math.abs(newHeight - prevHeight) > 1) {
+      modalBox.style.height = `${prevHeight}px`;
+      modalBox.style.transition = "height 220ms cubic-bezier(0.2, 0, 0, 1)";
+      requestAnimationFrame(() => {
+        modalBox.style.height = `${newHeight}px`;
+      });
+      window.setTimeout(() => {
+        modalBox.style.height = "";
+        modalBox.style.transition = "";
+      }, 240);
+    }
+
+    requestAnimationFrame(() => listContainer.classList.remove("is-switching"));
+  }, 140);
+}

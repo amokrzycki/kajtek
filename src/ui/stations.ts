@@ -1,9 +1,9 @@
-import { getEnabledStations } from "@/catalog.js";
-import { STORAGE_KEYS } from "@/consts.js";
-import { ICONS } from "@/icons.js";
-import { state } from "@/state.js";
-import type { Station } from "@/types.js";
-import { escapeHtml, renderStationThumbHtml } from "@/utils.js";
+import { getEnabledStations } from "../catalog.js";
+import { STORAGE_KEYS } from "../consts.js";
+import { ICONS } from "../icons.js";
+import { state } from "../state.js";
+import type { Station } from "../types.js";
+import { escapeHtml, renderStationThumbHtml } from "../utils.js";
 import { openCatalogModal } from "./catalog/modal.js";
 import { els } from "./elements.js";
 
