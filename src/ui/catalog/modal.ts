@@ -108,7 +108,7 @@ function createModalElements(): void {
         <button type="button" id="catalog-tab-custom" class="catalog-tab" role="tab" aria-selected="false" aria-controls="catalog-list-container" data-tab="custom">WŁASNE <span class="catalog-tab-count">0</span></button>
       </div>
 
-      <div id="catalog-error-banner" class="k-modal-error" style="display: none;"></div>
+      <div id="catalog-error-banner" class="k-modal-error"></div>
 
       <div id="catalog-list-container" class="k-modal-list" role="tabpanel" aria-labelledby="catalog-tab-all"></div>
     </div>
@@ -509,9 +509,9 @@ function renderModalBody(): void {
   if (errorBanner) {
     if (errorMessage) {
       errorBanner.textContent = errorMessage;
-      errorBanner.style.display = "block";
+      errorBanner.classList.add("is-visible");
     } else {
-      errorBanner.style.display = "none";
+      errorBanner.classList.remove("is-visible");
     }
   }
 

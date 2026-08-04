@@ -1,12 +1,10 @@
 import { isBlacklisted } from "./blacklist.js";
 import { getOrderedStations, getStoredRmfCatalog } from "./catalog.js";
+import { SWITCH_RATE_LIMIT } from "./consts.js";
 import { selectStation } from "./player.js";
 import { notifyState, state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import { getTrackKey, withinRateLimit } from "./utils.js";
-
-const RATE_LIMIT_WINDOW_MS = 30000;
-const RATE_LIMIT_MAX = 3;
 
 interface BlacklistWarning {
   phase: "warning" | "switched";
@@ -58,7 +56,7 @@ function pickBlacklistCandidate(
 }
 
 function performBlacklistSwitch(track: TrackInfo, originStation: Station, candidate: Station, reason: string) {
-  const rateLimit = withinRateLimit(blacklistSwitchTimestamps, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX);
+  const rateLimit = withinRateLimit(blacklistSwitchTimestamps, SWITCH_RATE_LIMIT.WINDOW_MS, SWITCH_RATE_LIMIT.MAX);
   blacklistSwitchTimestamps = rateLimit.timestamps;
 
   if (rateLimit.limited) {
