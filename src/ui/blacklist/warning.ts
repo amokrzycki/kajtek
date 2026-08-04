@@ -1,6 +1,6 @@
-import { getBlacklistWarningState } from "@/player.js";
-import { escapeHtml } from "@/utils.js";
-import { els } from "./elements.js";
+import { getBlacklistWarningState } from "../../blacklistWarning.js";
+import { escapeHtml } from "../../utils.js";
+import { els } from "../elements.js";
 
 function formatMMSS(totalSec: number): string {
   const sec = Math.max(0, totalSec);
@@ -16,12 +16,12 @@ function reasonLabel(reason: string): string {
 }
 
 export function renderBlacklistWarning(): void {
-  const w = getBlacklistWarningState();
+  const warning = getBlacklistWarningState();
 
-  els.historyList.style.display = w ? "none" : "";
-  els.historyEmpty.style.display = w ? "none" : els.historyEmpty.style.display;
+  els.historyList.style.display = warning ? "none" : "";
+  els.historyEmpty.style.display = warning ? "none" : els.historyEmpty.style.display;
 
-  if (!w) {
+  if (!warning) {
     els.blacklistWarning.style.display = "none";
     els.blacklistWarning.innerHTML = "";
     return;
@@ -29,16 +29,16 @@ export function renderBlacklistWarning(): void {
 
   els.blacklistWarning.style.display = "block";
 
-  if (w.phase === "warning") {
-    const reason = reasonLabel(w.candidateReason);
+  if (warning.phase === "warning") {
+    const reason = reasonLabel(warning.candidateReason);
     els.blacklistWarning.innerHTML = `
-      <div class="bl-warn-head"><span>ZA CHWILĘ</span><span class="k-rule"></span><span class="bl-warn-clock">${formatMMSS(w.secondsLeft)}</span></div>
+      <div class="bl-warn-head"><span>ZA CHWILĘ</span><span class="k-rule"></span><span class="bl-warn-clock">${formatMMSS(warning.secondsLeft)}</span></div>
       <div class="bl-warn-row bl-warn-blocked">
         <span class="bl-warn-tag bl-warn-tag-block">czarna lista</span>
         <span class="bl-warn-dot"></span>
         <div class="bl-warn-info">
-          <div class="bl-warn-title bl-warn-strike">${escapeHtml(w.track.artist)} – ${escapeHtml(w.track.title)}</div>
-          <div class="bl-warn-sub">leci teraz na ${escapeHtml(w.originStation.name)}</div>
+          <div class="bl-warn-title bl-warn-strike">${escapeHtml(warning.track.artist)} – ${escapeHtml(warning.track.title)}</div>
+          <div class="bl-warn-sub">leci teraz na ${escapeHtml(warning.originStation.name)}</div>
         </div>
       </div>
       <div class="bl-warn-arrow">↓ kandydat do przełączenia</div>
@@ -46,7 +46,7 @@ export function renderBlacklistWarning(): void {
         <span class="bl-warn-tag bl-warn-tag-ok">${escapeHtml(reason)}</span>
         <span class="bl-warn-dot bl-warn-dot-ok"></span>
         <div class="bl-warn-info">
-          <div class="bl-warn-title">${escapeHtml(w.candidate.name)}</div>
+          <div class="bl-warn-title">${escapeHtml(warning.candidate.name)}</div>
           <div class="bl-warn-sub">${escapeHtml(reason)} · bez utworów z czarnej listy</div>
         </div>
       </div>
@@ -61,9 +61,9 @@ export function renderBlacklistWarning(): void {
       <div class="bl-warn-row bl-warn-candidate">
         <span class="bl-warn-tag bl-warn-tag-ok">przełączono</span>
         <span class="bl-warn-dot bl-warn-dot-ok"></span>
-        <div class="bl-warn-info"><div class="bl-warn-title">${escapeHtml(w.candidate.name)}</div></div>
+        <div class="bl-warn-info"><div class="bl-warn-title">${escapeHtml(warning.candidate.name)}</div></div>
       </div>
-      <div class="bl-warn-blocked-note">Zablokowano: ${escapeHtml(w.track.artist)} – ${escapeHtml(w.track.title)} (${escapeHtml(w.originStation.name)})</div>
+      <div class="bl-warn-blocked-note">Zablokowano: ${escapeHtml(warning.track.artist)} – ${escapeHtml(warning.track.title)} (${escapeHtml(warning.originStation.name)})</div>
       <button type="button" class="bl-warn-link bl-warn-revert">wróć do poprzedniej stacji</button>
     `;
   }

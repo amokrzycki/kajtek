@@ -1,6 +1,6 @@
-import { VOL_LEDS, VU_COUNT } from "@/consts.js";
-import { state } from "@/state.js";
-import { isIOS } from "@/utils.js";
+import { VOL_LEDS, VU_COUNT } from "../consts.js";
+import { state } from "../state.js";
+import { isIOS } from "../utils.js";
 
 export const els = {
   darkToggle: document.getElementById("dark-toggle") as HTMLButtonElement,

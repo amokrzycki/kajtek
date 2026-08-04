@@ -1,7 +1,7 @@
-import { ICONS } from "@/icons.js";
-import { notifyState, persistFavTracks, state } from "@/state.js";
-import type { FavTrack, Station, TrackInfo } from "@/types.js";
-import { escapeHtml, formatFavDateTime, getTrackKey } from "@/utils.js";
+import { ICONS } from "../icons.js";
+import { notifyState, persistFavTracks, state } from "../state.js";
+import type { FavTrack, Station, TrackInfo } from "../types.js";
+import { escapeHtml, formatFavDateTime, getTrackKey } from "../utils.js";
 import { els } from "./elements.js";
 
 export function isTrackFavorited(t: TrackInfo): boolean {

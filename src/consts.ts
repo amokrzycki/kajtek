@@ -57,6 +57,11 @@ export const TIMERS = {
   HISTORY_SLIDE_MS: 700,
 } as const;
 
+export const SWITCH_RATE_LIMIT = {
+  WINDOW_MS: 30000,
+  MAX: 3,
+} as const;
+
 export const DEFAULT_BREAK_LABEL = "Przerwa / Reklamy";
 export const VU_COUNT = 24;
 export const STATIONS_WITH_FACTS = ["rmf", "rmf24"];

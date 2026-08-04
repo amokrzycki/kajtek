@@ -93,6 +93,39 @@ http
       return;
     }
 
+    if (req.url?.startsWith("/api/leliwa/")) {
+      const targetPath = req.url.replace(/^\/api\/leliwa/, "");
+
+      const options = {
+        hostname: "streaming.g-news.pl",
+        port: 443,
+        path: targetPath,
+        method: req.method,
+        headers: {
+          ...req.headers,
+          host: "streaming.g-news.pl",
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        },
+      };
+
+      const proxyReq = https.request(options, (proxyRes) => {
+        const headers = {
+          ...proxyRes.headers,
+          "access-control-allow-origin": "*",
+        };
+        res.writeHead(proxyRes.statusCode || 200, headers);
+        proxyRes.pipe(res);
+      });
+
+      proxyReq.on("error", (err) => {
+        res.writeHead(502);
+        res.end(`Proxy error: ${err.message}`);
+      });
+
+      req.pipe(proxyReq);
+      return;
+    }
+
     // check dist/ then public/ so compiled/static assets shadow raw root files
     let filePath = req.url === "/" ? "./index.html" : `.${req.url}`;
     if (req.url !== "/") {

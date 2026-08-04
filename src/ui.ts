@@ -6,7 +6,7 @@ import { ICONS } from "./icons.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
-import { renderBlacklistWarning } from "./ui/blacklistWarning.js";
+import { renderBlacklistWarning } from "./ui/blacklist/warning.js";
 import { els, initVolumeControlUI, initVU, renderVolLadder } from "./ui/elements.js";
 import { applyHistoryTabVisibility, isTrackFavorited, renderFavoritesUI } from "./ui/favorites.js";
 import { setHistoryLoadingState, triggerHistorySlideIn, updateHistoryUI } from "./ui/history.js";
@@ -19,13 +19,6 @@ const ART_V: Record<string, string> = {
   "rmf-maxxx": "1",
   "rmf-classic": "2",
 };
-
-let historyPanelWasOpen = false;
-els.historyPanel.addEventListener("transitionend", (e: TransitionEvent) => {
-  if (e.target === els.historyPanel && e.propertyName === "max-height" && state.showHistory) {
-    els.historyPanel.style.maxHeight = "none";
-  }
-});
 
 export { toggleFavTrack } from "./ui/favorites.js";
 export {
@@ -92,11 +85,14 @@ export function updateNowPlayingTrack(track: TrackInfo | null): void {
   }
 }
 
+// RMF sometimes returns its generic placeholder logo (empty) instead of a real cover; treat it as "no cover"
+const RMF_PLACEHOLDER_COVER = "/assets/images/logo200x200.png";
+
 export function resolveAlbumCoverUrl(track: TrackInfo | null, station: Station | null): string {
   if (track?.isLiveBreak) {
     return station?.coverUrl || "";
   }
-  if (track?.coverUrl && track.coverUrl.trim().length > 0) {
+  if (track?.coverUrl && track.coverUrl.trim().length > 0 && !track.coverUrl.includes(RMF_PLACEHOLDER_COVER)) {
     return track.coverUrl;
   }
   return station?.coverUrl || "";
@@ -227,30 +223,18 @@ export function updateUI(
   els.historyToggleBtn.classList.toggle("disabled", isGeneric);
   els.historyToggleBtn.setAttribute("aria-expanded", String(state.showHistory));
   const willOpenHistory = state.showHistory;
-  if (!willOpenHistory && historyPanelWasOpen) {
-    els.historyPanel.style.maxHeight = `${els.historyPanel.scrollHeight}px`;
-    void els.historyPanel.offsetHeight;
-  }
-
   els.historyPanel.classList.toggle("open", willOpenHistory);
   updateHistoryUI();
   renderBlacklistWarning();
   renderFavoritesUI();
   applyHistoryTabVisibility();
 
-  if (willOpenHistory && !historyPanelWasOpen) {
-    els.historyPanel.style.maxHeight = `${els.historyPanel.scrollHeight}px`;
-  } else if (!willOpenHistory) {
-    els.historyPanel.style.maxHeight = "0px";
-  }
-  historyPanelWasOpen = willOpenHistory;
-
   if (shouldRenderStationList()) {
     renderStationList(onSelect, onToggleFav);
   }
 }
 
-/* ponytail: memoize station list render triggers so volume/sleep/playing updates don't touch station DOM */
+/* memoize station list render triggers so volume/sleep/playing updates don't touch station DOM */
 let lastStationId: string | null = null;
 let lastFavsKey = "";
 let lastViewMode = "";

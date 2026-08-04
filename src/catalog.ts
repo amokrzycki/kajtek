@@ -2,20 +2,16 @@ import { API_ENDPOINTS, INIT_STATIONS, STORAGE_KEYS, TIMERS } from "./consts.js"
 import { LOCAL_STATIONS } from "./localStations.js";
 import { state } from "./state.js";
 import type { CustomStation, RawRmfStation, RmfCatalogCache, Station, StationPref } from "./types.js";
-import { capitalizeFirstLetter, resolveProtocolRelativeUrl } from "./utils.js";
+import { capitalizeFirstLetter, getStoredJSON, resolveProtocolRelativeUrl, setStoredJSON } from "./utils.js";
 
 export function getStoredRmfCatalog(): RmfCatalogCache | null {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.RMF_CATALOG_CACHE);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    if (typeof parsed?.fetchedAt === "number" && Array.isArray(parsed?.stations)) {
-      return parsed as RmfCatalogCache;
-    }
-  } catch (_) {
-    // Ignore cache parse error
-  }
-  return null;
+  return getStoredJSON<RmfCatalogCache | null>(
+    STORAGE_KEYS.RMF_CATALOG_CACHE,
+    null,
+    (v) =>
+      typeof (v as Partial<RmfCatalogCache>)?.fetchedAt === "number" &&
+      Array.isArray((v as Partial<RmfCatalogCache>)?.stations),
+  );
 }
 
 export async function fetchRmfCatalog(): Promise<RmfCatalogCache> {
@@ -66,7 +62,7 @@ export async function fetchRmfCatalog(): Promise<RmfCatalogCache> {
           stations: validatedStations,
         };
 
-        localStorage.setItem(STORAGE_KEYS.RMF_CATALOG_CACHE, JSON.stringify(cache));
+        setStoredJSON(STORAGE_KEYS.RMF_CATALOG_CACHE, cache);
         return cache;
       }
     } catch (err) {
@@ -78,15 +74,7 @@ export async function fetchRmfCatalog(): Promise<RmfCatalogCache> {
 }
 
 export function getCustomStations(): CustomStation[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.CUSTOM_STATIONS);
-    if (!raw) return [];
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as CustomStation[]) : [];
-  } catch (_) {
-    // Ignore JSON parse error
-  }
-  return [];
+  return getStoredJSON<CustomStation[]>(STORAGE_KEYS.CUSTOM_STATIONS, [], Array.isArray);
 }
 
 export function addCustomStation(name: string, streamUrl: string): CustomStation {
@@ -115,7 +103,7 @@ export function addCustomStation(name: string, streamUrl: string): CustomStation
   };
 
   list.push(newStation);
-  localStorage.setItem(STORAGE_KEYS.CUSTOM_STATIONS, JSON.stringify(list));
+  setStoredJSON(STORAGE_KEYS.CUSTOM_STATIONS, list);
 
   setStationEnabled(id, true);
   return newStation;
@@ -123,26 +111,20 @@ export function addCustomStation(name: string, streamUrl: string): CustomStation
 
 export function deleteCustomStation(id: string): void {
   const list = getCustomStations().filter((s) => s.id !== id);
-  localStorage.setItem(STORAGE_KEYS.CUSTOM_STATIONS, JSON.stringify(list));
+  setStoredJSON(STORAGE_KEYS.CUSTOM_STATIONS, list);
 
   const prefs = getStationPrefs();
   delete prefs[id];
-  localStorage.setItem(STORAGE_KEYS.STATION_PREFS, JSON.stringify(prefs));
+  setStoredJSON(STORAGE_KEYS.STATION_PREFS, prefs);
 
   if (state.favs.has(id)) {
     state.favs.delete(id);
-    localStorage.setItem(STORAGE_KEYS.FAVS, JSON.stringify(Array.from(state.favs)));
+    setStoredJSON(STORAGE_KEYS.FAVS, Array.from(state.favs));
   }
 }
 
 export function getStationPrefs(): Record<string, StationPref> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEYS.STATION_PREFS);
-    if (!raw) return {};
-    return JSON.parse(raw) as Record<string, StationPref>;
-  } catch (_) {
-    return {};
-  }
+  return getStoredJSON<Record<string, StationPref>>(STORAGE_KEYS.STATION_PREFS, {});
 }
 
 export function isStationEnabled(id: string): boolean {
@@ -168,11 +150,11 @@ export function setStationEnabled(id: string, enabled: boolean): void {
   const fav = enabled ? state.favs.has(id) : false;
 
   prefs[id] = { id, enabled, favorite: fav };
-  localStorage.setItem(STORAGE_KEYS.STATION_PREFS, JSON.stringify(prefs));
+  setStoredJSON(STORAGE_KEYS.STATION_PREFS, prefs);
 
   if (!enabled && state.favs.has(id)) {
     state.favs.delete(id);
-    localStorage.setItem(STORAGE_KEYS.FAVS, JSON.stringify(Array.from(state.favs)));
+    setStoredJSON(STORAGE_KEYS.FAVS, Array.from(state.favs));
   }
 }
 
@@ -183,11 +165,11 @@ export function setStationFavorite(id: string, favorite: boolean): void {
   } else {
     state.favs.delete(id);
   }
-  localStorage.setItem(STORAGE_KEYS.FAVS, JSON.stringify(Array.from(state.favs)));
+  setStoredJSON(STORAGE_KEYS.FAVS, Array.from(state.favs));
 
   const prefs = getStationPrefs();
   prefs[id] = { id, enabled: isStationEnabled(id), favorite };
-  localStorage.setItem(STORAGE_KEYS.STATION_PREFS, JSON.stringify(prefs));
+  setStoredJSON(STORAGE_KEYS.STATION_PREFS, prefs);
 }
 
 export function getAllKnownStations(): Station[] {

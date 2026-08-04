@@ -1,14 +1,8 @@
 import { addToBlacklist, isBlacklisted, normalizeTrackKey, removeFromBlacklist } from "./blacklist.js";
+import { dismissBlacklistWarning, returnToPreviousStation, switchBlacklistCandidateNow } from "./blacklistWarning.js";
 import { getAllKnownStations } from "./catalog.js";
 import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
-import {
-  currentTrack,
-  dismissBlacklistWarning,
-  returnToPreviousStation,
-  selectStation,
-  switchBlacklistCandidateNow,
-  togglePlay,
-} from "./player.js";
+import { currentTrack, selectStation, togglePlay } from "./player.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { notifyState, state, subscribeState } from "./state.js";
 import { removeFavTrackByKey } from "./ui/favorites.js";

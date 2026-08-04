@@ -24,6 +24,6 @@ export const LOCAL_STATIONS: Station[] = [
     short: "Leliwa",
     cat: "local",
     provider: "generic",
-    stream: "http://streaming.g-news.pl:8050/leliwa",
+    stream: "https://streaming.g-news.pl:8050/leliwa",
   },
 ];

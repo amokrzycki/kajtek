@@ -67,3 +67,30 @@ export function renderStationThumbHtml(
   if (!coverUrl) return `<div class="${placeholderClass}">${initial}</div>`;
   return `<img src="${escapeHtml(coverUrl)}" alt="" class="${thumbClass}" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><div class="${placeholderClass}" style="display:none;">${initial}</div>`;
 }
+
+export function getStoredJSON<T>(key: string, fallback: T, validate?: (value: unknown) => boolean): T {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    const parsed = JSON.parse(raw);
+    if (validate && !validate(parsed)) return fallback;
+    return parsed as T;
+  } catch (_) {
+    return fallback;
+  }
+}
+
+export function setStoredJSON(key: string, value: unknown): void {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+export function withinRateLimit(
+  timestamps: number[],
+  windowMs: number,
+  max: number,
+): { timestamps: number[]; limited: boolean } {
+  const now = Date.now();
+  const recent = timestamps.filter((t) => now - t < windowMs);
+  if (recent.length >= max) return { timestamps: recent, limited: true };
+  return { timestamps: [...recent, now], limited: false };
+}

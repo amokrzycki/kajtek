@@ -6,13 +6,13 @@ import {
   getStoredRmfCatalog,
   isStationEnabled,
   setStationEnabled,
-} from "@/catalog.js";
-import { ICONS } from "@/icons.js";
-import { notifyState } from "@/state.js";
-import type { RmfCatalogCache, Station } from "@/types.js";
-import { escapeHtml, renderStationThumbHtml } from "@/utils.js";
+} from "../../catalog.js";
+import { ICONS } from "../../icons.js";
+import { notifyState } from "../../state.js";
+import type { RmfCatalogCache, Station } from "../../types.js";
+import { escapeHtml, renderStationThumbHtml } from "../../utils.js";
 import { openBlacklistModal } from "../blacklist/modal.js";
-import { bindModalDismiss, closeModal, openModal } from "../modal.js";
+import { animateTabSwitch, bindModalDismiss, closeModal, openModal } from "../modal.js";
 import { handleCustomStationSubmit } from "./form.js";
 
 type CatalogTab = "all" | "local" | "custom";
@@ -208,28 +208,7 @@ function setActiveTab(tab: CatalogTab): void {
     return;
   }
 
-  if (tabSwitchTimer) window.clearTimeout(tabSwitchTimer);
-  const prevHeight = modalBox.getBoundingClientRect().height;
-  listContainer.classList.add("is-switching");
-
-  tabSwitchTimer = window.setTimeout(() => {
-    renderModalBody();
-
-    const newHeight = modalBox.getBoundingClientRect().height;
-    if (Math.abs(newHeight - prevHeight) > 1) {
-      modalBox.style.height = `${prevHeight}px`;
-      modalBox.style.transition = "height 220ms cubic-bezier(0.2, 0, 0, 1)";
-      requestAnimationFrame(() => {
-        modalBox.style.height = `${newHeight}px`;
-      });
-      window.setTimeout(() => {
-        modalBox.style.height = "";
-        modalBox.style.transition = "";
-      }, 240);
-    }
-
-    requestAnimationFrame(() => listContainer.classList.remove("is-switching"));
-  }, 140);
+  tabSwitchTimer = animateTabSwitch(listContainer, modalBox, renderModalBody, tabSwitchTimer);
 }
 
 async function handleRefreshCatalog(): Promise<void> {
@@ -281,9 +260,9 @@ function matchesQuery(station: Station, q: string, cache: RmfCatalogCache | null
   return false;
 }
 
-// Almost every RMF station name starts with "RMF" or "Radio", which would dump 3/4 of the
+// Almost every RMF station name starts with "RMF", which would dump 3/4 of the
 // catalog into a single "R" bucket — index by the first significant word instead.
-const GENERIC_NAME_PREFIX = /^(RMF|Radio)\s+/i;
+const GENERIC_NAME_PREFIX = /^RMF\s+/i;
 
 // Ł doesn't decompose under NFD, so it needs an explicit swap before diacritics are stripped.
 function indexLetter(name: string): string {
@@ -426,7 +405,9 @@ function renderAllTab(
 
   const azList = document.createElement("div");
   azList.className = "catalog-az-list";
-  groups.forEach((groupStations, letter) => {
+  IDXRAIL_SYMBOLS.forEach((letter) => {
+    const groupStations = groups.get(letter);
+    if (!groupStations) return;
     const head = buildSecHeadEl(letter);
     head.id = `catalog-sec-${letter}`;
     azList.appendChild(head);

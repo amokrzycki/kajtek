@@ -1,9 +1,9 @@
-import { getEnabledStations } from "@/catalog.js";
-import { STORAGE_KEYS } from "@/consts.js";
-import { ICONS } from "@/icons.js";
-import { state } from "@/state.js";
-import type { Station } from "@/types.js";
-import { escapeHtml, renderStationThumbHtml } from "@/utils.js";
+import { getEnabledStations } from "../catalog.js";
+import { STORAGE_KEYS } from "../consts.js";
+import { ICONS } from "../icons.js";
+import { state } from "../state.js";
+import type { Station } from "../types.js";
+import { escapeHtml, renderStationThumbHtml } from "../utils.js";
 import { openCatalogModal } from "./catalog/modal.js";
 import { els } from "./elements.js";
 
@@ -163,19 +163,18 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
           const deltaY = firstRect.top - lastRect.top;
 
           if (deltaX !== 0 || deltaY !== 0) {
-            card.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-            card.style.transition = "none";
             card.style.zIndex = "10";
-
-            requestAnimationFrame(() => {
-              card.style.transition = "transform 480ms cubic-bezier(0.16, 1, 0.3, 1)";
-              card.style.transform = "";
-
-              setTimeout(() => {
-                card.style.transition = "";
-                card.style.zIndex = "";
-              }, 480);
+            const anim = card.animate([{ transform: `translate(${deltaX}px, ${deltaY}px)` }, { transform: "none" }], {
+              duration: 280,
+              easing: "cubic-bezier(0.16, 1, 0.3, 1)",
             });
+            anim.finished
+              .catch(() => {
+                // Ignore errors, e.g., if the animation was canceled
+              })
+              .finally(() => {
+                card.style.zIndex = "";
+              });
           }
         }
       });

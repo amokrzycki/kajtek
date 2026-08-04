@@ -1,8 +1,8 @@
-import { addToBlacklist, getBlacklist, removeFromBlacklist } from "@/blacklist.js";
-import { ICONS } from "@/icons.js";
-import { currentTrack } from "@/player.js";
-import { escapeHtml } from "@/utils.js";
-import { bindModalDismiss, closeModal, openModal } from "../modal.js";
+import { addToBlacklist, getBlacklist, removeFromBlacklist } from "../../blacklist.js";
+import { ICONS } from "../../icons.js";
+import { currentTrack } from "../../player.js";
+import { escapeHtml } from "../../utils.js";
+import { animateTabSwitch, bindModalDismiss, closeModal, openModal } from "../modal.js";
 
 type BlacklistTab = "list" | "add";
 
@@ -44,28 +44,7 @@ function setActiveTab(tab: BlacklistTab): void {
     return;
   }
 
-  if (tabSwitchTimer) window.clearTimeout(tabSwitchTimer);
-  const prevHeight = modalBox.getBoundingClientRect().height;
-  listContainer.classList.add("is-switching");
-
-  tabSwitchTimer = window.setTimeout(() => {
-    renderModalBody();
-
-    const newHeight = modalBox.getBoundingClientRect().height;
-    if (Math.abs(newHeight - prevHeight) > 1) {
-      modalBox.style.height = `${prevHeight}px`;
-      modalBox.style.transition = "height 220ms cubic-bezier(0.2, 0, 0, 1)";
-      requestAnimationFrame(() => {
-        modalBox.style.height = `${newHeight}px`;
-      });
-      window.setTimeout(() => {
-        modalBox.style.height = "";
-        modalBox.style.transition = "";
-      }, 240);
-    }
-
-    requestAnimationFrame(() => listContainer.classList.remove("is-switching"));
-  }, 140);
+  tabSwitchTimer = animateTabSwitch(listContainer, modalBox, renderModalBody, tabSwitchTimer);
 }
 
 function createModalElements(): void {
