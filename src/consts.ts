@@ -10,6 +10,7 @@ export const STORAGE_KEYS = {
   VIEW_MODE: "kajtek_view_mode",
   BLACKLIST: "kajtek_blacklist",
   BLACKLIST_ENABLED: "kajtek_blacklist_enabled",
+  AD_SKIP_ENABLED: "kajtek_ad_skip_enabled",
   VOLUME: "kajtek_volume",
 } as const;
 

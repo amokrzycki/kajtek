@@ -119,6 +119,7 @@ export interface AppState {
   viewMode: "list" | "grid";
   version: string;
   blacklistEnabled: boolean;
+  adSkipEnabled: boolean;
 }
 
 export interface PlaylistResult {

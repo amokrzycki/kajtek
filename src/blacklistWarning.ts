@@ -1,12 +1,15 @@
 import { isBlacklisted } from "./blacklist.js";
 import { getOrderedStations, getStoredRmfCatalog } from "./catalog.js";
-import { SWITCH_RATE_LIMIT } from "./consts.js";
+import { DEFAULT_BREAK_LABEL, SWITCH_RATE_LIMIT } from "./consts.js";
 import { selectStation } from "./player.js";
 import { notifyState, state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import { getTrackKey, withinRateLimit } from "./utils.js";
 
+type WarningKind = "blacklist" | "adSkip";
+
 interface BlacklistWarning {
+  kind: WarningKind;
   phase: "warning" | "switched";
   track: TrackInfo;
   trackKey: string;
@@ -30,9 +33,7 @@ export function resetBlacklistWarningState(): void {
   dismissedTrackKey = null;
 }
 
-function pickBlacklistCandidate(
-  origin: Station,
-): { station: Station; reason: "favorite" | "similar" | "other" } | null {
+function pickSwitchCandidate(origin: Station): { station: Station; reason: "favorite" | "similar" | "other" } | null {
   const pool = getOrderedStations().filter((s) => s.id !== origin.id);
   if (pool.length === 0) return null;
 
@@ -55,12 +56,18 @@ function pickBlacklistCandidate(
   return first ? { station: first, reason: "other" } : null;
 }
 
-function performBlacklistSwitch(track: TrackInfo, originStation: Station, candidate: Station, reason: string) {
+function performStationSwitch(
+  kind: WarningKind,
+  track: TrackInfo,
+  originStation: Station,
+  candidate: Station,
+  reason: string,
+) {
   const rateLimit = withinRateLimit(blacklistSwitchTimestamps, SWITCH_RATE_LIMIT.WINDOW_MS, SWITCH_RATE_LIMIT.MAX);
   blacklistSwitchTimestamps = rateLimit.timestamps;
 
   if (rateLimit.limited) {
-    // avoid switching forever if every candidate keeps landing on another blacklisted song.
+    // avoid switching forever if every candidate keeps landing on another blocked track/break.
     dismissedTrackKey = getTrackKey(track);
     blacklistWarning = null;
     return;
@@ -68,6 +75,7 @@ function performBlacklistSwitch(track: TrackInfo, originStation: Station, candid
 
   selectStation(candidate);
   blacklistWarning = {
+    kind,
     phase: "switched",
     track,
     trackKey: getTrackKey(track),
@@ -79,18 +87,19 @@ function performBlacklistSwitch(track: TrackInfo, originStation: Station, candid
   };
 }
 
-function armBlacklistWarning(track: TrackInfo, origin: Station, immediate: boolean) {
-  const picked = pickBlacklistCandidate(origin);
+function armSwitchWarning(kind: WarningKind, track: TrackInfo, origin: Station, immediate: boolean) {
+  const picked = pickSwitchCandidate(origin);
   if (!picked) return;
 
   state.showHistory = true;
   state.historyTab = "program";
 
   if (immediate) {
-    performBlacklistSwitch(track, origin, picked.station, picked.reason);
+    performStationSwitch(kind, track, origin, picked.station, picked.reason);
   } else {
     const nowSec = Math.floor(Date.now() / 1000);
     blacklistWarning = {
+      kind,
       phase: "warning",
       track,
       trackKey: getTrackKey(track),
@@ -108,7 +117,7 @@ export function detectBlacklistedUpcoming() {
 
   if (state.liveTrack && (!state.liveTrack.isLiveBreak || state.liveTrack.isFacts) && isBlacklisted(state.liveTrack)) {
     const key = getTrackKey(state.liveTrack);
-    if (key !== dismissedTrackKey) armBlacklistWarning(state.liveTrack, state.station, true);
+    if (key !== dismissedTrackKey) armSwitchWarning("blacklist", state.liveTrack, state.station, true);
     return;
   }
 
@@ -118,13 +127,33 @@ export function detectBlacklistedUpcoming() {
     .sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0))[0];
 
   if (upcoming && isBlacklisted(upcoming) && getTrackKey(upcoming) !== dismissedTrackKey) {
-    armBlacklistWarning(upcoming, state.station, false);
+    armSwitchWarning("blacklist", upcoming, state.station, false);
+  }
+}
+
+export function detectUpcomingAdBreak() {
+  if (!state.station || blacklistWarning || !state.adSkipEnabled) return;
+
+  if (state.liveTrack?.isLiveBreak && state.liveTrack.title === DEFAULT_BREAK_LABEL) {
+    const key = getTrackKey(state.liveTrack);
+    if (key !== dismissedTrackKey) armSwitchWarning("adSkip", state.liveTrack, state.station, true);
+    return;
+  }
+
+  const nowSec = Math.floor(Date.now() / 1000);
+  const nextUp = state.history
+    .filter((t) => t.timestamp && t.timestamp > nowSec)
+    .sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0))[0];
+
+  if (nextUp?.isBreak && nextUp.label === DEFAULT_BREAK_LABEL && getTrackKey(nextUp) !== dismissedTrackKey) {
+    armSwitchWarning("adSkip", nextUp, state.station, false);
   }
 }
 
 export function switchBlacklistCandidateNow(): void {
   if (blacklistWarning?.phase !== "warning") return;
-  performBlacklistSwitch(
+  performStationSwitch(
+    blacklistWarning.kind,
     blacklistWarning.track,
     blacklistWarning.originStation,
     blacklistWarning.candidate,
@@ -155,7 +184,8 @@ setInterval(() => {
     const nowSec = Math.floor(Date.now() / 1000);
     const secondsLeft = (blacklistWarning.track.timestamp ?? nowSec) - nowSec;
     if (secondsLeft <= 0) {
-      performBlacklistSwitch(
+      performStationSwitch(
+        blacklistWarning.kind,
         blacklistWarning.track,
         blacklistWarning.originStation,
         blacklistWarning.candidate,

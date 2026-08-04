@@ -1,5 +1,5 @@
 import type Hls from "hls.js";
-import { detectBlacklistedUpcoming, resetBlacklistWarningState } from "./blacklistWarning.js";
+import { detectBlacklistedUpcoming, detectUpcomingAdBreak, resetBlacklistWarningState } from "./blacklistWarning.js";
 import { getOrderedStations } from "./catalog.js";
 import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, SWITCH_RATE_LIMIT, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
@@ -298,6 +298,7 @@ async function refreshTrackInfo() {
       pendingStationSlideIn = false;
       updateHistoryUI(doFullSlide);
       detectBlacklistedUpcoming();
+      detectUpcomingAdBreak();
     }
   } else {
     state.liveTrack = null;

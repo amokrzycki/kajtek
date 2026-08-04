@@ -22,6 +22,7 @@ export function openSettingsModal(): void {
     createModalElements();
   } else {
     syncBlacklistToggle();
+    syncAdSkipToggle();
   }
   if (modalEl) openModal(modalEl);
 }
@@ -69,18 +70,15 @@ function createModalElements(): void {
 
         <div class="k-settings-group">
           <div class="k-settings-label">Reklamy</div>
-          <div class="k-settings-disabled">
-            <div class="k-settings-row">
-              <div class="k-settings-row-text">
-                <span>Pomijaj reklamy</span>
-                <span class="k-settings-row-sub">Automatyczne wyciszanie i przewijanie bloków reklamowych</span>
-              </div>
-              <label class="catalog-toggle-switch">
-                <input type="checkbox" class="catalog-checkbox" disabled />
-              </label>
+          <div class="k-settings-row">
+            <div class="k-settings-row-text">
+              <span>Pomijaj reklamy</span>
+              <span class="k-settings-row-sub">Automatyczne przełączanie stacji na czas bloku reklamowego</span>
             </div>
+            <label class="catalog-toggle-switch" id="settings-adskip-switch">
+              <input type="checkbox" id="settings-adskip-toggle" class="catalog-checkbox" aria-label="Pomijaj reklamy" />
+            </label>
           </div>
-          <span class="k-settings-soon-badge">już wkrótce</span>
         </div>
 
         <div class="k-settings-group">
@@ -110,7 +108,14 @@ function createModalElements(): void {
     notifyState();
   });
 
+  modalEl.querySelector<HTMLInputElement>("#settings-adskip-toggle")?.addEventListener("change", (e) => {
+    state.adSkipEnabled = (e.target as HTMLInputElement).checked;
+    setStoredJSON(STORAGE_KEYS.AD_SKIP_ENABLED, state.adSkipEnabled);
+    notifyState();
+  });
+
   syncBlacklistToggle();
+  syncAdSkipToggle();
 }
 
 function syncBlacklistToggle(): void {
@@ -119,4 +124,12 @@ function syncBlacklistToggle(): void {
   if (!toggle || !label) return;
   toggle.checked = state.blacklistEnabled;
   label.title = state.blacklistEnabled ? "Wyłącz czarną listę" : "Włącz czarną listę";
+}
+
+function syncAdSkipToggle(): void {
+  const toggle = modalEl?.querySelector<HTMLInputElement>("#settings-adskip-toggle");
+  const label = modalEl?.querySelector<HTMLLabelElement>("#settings-adskip-switch");
+  if (!toggle || !label) return;
+  toggle.checked = state.adSkipEnabled;
+  label.title = state.adSkipEnabled ? "Wyłącz pomijanie reklam" : "Włącz pomijanie reklam";
 }
