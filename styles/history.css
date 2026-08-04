@@ -1,7 +1,16 @@
 .history-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--k-tr-panel);
+}
+
+.history-panel.open {
+  grid-template-rows: 1fr;
+}
+
+.history-clip {
+  min-height: 0;
   overflow: hidden;
-  max-height: 0;
-  transition: max-height var(--k-tr-panel);
 }
 
 .history-inner {
