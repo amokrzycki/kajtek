@@ -26,6 +26,24 @@ export function bindModalDismiss(modalEl: HTMLElement, close: () => void): void 
   });
 }
 
+export function animateHeightChange(modalBox: HTMLElement, apply: () => void): void {
+  const prevHeight = modalBox.getBoundingClientRect().height;
+  apply();
+
+  const newHeight = modalBox.getBoundingClientRect().height;
+  if (Math.abs(newHeight - prevHeight) > 1) {
+    modalBox.style.height = `${prevHeight}px`;
+    modalBox.style.transition = "height 220ms cubic-bezier(0.2, 0, 0, 1)";
+    requestAnimationFrame(() => {
+      modalBox.style.height = `${newHeight}px`;
+    });
+    window.setTimeout(() => {
+      modalBox.style.height = "";
+      modalBox.style.transition = "";
+    }, 240);
+  }
+}
+
 export function animateTabSwitch(
   listContainer: HTMLElement,
   modalBox: HTMLElement,
@@ -33,25 +51,10 @@ export function animateTabSwitch(
   pendingTimer: number | undefined,
 ): number {
   if (pendingTimer) window.clearTimeout(pendingTimer);
-  const prevHeight = modalBox.getBoundingClientRect().height;
   listContainer.classList.add("is-switching");
 
   return window.setTimeout(() => {
-    render();
-
-    const newHeight = modalBox.getBoundingClientRect().height;
-    if (Math.abs(newHeight - prevHeight) > 1) {
-      modalBox.style.height = `${prevHeight}px`;
-      modalBox.style.transition = "height 220ms cubic-bezier(0.2, 0, 0, 1)";
-      requestAnimationFrame(() => {
-        modalBox.style.height = `${newHeight}px`;
-      });
-      window.setTimeout(() => {
-        modalBox.style.height = "";
-        modalBox.style.transition = "";
-      }, 240);
-    }
-
+    animateHeightChange(modalBox, render);
     requestAnimationFrame(() => listContainer.classList.remove("is-switching"));
   }, 140);
 }
