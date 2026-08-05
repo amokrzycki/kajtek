@@ -8,6 +8,7 @@ Motywy! Kajtek posiada teraz 6 motywów kolorystycznych, które możesz zmienia�
 - Automatyczny powrót na poprzednią stację po zakończeniu reklam (włączany w ustawieniach)
 - Poprawiona niezawodność pomijania reklam, Kajtek nie przełączy Cię już na stację, która akurat gra reklamę lub utwór z czarnej listy
 - Masz teraz 5 sekund na reakcję przed automatycznym przełączeniem stacji, jeśli wejdziesz na stację, która gra reklamę lub utwór z czarnej listy
+- Aplikacja posiada teraz system pierwszego uruchomienia, który pomoże Ci w konfiguracji Kajtka
 
 ## 0.8
 
