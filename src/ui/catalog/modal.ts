@@ -12,7 +12,7 @@ import { notifyState } from "../../state.js";
 import type { RmfCatalogCache, Station } from "../../types.js";
 import { escapeHtml, renderStationThumbHtml } from "../../utils.js";
 import { openBlacklistModal } from "../blacklist/modal.js";
-import { animateTabSwitch, bindModalDismiss, closeModal, openModal } from "../modal.js";
+import { animateHeightChange, animateTabSwitch, bindModalDismiss, closeModal, openModal } from "../modal.js";
 import { handleCustomStationSubmit } from "./form.js";
 
 type CatalogTab = "all" | "local" | "custom";
@@ -232,7 +232,12 @@ async function handleRefreshCatalog(): Promise<void> {
       refreshBtn.disabled = false;
       refreshBtn.textContent = "Odśwież listę";
     }
-    renderModalBody();
+    const modalBox = modalEl?.querySelector<HTMLElement>(".k-modal");
+    if (modalBox) {
+      animateHeightChange(modalBox, renderModalBody);
+    } else {
+      renderModalBody();
+    }
   }
 }
 

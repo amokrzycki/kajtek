@@ -707,6 +707,138 @@
   color: var(--k-text);
 }
 
+/* ——— modal onboardingu ——— */
+
+.k-onboarding-modal {
+  max-width: 420px;
+  position: relative;
+}
+
+.k-onboarding-close {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 1;
+}
+
+.k-onboarding-body {
+  padding: 1.75rem 1.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--k-s2);
+  overflow-y: auto;
+}
+
+.k-onboarding-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--k-accent-dim);
+  color: var(--k-accent-text);
+}
+
+.k-onboarding-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+.k-onboarding-title {
+  font-family: var(--k-font-display);
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+  margin: 0;
+  color: var(--k-text);
+}
+
+.k-onboarding-subtitle {
+  margin: 0;
+  font-size: var(--k-fs-body);
+  color: var(--k-text-muted);
+}
+
+.k-onboarding-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--k-s3);
+  margin: var(--k-s2) 0;
+  text-align: left;
+}
+
+.k-onboarding-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--k-s3);
+}
+
+.k-onboarding-item-icon {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  color: var(--k-accent-text);
+}
+
+.k-onboarding-item-title {
+  font-family: var(--k-font-body);
+  font-weight: 600;
+  font-size: var(--k-fs-body);
+  color: var(--k-text);
+}
+
+.k-onboarding-item-desc {
+  font-size: var(--k-fs-label);
+  color: var(--k-text-muted);
+  margin-top: 2px;
+}
+
+.k-onboarding-note {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  background: var(--k-accent-dim);
+  border: 1px solid var(--k-accent-ring);
+  border-radius: var(--k-rc);
+  font-size: var(--k-fs-label);
+  color: var(--k-text-2);
+}
+
+.k-onboarding-cta {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  margin-top: var(--k-s2);
+}
+
+.k-onboarding-cta svg {
+  width: 12px;
+  height: 12px;
+}
+
+.k-onboarding-skip {
+  background: none;
+  border: none;
+  color: var(--k-text-faint);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-label);
+  cursor: pointer;
+  padding: 0.25rem;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .k-onboarding-skip:hover {
+    color: var(--k-text);
+  }
+}
+
 .k-settings-row-sub {
   font-family: var(--k-font-mono);
   font-size: var(--k-fs-data);

@@ -8,6 +8,7 @@ import { genericProvider, getProvider } from "./providers.js";
 import { notifyState, state, subscribeState } from "./state.js";
 import { openChangelogModal } from "./ui/changelog/modal.js";
 import { removeFavTrackByKey } from "./ui/favorites.js";
+import { openOnboardingModal, shouldShowOnboarding } from "./ui/onboarding/modal.js";
 import { openSettingsModal } from "./ui/settings/modal.js";
 import {
   els,
@@ -143,6 +144,8 @@ function attachEvents() {
 }
 
 function init() {
+  const isFirstVisit = shouldShowOnboarding();
+
   setVersion();
   initVU();
   initVolumeControlUI();
@@ -152,7 +155,11 @@ function init() {
   refresh();
 
   const newEntries = checkForNewChangelog();
-  if (newEntries) openChangelogModal(newEntries);
+  if (isFirstVisit) {
+    openOnboardingModal();
+  } else if (newEntries) {
+    openChangelogModal(newEntries);
+  }
 }
 
 document.addEventListener("DOMContentLoaded", init);
