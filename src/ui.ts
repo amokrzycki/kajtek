@@ -155,6 +155,7 @@ export function updateUI(
   onToggleFav: (id: string) => void,
 ): void {
   applyTheme();
+  applyCase();
 
   els.vuStrip.classList.toggle("active", state.playing);
   els.reelLeft.classList.toggle("spinning", state.playing);
@@ -268,4 +269,9 @@ function applyTheme(): void {
   els.darkToggle.classList.toggle("on", state.dark);
   localStorage.setItem(STORAGE_KEYS.THEME, state.dark ? "dark" : "light");
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", state.dark ? "#1a1816" : "#eeebe3");
+}
+
+function applyCase(): void {
+  document.documentElement.dataset.case = state.case;
+  localStorage.setItem(STORAGE_KEYS.CASE, state.case);
 }

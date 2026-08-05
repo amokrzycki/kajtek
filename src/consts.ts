@@ -1,7 +1,11 @@
 import type { Station } from "./types.js";
 
+export const CASES = ["red", "green", "yellow", "blue", "pink", "black"] as const;
+export type CaseSlug = (typeof CASES)[number];
+
 export const STORAGE_KEYS = {
   THEME: "kajtek_theme",
+  CASE: "kajtek_case",
   FAVS: "kajtek_favs",
   FAV_TRACKS: "kajtek_fav_tracks",
   STATION_PREFS: "kajtek_station_prefs",

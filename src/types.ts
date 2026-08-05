@@ -1,3 +1,5 @@
+import type { CaseSlug } from "./consts.js";
+
 export interface Station {
   id: string;
   name: string;
@@ -104,6 +106,7 @@ export interface FavTrack {
 
 export interface AppState {
   dark: boolean;
+  case: CaseSlug;
   station: Station | null;
   playing: boolean;
   vol: number;

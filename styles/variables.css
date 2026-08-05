@@ -54,6 +54,8 @@
   --k-case-edge: #b21b14;
   --k-case-ink: #ffffff;
   --k-case-ink-dim: rgba(255, 255, 255, 0.9);
+  --k-u-box-fg: #c4221a;
+  --k-art-empty: linear-gradient(150deg, #1a0a05 0%, #7a2808 55%, #2a1005 100%);
   --k-vu-led-green: #4ade3a;
   --k-vu-led-yellow: #ffd23d;
   --k-vu-led-red: #ff453a;

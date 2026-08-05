@@ -1,6 +1,7 @@
 declare const APP_VERSION: string;
 
-import { DEFAULT_VERSION, STORAGE_KEYS } from "./consts.js";
+import type { CaseSlug } from "./consts.js";
+import { CASES, DEFAULT_VERSION, STORAGE_KEYS } from "./consts.js";
 import type { AppState, FavTrack, TrackInfo } from "./types.js";
 import { getStoredJSON, setStoredJSON } from "./utils.js";
 
@@ -8,10 +9,13 @@ export function persistFavTracks(): void {
   setStoredJSON(STORAGE_KEYS.FAV_TRACKS, state.favTracks);
 }
 
+const storedCase = localStorage.getItem(STORAGE_KEYS.CASE);
+
 export const state: AppState = {
   dark: localStorage.getItem(STORAGE_KEYS.THEME)
     ? localStorage.getItem(STORAGE_KEYS.THEME) === "dark"
     : window.matchMedia("(prefers-color-scheme: dark)").matches,
+  case: (CASES as readonly string[]).includes(storedCase ?? "") ? (storedCase as CaseSlug) : "red",
   station: null,
   playing: false,
   vol: getStoredJSON<number>(STORAGE_KEYS.VOLUME, 10, (v) => typeof v === "number"),

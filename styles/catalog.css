@@ -665,30 +665,6 @@
   position: relative;
 }
 
-.k-settings-disabled {
-  filter: blur(2.5px);
-  opacity: 0.6;
-  pointer-events: none;
-  user-select: none;
-}
-
-.k-settings-soon-badge {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-family: var(--k-font-mono);
-  font-size: var(--k-fs-tag);
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  padding: 3px 10px;
-  border-radius: 999px;
-  border: 1px solid var(--k-border-3);
-  background: var(--k-bg-raised);
-  color: var(--k-text-muted);
-  box-shadow: var(--k-sh-sm);
-}
-
 .k-settings-row {
   display: flex;
   align-items: center;
@@ -751,6 +727,15 @@
   border: 1px solid var(--k-border-2);
   border-radius: var(--k-rb);
   background: var(--k-bg-raised);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: box-shadow var(--k-tr);
+}
+
+.k-settings-swatch[aria-pressed="true"] {
+  border-color: var(--k-text-2);
+  box-shadow: inset 0 0 0 2px var(--k-text-2);
 }
 
 .k-settings-swatch-dot {
