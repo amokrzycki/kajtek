@@ -679,6 +679,33 @@
   margin-bottom: 0.5rem;
 }
 
+.bl-warn-compact .bl-warn-clip {
+  padding-bottom: 0.4rem;
+}
+
+.bl-warn-mini {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--k-fs-data);
+  color: var(--k-disp-dim);
+}
+
+.bl-warn-mini-text {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bl-warn-mini-clock {
+  font-family: var(--k-font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--k-disp-accent);
+  white-space: nowrap;
+}
+
 @media (max-width: 640px) {
   .history-inner {
     margin: 0.2rem 12px 12px;

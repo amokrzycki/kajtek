@@ -120,6 +120,7 @@ export interface AppState {
   version: string;
   blacklistEnabled: boolean;
   adSkipEnabled: boolean;
+  adSkipAutoReturnEnabled: boolean;
 }
 
 export interface PlaylistResult {

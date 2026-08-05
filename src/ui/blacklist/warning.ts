@@ -1,4 +1,5 @@
 import { getBlacklistWarningState } from "../../blacklistWarning.js";
+import { state } from "../../state.js";
 import { escapeHtml } from "../../utils.js";
 import { els } from "../elements.js";
 
@@ -20,7 +21,24 @@ function blockedTrackText(track: { artist: string; title: string; label?: string
   return track.artist ? `${escapeHtml(track.artist)} – ${escapeHtml(adText)}` : escapeHtml(adText);
 }
 
+function isAutoReturnPending(warning: NonNullable<ReturnType<typeof getBlacklistWarningState>>): boolean {
+  return warning.kind === "adSkip" && warning.phase === "switched" && state.adSkipAutoReturnEnabled;
+}
+
+function buildMiniWarningHtml(warning: NonNullable<ReturnType<typeof getBlacklistWarningState>>): string {
+  return `
+    <div class="bl-warn-mini">
+      <span class="bl-warn-dot bl-warn-dot-ok"></span>
+      <span class="bl-warn-mini-text">Pominięto reklamę na ${escapeHtml(warning.originStation.name)} · gra ${escapeHtml(warning.candidate.name)}</span>
+      <span class="bl-warn-mini-clock">wracamy za ${formatMMSS(warning.secondsLeft)}</span>
+      <button type="button" class="bl-warn-link bl-warn-revert">wróć</button>
+    </div>
+  `;
+}
+
 function buildWarningHtml(warning: NonNullable<ReturnType<typeof getBlacklistWarningState>>): string {
+  if (isAutoReturnPending(warning)) return buildMiniWarningHtml(warning);
+
   const isAdSkip = warning.kind === "adSkip";
   const blockTag = isAdSkip ? "reklama" : "czarna lista";
   const blockSub = isAdSkip
@@ -75,9 +93,14 @@ let swapTimer: number | undefined;
 
 export function renderBlacklistWarning(): void {
   const warning = getBlacklistWarningState();
+  const compact = !!warning && isAutoReturnPending(warning);
 
-  els.historyList.style.display = warning ? "none" : "";
-  els.historyEmpty.style.display = warning ? "none" : els.historyEmpty.style.display;
+  // The full-card banner takes over the whole program list, so only hide it there — the
+  // compact auto-return chip is meant to sit alongside history, not replace it.
+  const hideHistory = !!warning && !compact;
+  els.historyList.style.display = hideHistory ? "none" : "";
+  els.historyEmpty.style.display = hideHistory ? "none" : els.historyEmpty.style.display;
+  els.blacklistWarning.classList.toggle("bl-warn-compact", compact);
 
   if (!warning) {
     if (lastContentKey !== null) {
