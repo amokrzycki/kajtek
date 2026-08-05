@@ -699,6 +699,10 @@
   border-radius: var(--k-rc);
 }
 
+.k-settings-row + .k-settings-row {
+  margin-top: var(--k-s2);
+}
+
 .k-changelog-intro {
   margin: 0 0 0.6rem;
   font-size: 0.85rem;

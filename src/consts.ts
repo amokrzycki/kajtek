@@ -11,6 +11,7 @@ export const STORAGE_KEYS = {
   BLACKLIST: "kajtek_blacklist",
   BLACKLIST_ENABLED: "kajtek_blacklist_enabled",
   AD_SKIP_ENABLED: "kajtek_ad_skip_enabled",
+  AD_SKIP_AUTO_RETURN: "kajtek_ad_skip_auto_return",
   VOLUME: "kajtek_volume",
   LAST_SEEN_VERSION: "kajtek_last_seen_version",
 } as const;
@@ -59,12 +60,15 @@ export const TIMERS = {
   TRACK_POLL_MS: 5000,
   SLEEP_STEP_MS: 1000,
   HISTORY_SLIDE_MS: 700,
+  AD_RETURN_MAX_WAIT_MS: 180_000,
 } as const;
 
 export const SWITCH_RATE_LIMIT = {
   WINDOW_MS: 30000,
   MAX: 3,
 } as const;
+
+export const MIN_SKIP_GRACE_SEC = 5;
 
 export const DEFAULT_BREAK_LABEL = "Przerwa / Reklamy";
 export const VU_COUNT = 24;

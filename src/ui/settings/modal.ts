@@ -73,10 +73,24 @@ function createModalElements(): void {
           <div class="k-settings-row">
             <div class="k-settings-row-text">
               <span>Pomijaj reklamy</span>
-              <span class="k-settings-row-sub">Automatyczne przełączanie stacji na czas bloku reklamowego</span>
+              <span class="k-settings-row-sub">Automatyczne wykrywanie i pomijanie reklam</span>
             </div>
             <label class="catalog-toggle-switch" id="settings-adskip-switch">
               <input type="checkbox" id="settings-adskip-toggle" class="catalog-checkbox" aria-label="Pomijaj reklamy" />
+            </label>
+          </div>
+          <div class="k-settings-row">
+            <div class="k-settings-row-text">
+              <span>Automatyczny powrót po reklamie</span>
+              <span class="k-settings-row-sub">Wróć na poprzednią stację, gdy blok reklamowy się skończy</span>
+            </div>
+            <label class="catalog-toggle-switch" id="settings-adskip-autoreturn-switch">
+              <input
+                type="checkbox"
+                id="settings-adskip-autoreturn-toggle"
+                class="catalog-checkbox"
+                aria-label="Automatyczny powrót po reklamie"
+              />
             </label>
           </div>
         </div>
@@ -114,6 +128,12 @@ function createModalElements(): void {
     notifyState();
   });
 
+  modalEl.querySelector<HTMLInputElement>("#settings-adskip-autoreturn-toggle")?.addEventListener("change", (e) => {
+    state.adSkipAutoReturnEnabled = (e.target as HTMLInputElement).checked;
+    setStoredJSON(STORAGE_KEYS.AD_SKIP_AUTO_RETURN, state.adSkipAutoReturnEnabled);
+    notifyState();
+  });
+
   syncBlacklistToggle();
   syncAdSkipToggle();
 }
@@ -129,7 +149,14 @@ function syncBlacklistToggle(): void {
 function syncAdSkipToggle(): void {
   const toggle = modalEl?.querySelector<HTMLInputElement>("#settings-adskip-toggle");
   const label = modalEl?.querySelector<HTMLLabelElement>("#settings-adskip-switch");
-  if (!toggle || !label) return;
-  toggle.checked = state.adSkipEnabled;
-  label.title = state.adSkipEnabled ? "Wyłącz pomijanie reklam" : "Włącz pomijanie reklam";
+  if (toggle && label) {
+    toggle.checked = state.adSkipEnabled;
+    label.title = state.adSkipEnabled ? "Wyłącz pomijanie reklam" : "Włącz pomijanie reklam";
+  }
+
+  const autoReturnToggle = modalEl?.querySelector<HTMLInputElement>("#settings-adskip-autoreturn-toggle");
+  const autoReturnLabel = modalEl?.querySelector<HTMLLabelElement>("#settings-adskip-autoreturn-switch");
+  if (!autoReturnToggle || !autoReturnLabel) return;
+  autoReturnToggle.checked = state.adSkipAutoReturnEnabled;
+  autoReturnLabel.title = state.adSkipAutoReturnEnabled ? "Wyłącz automatyczny powrót" : "Włącz automatyczny powrót";
 }

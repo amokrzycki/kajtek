@@ -1,6 +1,6 @@
 import { isBlacklisted } from "./blacklist.js";
 import { getOrderedStations, getStoredRmfCatalog } from "./catalog.js";
-import { DEFAULT_BREAK_LABEL, SWITCH_RATE_LIMIT, TIMERS } from "./consts.js";
+import { DEFAULT_BREAK_LABEL, MIN_SKIP_GRACE_SEC, SWITCH_RATE_LIMIT, TIMERS } from "./consts.js";
 import { fetchPlaylist, selectStation } from "./player.js";
 import { notifyState, state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
@@ -17,12 +17,14 @@ interface BlacklistWarning {
   candidate: Station;
   candidateReason: "favorite" | "similar" | "other";
   secondsLeft: number;
+  deadlineSec?: number;
   switchedAt?: number;
 }
 
 interface ActiveAdSkip {
   originStation: Station;
   trackKey: string;
+  startedAt: number;
 }
 
 let blacklistWarning: BlacklistWarning | null = null;
@@ -30,6 +32,7 @@ let dismissedTrackKey: string | null = null;
 let blacklistSwitchTimestamps: number[] = [];
 let activeAdSkip: ActiveAdSkip | null = null;
 let lastAdReturnPollAt = 0;
+let arming = false;
 
 export function getBlacklistWarningState(): BlacklistWarning | null {
   return blacklistWarning;
@@ -41,27 +44,43 @@ export function resetBlacklistWarningState(): void {
   activeAdSkip = null;
 }
 
-function pickSwitchCandidate(origin: Station): { station: Station; reason: "favorite" | "similar" | "other" } | null {
+async function candidateCurrentlyBlocked(candidate: Station, kind: WarningKind): Promise<boolean> {
+  if (!candidate.apiBaseUrl) return false;
+  const data = await fetchPlaylist(candidate);
+  const current = data?.current;
+  if (!current) return false;
+  return kind === "adSkip"
+    ? current.isLiveBreak === true && current.title === DEFAULT_BREAK_LABEL
+    : isBlacklisted(current);
+}
+
+async function pickSwitchCandidate(
+  origin: Station,
+  kind: WarningKind,
+): Promise<{ station: Station; reason: "favorite" | "similar" | "other" } | null> {
   const pool = getOrderedStations().filter((s) => s.id !== origin.id);
   if (pool.length === 0) return null;
 
+  let similarIdnames = new Set<string>();
   if (origin.provider === "rmf") {
     const catalog = getStoredRmfCatalog()?.stations ?? [];
     const raw = catalog.find((r) => r.idname === origin.id || String(r.id) === origin.id);
     const similarNumericIds = new Set(raw?.similar_stations?.id_list.map(String));
-    const similarIdnames = new Set(catalog.filter((r) => similarNumericIds.has(String(r.id))).map((r) => r.idname));
-    // ponytail: ranking hint only, not a guarantee — doesn't verify the candidate's own live
-    // track isn't blacklisted (would need an extra fetch per candidate); the switch-cap below
-    // self-corrects on the next detection pass if it turns out bad.
-    const similar = pool.find((s) => similarIdnames.has(s.id));
-    if (similar) return { station: similar, reason: state.favs.has(similar.id) ? "favorite" : "similar" };
+    similarIdnames = new Set(catalog.filter((r) => similarNumericIds.has(String(r.id))).map((r) => r.idname));
   }
 
-  const fav = pool.find((s) => state.favs.has(s.id));
-  if (fav) return { station: fav, reason: "favorite" };
+  const ordered = [
+    ...pool.filter((s) => similarIdnames.has(s.id)),
+    ...pool.filter((s) => state.favs.has(s.id) && !similarIdnames.has(s.id)),
+    ...pool.filter((s) => !similarIdnames.has(s.id) && !state.favs.has(s.id)),
+  ];
 
-  const first = pool[0];
-  return first ? { station: first, reason: "other" } : null;
+  for (const station of ordered) {
+    if (await candidateCurrentlyBlocked(station, kind)) continue;
+    const reason = similarIdnames.has(station.id) ? "similar" : state.favs.has(station.id) ? "favorite" : "other";
+    return { station, reason };
+  }
+  return null;
 }
 
 function performStationSwitch(
@@ -94,22 +113,25 @@ function performStationSwitch(
     secondsLeft: 0,
     switchedAt: Date.now(),
   };
-  if (kind === "adSkip") {
-    activeAdSkip = { originStation, trackKey };
+  if (kind === "adSkip" && state.adSkipAutoReturnEnabled) {
+    activeAdSkip = { originStation, trackKey, startedAt: Date.now() };
   }
 }
 
-function armSwitchWarning(kind: WarningKind, track: TrackInfo, origin: Station, immediate: boolean) {
-  const picked = pickSwitchCandidate(origin);
-  if (!picked) return;
+async function armSwitchWarning(kind: WarningKind, track: TrackInfo, origin: Station, immediate: boolean) {
+  if (arming) return;
+  arming = true;
+  try {
+    const picked = await pickSwitchCandidate(origin, kind);
+    if (!picked || state.station?.id !== origin.id) return;
 
-  state.showHistory = true;
-  state.historyTab = "program";
+    state.showHistory = true;
+    state.historyTab = "program";
 
-  if (immediate) {
-    performStationSwitch(kind, track, origin, picked.station, picked.reason);
-  } else {
+    // Even when we're already mid-break (no future track.timestamp to count down from), give the
+    // user a visible grace window instead of switching the instant it's detected.
     const nowSec = Math.floor(Date.now() / 1000);
+    const deadlineSec = immediate ? nowSec + MIN_SKIP_GRACE_SEC : (track.timestamp ?? nowSec);
     blacklistWarning = {
       kind,
       phase: "warning",
@@ -118,10 +140,13 @@ function armSwitchWarning(kind: WarningKind, track: TrackInfo, origin: Station, 
       originStation: origin,
       candidate: picked.station,
       candidateReason: picked.reason,
-      secondsLeft: (track.timestamp ?? nowSec) - nowSec,
+      secondsLeft: deadlineSec - nowSec,
+      deadlineSec,
     };
+    notifyState();
+  } finally {
+    arming = false;
   }
-  notifyState();
 }
 
 export function detectBlacklistedUpcoming() {
@@ -129,7 +154,7 @@ export function detectBlacklistedUpcoming() {
 
   if (state.liveTrack && (!state.liveTrack.isLiveBreak || state.liveTrack.isFacts) && isBlacklisted(state.liveTrack)) {
     const key = getTrackKey(state.liveTrack);
-    if (key !== dismissedTrackKey) armSwitchWarning("blacklist", state.liveTrack, state.station, true);
+    if (key !== dismissedTrackKey) void armSwitchWarning("blacklist", state.liveTrack, state.station, true);
     return;
   }
 
@@ -139,7 +164,7 @@ export function detectBlacklistedUpcoming() {
     .sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0))[0];
 
   if (upcoming && isBlacklisted(upcoming) && getTrackKey(upcoming) !== dismissedTrackKey) {
-    armSwitchWarning("blacklist", upcoming, state.station, false);
+    void armSwitchWarning("blacklist", upcoming, state.station, false);
   }
 }
 
@@ -148,7 +173,7 @@ export function detectUpcomingAdBreak() {
 
   if (state.liveTrack?.isLiveBreak && state.liveTrack.title === DEFAULT_BREAK_LABEL) {
     const key = getTrackKey(state.liveTrack);
-    if (key !== dismissedTrackKey) armSwitchWarning("adSkip", state.liveTrack, state.station, true);
+    if (key !== dismissedTrackKey) void armSwitchWarning("adSkip", state.liveTrack, state.station, true);
     return;
   }
 
@@ -158,7 +183,7 @@ export function detectUpcomingAdBreak() {
     .sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0))[0];
 
   if (nextUp?.isBreak && nextUp.label === DEFAULT_BREAK_LABEL && getTrackKey(nextUp) !== dismissedTrackKey) {
-    armSwitchWarning("adSkip", nextUp, state.station, false);
+    void armSwitchWarning("adSkip", nextUp, state.station, false);
   }
 }
 
@@ -192,9 +217,13 @@ export function returnToPreviousStation(): void {
 
 async function checkAdBreakEnded(): Promise<void> {
   if (!activeAdSkip) return;
-  const { originStation, trackKey } = activeAdSkip;
+  const { originStation, trackKey, startedAt } = activeAdSkip;
+  const timedOut = Date.now() - startedAt >= TIMERS.AD_RETURN_MAX_WAIT_MS;
   const data = await fetchPlaylist(originStation);
-  if (!activeAdSkip || data?.current == null || data.current.isLiveBreak) return;
+  if (!activeAdSkip) return;
+  // Give up waiting past the cap even if the origin still reports a break — a stuck/misreporting
+  // station API would otherwise poll forever and never bring us back.
+  if (!timedOut && (data?.current == null || data.current.isLiveBreak)) return;
 
   activeAdSkip = null;
   blacklistWarning = null;
@@ -213,7 +242,7 @@ setInterval(() => {
 
   if (blacklistWarning.phase === "warning") {
     const nowSec = Math.floor(Date.now() / 1000);
-    const secondsLeft = (blacklistWarning.track.timestamp ?? nowSec) - nowSec;
+    const secondsLeft = (blacklistWarning.deadlineSec ?? nowSec) - nowSec;
     if (secondsLeft <= 0) {
       performStationSwitch(
         blacklistWarning.kind,
@@ -228,7 +257,14 @@ setInterval(() => {
       notifyState();
     }
   } else if (blacklistWarning.phase === "switched") {
-    if (Date.now() - (blacklistWarning.switchedAt ?? 0) > 8000) {
+    if (blacklistWarning.kind === "adSkip" && activeAdSkip) {
+      const remainingMs = TIMERS.AD_RETURN_MAX_WAIT_MS - (Date.now() - activeAdSkip.startedAt);
+      const secondsLeft = Math.max(0, Math.ceil(remainingMs / 1000));
+      if (secondsLeft !== blacklistWarning.secondsLeft) {
+        blacklistWarning.secondsLeft = secondsLeft;
+        notifyState();
+      }
+    } else if (Date.now() - (blacklistWarning.switchedAt ?? 0) > 8000) {
       blacklistWarning = null;
       notifyState();
     }

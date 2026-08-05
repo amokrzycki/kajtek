@@ -28,6 +28,7 @@ export const state: AppState = {
   version: typeof APP_VERSION !== "undefined" ? APP_VERSION : DEFAULT_VERSION,
   blacklistEnabled: localStorage.getItem(STORAGE_KEYS.BLACKLIST_ENABLED) !== "false",
   adSkipEnabled: localStorage.getItem(STORAGE_KEYS.AD_SKIP_ENABLED) === "true",
+  adSkipAutoReturnEnabled: localStorage.getItem(STORAGE_KEYS.AD_SKIP_AUTO_RETURN) !== "false",
 };
 
 type StateListener = (state: AppState) => void;
