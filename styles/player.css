@@ -282,7 +282,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(150deg, #1a0a05 0%, #7a2808 55%, #2a1005 100%);
+  background: var(--k-art-empty);
   transition:
     background 400ms ease,
     box-shadow var(--k-tr);
@@ -537,7 +537,7 @@
 
 .np-branding .unitra-sub .u-box {
   background: var(--k-case-ink);
-  color: #c4221a;
+  color: var(--k-u-box-fg);
   font-size: 0.46rem;
   font-weight: 900;
   padding: 1px 4px;

@@ -1,15 +1,16 @@
+import type { CaseSlug } from "../../consts.js";
 import { STORAGE_KEYS } from "../../consts.js";
 import { notifyState, state } from "../../state.js";
 import { setStoredJSON } from "../../utils.js";
 import { bindModalDismiss, closeModal, openModal } from "../modal.js";
 
-const ACCENT_SWATCHES = [
-  { label: "Czerwony", hex: "#c4251b" },
-  { label: "Niebieski", hex: "oklch(55% 0.19 255)" },
-  { label: "Różowy", hex: "oklch(58% 0.20 350)" },
-  { label: "Zielony", hex: "oklch(55% 0.16 145)" },
-  { label: "Czarny", hex: "oklch(28% 0.01 90)" },
-  { label: "Żółty", hex: "oklch(78% 0.16 95)" },
+const CASE_SWATCHES: { slug: CaseSlug; label: string; hex: string }[] = [
+  { slug: "red", label: "Czerwony", hex: "#c4221a" },
+  { slug: "green", label: "Zielony", hex: "#7f9e1c" },
+  { slug: "yellow", label: "Żółty", hex: "#e6a608" },
+  { slug: "blue", label: "Niebieski", hex: "#4d88c6" },
+  { slug: "pink", label: "Różowy", hex: "#e88fa2" },
+  { slug: "black", label: "Czarny", hex: "#1d1b19" },
 ];
 
 let modalEl: HTMLElement | null = null;
@@ -23,6 +24,7 @@ export function openSettingsModal(): void {
   } else {
     syncBlacklistToggle();
     syncAdSkipToggle();
+    syncCaseSwatches();
   }
   if (modalEl) openModal(modalEl);
 }
@@ -34,12 +36,12 @@ export function closeSettingsModal(): void {
 }
 
 function swatchesHtml(): string {
-  return ACCENT_SWATCHES.map(
+  return CASE_SWATCHES.map(
     (s) => `
-      <div class="k-settings-swatch">
+      <button type="button" class="k-settings-swatch" data-case="${s.slug}" aria-pressed="false">
         <span class="k-settings-swatch-dot" style="background:${s.hex};"></span>
         <span class="k-settings-swatch-label">${s.label}</span>
-      </div>
+      </button>
     `,
   ).join("");
 }
@@ -62,10 +64,7 @@ function createModalElements(): void {
       <div class="k-settings-body">
         <div class="k-settings-group">
           <div class="k-settings-label">Kolor akcentu</div>
-          <div class="k-settings-disabled">
-            <div class="k-settings-swatches">${swatchesHtml()}</div>
-          </div>
-          <span class="k-settings-soon-badge">już wkrótce</span>
+          <div class="k-settings-swatches">${swatchesHtml()}</div>
         </div>
 
         <div class="k-settings-group">
@@ -134,8 +133,23 @@ function createModalElements(): void {
     notifyState();
   });
 
+  modalEl.querySelector(".k-settings-swatches")?.addEventListener("click", (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".k-settings-swatch");
+    if (!btn?.dataset.case) return;
+    state.case = btn.dataset.case as CaseSlug;
+    notifyState();
+    syncCaseSwatches();
+  });
+
   syncBlacklistToggle();
   syncAdSkipToggle();
+  syncCaseSwatches();
+}
+
+function syncCaseSwatches(): void {
+  modalEl?.querySelectorAll<HTMLButtonElement>(".k-settings-swatch").forEach((btn) => {
+    btn.setAttribute("aria-pressed", String(btn.dataset.case === state.case));
+  });
 }
 
 function syncBlacklistToggle(): void {
