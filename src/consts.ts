@@ -10,6 +10,7 @@ export const STORAGE_KEYS = {
   FAV_TRACKS: "kajtek_fav_tracks",
   STATION_PREFS: "kajtek_station_prefs",
   RMF_CATALOG_CACHE: "kajtek_rmf_catalog",
+  ESKA_CATALOG_CACHE: "kajtek_eska_catalog",
   CUSTOM_STATIONS: "kajtek_custom_stations",
   VIEW_MODE: "kajtek_view_mode",
   BLACKLIST: "kajtek_blacklist",
@@ -24,6 +25,8 @@ export const API_ENDPOINTS = {
   RMF_CATALOG_LOCAL: "/api/rmf/stations",
   RMF_CATALOG_REMOTE: "https://api.rmfon.pl/stations",
   RMF_STATIC_BASE: "https://static.rmf.pl",
+  ESKA_CATALOG: "https://front-api.grupazprmedia.pl/radios/v1/radio_stations/sc-cqM9-ELPm-JNjf/",
+  ESKA_NOW_PLAYING_BASE: "https://front-api.grupazprmedia.pl/music/v2/now_playing",
 } as const;
 
 export const INIT_STATIONS: Station[] = [
@@ -56,6 +59,18 @@ export const INIT_STATIONS: Station[] = [
     stream: "https://rs202-krk.rmfstream.pl/RMFCLASSIC48",
     apiBaseUrl: "/api/rmf/stations/7",
     coverUrl: "https://static.rmf.pl/portal/stations/covers/rmf-classic/20260130151605_rmf-classic_600.jpg",
+  },
+  {
+    // id matches what the ESKA catalog mapper generates, so the fetched list dedupes this row away
+    id: "eska_ra-4TNN-ZLtR-bGih",
+    name: "Radio ESKA",
+    short: "Hity na czasie",
+    cat: "national",
+    provider: "eska",
+    stream: "https://liveradio.timesa.pl/2980-1.aac/playlist.m3u8",
+    _streams: ["https://liveradio.timesa.pl/2980-1.aac/playlist.m3u8", "https://waw.ic.smcdn.pl/2980-1.aac"],
+    apiBaseUrl: `${API_ENDPOINTS.ESKA_NOW_PLAYING_BASE}/2980`,
+    coverUrl: "https://cdn.music.smcloud.net/t/logo/2f7b5979-4b66-4586-aefb-ca31e4b8580d_eska_1500x1500_500x500.jpg",
   },
 ];
 

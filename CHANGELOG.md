@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.10
+
+Sieć ESKA dołącza do Kajtka! Radio ESKA gra od razu po aktualizacji, a w katalogu znajdziesz całą resztę sieci.
+
+- Radio ESKA dostępne od razu, bez żadnej konfiguracji
+- Cała sieć ESKA w katalogu stacji: 65 kanałów regionalnych i tematycznych (ESKA Do Pracy, K-POP, GORĄCA 100, Impreska i inne), kliknij „Odśwież listę”
+- Wyszukiwarka katalogu znajdzie stację po nazwie Twojego miasta
+- Panel TERAZ / ZARAZ pokazuje utwór grany na ESCE oraz trzy kolejne, razem z okładkami
+
 ## 0.9
 
 Motywy! Kajtek posiada teraz 6 motywów kolorystycznych, które możesz zmieniać w ustawieniach aplikacji!
