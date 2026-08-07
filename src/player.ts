@@ -54,9 +54,7 @@ async function attachHlsStream(url: string): Promise<void> {
   });
 
   hls.on(Hls.Events.FRAG_CHANGED, (_event, data) => {
-    // ESKA ships track/ad state in a private #EXT-X-ZPR tag on every segment. FRAG_CHANGED fires as
-    // playback enters the fragment, so refreshing on a block change lands the panel on the same
-    // moment as the audio instead of waiting up to TRACK_POLL_MS. Other streams carry no such tag.
+    // ESKA ships track/ad state in a private #EXT-X-ZPR tag on every segment. FRAG_CHANGED fires as playback enters the fragment, so refreshing on a block change lands the panel on the same, moment as the audio instead of waiting up to TRACK_POLL_MS. Other streams carry no such tag.
     if (readZprTag(data.frag, state.station?.id ?? "")) void refreshTrackInfo();
   });
 

@@ -41,7 +41,7 @@ function formatPlTime(start: string | null | undefined): string {
   return `${escapeHtml(`${parts[0]}:${parts[1]}`)}<span class="pl-time-sec">:${escapeHtml(parts[2] as string)}</span>`;
 }
 
-function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean, isPast: boolean): string {
+function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean): string {
   if (t.isBreak) {
     const breakDur = t.gapSec
       ? t.gapSec >= 60
@@ -197,7 +197,7 @@ function reconcileHistoryDOM(targetItems: TargetItem[]): void {
       child.style.viewTransitionName = vtName;
       child.style.animationDelay = delayStr;
       child.className = `pl-item ${item.statusCls}${breakCls}`;
-      child.innerHTML = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext, item.isPast);
+      child.innerHTML = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext);
 
       const currentNodes = Array.from(els.historyList.children);
       if (idx < currentNodes.length && currentNodes[idx]) {
@@ -214,7 +214,7 @@ function reconcileHistoryDOM(targetItems: TargetItem[]): void {
         child.className = newClass;
       }
 
-      const newInner = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext, item.isPast);
+      const newInner = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext);
       if (child.innerHTML !== newInner) {
         child.innerHTML = newInner;
       }

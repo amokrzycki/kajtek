@@ -61,7 +61,6 @@ export const INIT_STATIONS: Station[] = [
     coverUrl: "https://static.rmf.pl/portal/stations/covers/rmf-classic/20260130151605_rmf-classic_600.jpg",
   },
   {
-    // id matches what the ESKA catalog mapper generates, so the fetched list dedupes this row away
     id: "eska_ra-4TNN-ZLtR-bGih",
     name: "Radio ESKA",
     short: "Hity na czasie",

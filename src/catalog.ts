@@ -262,9 +262,7 @@ export function getAllKnownStations(): Station[] {
     });
   }
 
-  // Keyed by uid, not station_id: ESKA deliberately publishes one regional stream under several
-  // city labels (2220 is Śląsk/Sosnowiec/Chorzów/Katowice), and collapsing them would break
-  // searching for your own city.
+  // Keyed by uid, not station_id: ESKA deliberately publishes one regional stream under several, city labels (2220 is Śląsk/Sosnowiec/Chorzów/Katowice), and collapsing them would break searching for your own city.
   const eskaStations: Station[] = (getStoredEskaCatalog()?.stations ?? [])
     .filter((raw) => !existingIds.has(eskaStationId(raw.uid)))
     .sort((a, b) => a.sort - b.sort)
@@ -278,7 +276,7 @@ export function getAllKnownStations(): Station[] {
         stream: raw.stream_url,
         apiBaseUrl: `${API_ENDPOINTS.ESKA_NOW_PLAYING_BASE}/${raw.now_playing_url}`,
       };
-      // Direct AAC mount as the failover target for the HLS stream — both are same-origin-open.
+      // Direct AAC mount as the failover target for the HLS stream, both are same-origin-open.
       if (raw.stream_ic) st._streams = [raw.stream_url, raw.stream_ic];
       if (raw.cover) st.coverUrl = raw.cover;
       return st;
