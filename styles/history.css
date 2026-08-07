@@ -519,6 +519,7 @@
 
 .bl-warn.open {
   grid-template-rows: 1fr;
+  padding: 0.32rem 0.4rem;
 }
 
 .bl-warn-clip {

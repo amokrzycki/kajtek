@@ -6,8 +6,8 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 
 ## Features
 
-1. **Internet Radio Streaming** - Play live audio streams with real-time station management (RMF network, Radio Trojka, and generic MP3/HLS streams).
-2. **Station Catalog** - Browse the full RMF station catalog, curated local stations, and add your own custom stream URLs. Enable/disable stations per catalog.
+1. **Internet Radio Streaming** - Play live audio streams with real-time station management (RMF network, ESKA network, Radio Trojka, and generic MP3/HLS streams).
+2. **Station Catalog** - Browse the full RMF and ESKA station catalogs, curated local stations, and add your own custom stream URLs. Enable/disable stations per catalog.
 3. **Automatic Stream Failover** - Auto-switch to secondary MP3 stream mounts on playback error/stalled events, protected by a 3-retry / 30s rate limiter.
 4. **Ad Skip** - Automatically detect ad/commercial breaks and switch to another station until the break ends (toggle in Settings).
 5. **Track Blacklist** - Block artists/tracks you don't want to hear; the player automatically switches away when a blacklisted track starts, with an on-screen warning and revert option.

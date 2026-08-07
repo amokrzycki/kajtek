@@ -1,7 +1,15 @@
 import { API_ENDPOINTS, INIT_STATIONS, STORAGE_KEYS, TIMERS } from "./consts.js";
 import { LOCAL_STATIONS } from "./localStations.js";
 import { state } from "./state.js";
-import type { CustomStation, RawRmfStation, RmfCatalogCache, Station, StationPref } from "./types.js";
+import type {
+  CustomStation,
+  EskaCatalogCache,
+  RawEskaStation,
+  RawRmfStation,
+  RmfCatalogCache,
+  Station,
+  StationPref,
+} from "./types.js";
 import { capitalizeFirstLetter, getStoredJSON, resolveProtocolRelativeUrl, setStoredJSON } from "./utils.js";
 
 export function getStoredRmfCatalog(): RmfCatalogCache | null {
@@ -12,6 +20,46 @@ export function getStoredRmfCatalog(): RmfCatalogCache | null {
       typeof (v as Partial<RmfCatalogCache>)?.fetchedAt === "number" &&
       Array.isArray((v as Partial<RmfCatalogCache>)?.stations),
   );
+}
+
+function eskaStationId(uid: string): string {
+  return `eska_${uid}`;
+}
+
+export function getStoredEskaCatalog(): EskaCatalogCache | null {
+  return getStoredJSON<EskaCatalogCache | null>(
+    STORAGE_KEYS.ESKA_CATALOG_CACHE,
+    null,
+    (v) =>
+      typeof (v as Partial<EskaCatalogCache>)?.fetchedAt === "number" &&
+      Array.isArray((v as Partial<EskaCatalogCache>)?.stations),
+  );
+}
+
+export async function fetchEskaCatalog(): Promise<EskaCatalogCache> {
+  const res = await fetch(API_ENDPOINTS.ESKA_CATALOG, { signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS) });
+  if (!res.ok) throw new Error("Nie udało się pobrać listy stacji ESKA");
+
+  const data = await res.json();
+  if (!Array.isArray(data)) throw new Error("Nieoczekiwana odpowiedź serwera stacji ESKA");
+
+  const stations: RawEskaStation[] = data
+    .filter((item): item is Record<string, unknown> => Boolean(item && typeof item === "object"))
+    .filter((item) => typeof item.uid === "string" && typeof item.stream_url === "string")
+    .map((item) => ({
+      uid: String(item.uid),
+      now_playing_url: String(item.now_playing_url ?? ""),
+      name: typeof item.name === "string" && item.name.trim() ? item.name.trim() : "Stacja ESKA",
+      dedicated_name: typeof item.dedicated_name === "string" ? item.dedicated_name.trim() : "",
+      cover: typeof item.cover === "string" ? item.cover : "",
+      stream_url: String(item.stream_url),
+      stream_ic: typeof item.stream_ic === "string" ? item.stream_ic : "",
+      sort: typeof item.sort === "number" ? item.sort : 0,
+    }));
+
+  const cache: EskaCatalogCache = { fetchedAt: Date.now(), stations };
+  setStoredJSON(STORAGE_KEYS.ESKA_CATALOG_CACHE, cache);
+  return cache;
 }
 
 export async function fetchRmfCatalog(): Promise<RmfCatalogCache> {
@@ -187,14 +235,14 @@ export function getAllKnownStations(): Station[] {
   const catalog = getStoredRmfCatalog();
   const catalogStations: Station[] = [];
 
-  if (catalog?.stations) {
-    const existingIds = new Set([
-      ...INIT_STATIONS.map((s) => s.id),
-      ...INIT_STATIONS.map((s) => s.apiBaseUrl?.split("/").pop()),
-      ...LOCAL_STATIONS.map((s) => s.id),
-      ...customStations.map((s) => s.id),
-    ]);
+  const existingIds = new Set([
+    ...INIT_STATIONS.map((s) => s.id),
+    ...INIT_STATIONS.map((s) => s.apiBaseUrl?.split("/").pop()),
+    ...LOCAL_STATIONS.map((s) => s.id),
+    ...customStations.map((s) => s.id),
+  ]);
 
+  if (catalog?.stations) {
     catalog.stations.forEach((raw) => {
       const id = String(raw.id);
       if (existingIds.has(id) || (raw.idname && existingIds.has(raw.idname))) {
@@ -214,7 +262,27 @@ export function getAllKnownStations(): Station[] {
     });
   }
 
-  return [...INIT_STATIONS, ...LOCAL_STATIONS, ...customStations, ...catalogStations];
+  // Keyed by uid, not station_id: ESKA deliberately publishes one regional stream under several, city labels (2220 is Śląsk/Sosnowiec/Chorzów/Katowice), and collapsing them would break searching for your own city.
+  const eskaStations: Station[] = (getStoredEskaCatalog()?.stations ?? [])
+    .filter((raw) => !existingIds.has(eskaStationId(raw.uid)))
+    .sort((a, b) => a.sort - b.sort)
+    .map((raw): Station => {
+      const st: Station = {
+        id: eskaStationId(raw.uid),
+        name: raw.dedicated_name || raw.name,
+        short: raw.name,
+        cat: "national",
+        provider: "eska",
+        stream: raw.stream_url,
+        apiBaseUrl: `${API_ENDPOINTS.ESKA_NOW_PLAYING_BASE}/${raw.now_playing_url}`,
+      };
+      // Direct AAC mount as the failover target for the HLS stream, both are same-origin-open.
+      if (raw.stream_ic) st._streams = [raw.stream_url, raw.stream_ic];
+      if (raw.cover) st.coverUrl = raw.cover;
+      return st;
+    });
+
+  return [...INIT_STATIONS, ...LOCAL_STATIONS, ...customStations, ...catalogStations, ...eskaStations];
 }
 
 export function getEnabledStations(): Station[] {

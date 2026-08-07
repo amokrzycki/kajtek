@@ -1,5 +1,6 @@
 import {
   deleteCustomStation,
+  fetchEskaCatalog,
   fetchRmfCatalog,
   getAllKnownStations,
   getCustomStations,
@@ -19,6 +20,7 @@ type CatalogTab = "all" | "local" | "custom";
 
 const PROVIDER_LABELS: Record<string, string> = {
   rmf: "RMF",
+  eska: "ESKA",
 };
 
 const ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -223,7 +225,13 @@ async function handleRefreshCatalog(): Promise<void> {
   }
 
   try {
-    await fetchRmfCatalog();
+    // one network failing must not discard the other's stations
+    const results = await Promise.allSettled([fetchRmfCatalog(), fetchEskaCatalog()]);
+    const failed = results.filter((r) => r.status === "rejected");
+    if (failed.length === results.length) {
+      const reason = (failed[0] as PromiseRejectedResult | undefined)?.reason;
+      throw reason instanceof Error ? reason : new Error(String(reason));
+    }
   } catch (err) {
     errorMessage = err instanceof Error ? err.message : "Błąd połączenia z serwerem stacji";
   } finally {

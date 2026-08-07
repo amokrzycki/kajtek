@@ -3,6 +3,7 @@ import { detectBlacklistedUpcoming, detectUpcomingAdBreak, resetBlacklistWarning
 import { getOrderedStations } from "./catalog.js";
 import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, SWITCH_RATE_LIMIT, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
+import { readZprTag, startEskaSession } from "./providers/eska.js";
 import { rmfProvider } from "./providers/rmf.js";
 import { trojkaProvider } from "./providers/trojka.js";
 import { genericProvider, getFactsInfo, getProvider } from "./providers.js";
@@ -50,6 +51,11 @@ async function attachHlsStream(url: string): Promise<void> {
 
   hls.on(Hls.Events.FRAG_LOADED, () => {
     recoveryAttempts = 0;
+  });
+
+  hls.on(Hls.Events.FRAG_CHANGED, (_event, data) => {
+    // ESKA ships track/ad state in a private #EXT-X-ZPR tag on every segment. FRAG_CHANGED fires as playback enters the fragment, so refreshing on a block change lands the panel on the same, moment as the audio instead of waiting up to TRACK_POLL_MS. Other streams carry no such tag.
+    if (readZprTag(data.frag, state.station?.id ?? "")) void refreshTrackInfo();
   });
 
   hls.on(Hls.Events.ERROR, (_event, data) => {
@@ -344,6 +350,7 @@ export function selectStation(s: Station) {
   pendingStationSlideIn = true;
   failoverTimestamps = [];
   resetBlacklistWarningState();
+  startEskaSession(s.id);
   setHistoryLoadingState(true);
 
   ensureStationMetadata(s);

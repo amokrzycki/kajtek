@@ -1,4 +1,5 @@
 import { STATIONS_WITH_FACTS } from "./consts.js";
+import { eskaProvider } from "./providers/eska.js";
 import { rmfProvider } from "./providers/rmf.js";
 import { trojkaProvider } from "./providers/trojka.js";
 import type { PlaylistResult, Provider, RawTrack, Station, TrackInfo } from "./types.js";
@@ -29,47 +30,6 @@ export function getFactsInfo(
     ? getRmfFactsTimeInfo(timestamp)
     : { isFacts: false, targetHourStr: "" };
 }
-
-export const eskaProvider: Provider = {
-  name: "Eska / Radio Time Provider",
-  parse(data: unknown, station?: Station | null): PlaylistResult | null {
-    if (!data) return null;
-    const payload = data as RawTrack;
-
-    let rawTracks: RawTrack[] = [];
-    if (Array.isArray(data)) {
-      rawTracks = data as RawTrack[];
-    } else if (payload.current || payload.songs || payload.tracks || payload.now) {
-      const cur = payload.current || payload.now;
-      const upcoming = payload.upcoming || payload.next || payload.songs || payload.tracks || [];
-      if (cur) rawTracks.push({ ...cur, order: 0 });
-      if (Array.isArray(upcoming)) {
-        upcoming.forEach((t: RawTrack, i: number) => {
-          rawTracks.push({ ...t, order: i + 1 });
-        });
-      }
-    }
-
-    if (rawTracks.length === 0) return null;
-
-    const processed: TrackInfo[] = rawTracks.map((item, idx) => {
-      const len = Number.parseInt(String(item.lenght || item.length || "0"), 10);
-      return {
-        order: item.order ?? idx,
-        artist: decodeEntities(item.artist || item.author || item.name || station?.name),
-        title: decodeEntities(item.title || item.song || item.name || "Utwór"),
-        start: item.start || item.startTime || null,
-        ...(len > 0 ? { length: len } : {}),
-      };
-    });
-
-    const active = processed.find((t) => t.order === 0) || processed[0];
-    return {
-      current: active ? { artist: active.artist, title: active.title } : null,
-      all: processed,
-    };
-  },
-};
 
 export const genericProvider: Provider = {
   name: "Generic Playlist Provider",
@@ -114,9 +74,6 @@ export function getProvider(station?: Station | null): Provider {
   }
   if (station?.apiBaseUrl?.includes("rmf")) {
     return rmfProvider;
-  }
-  if (station?.apiBaseUrl?.includes("eska") || station?.apiBaseUrl?.includes("radioeska")) {
-    return eskaProvider;
   }
   return genericProvider;
 }

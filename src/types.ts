@@ -54,6 +54,35 @@ export interface RmfCatalogCache {
   stations: RawRmfStation[];
 }
 
+export interface RawEskaStation {
+  uid: string;
+  now_playing_url: string;
+  name: string;
+  dedicated_name: string;
+  cover: string;
+  stream_url: string;
+  stream_ic: string;
+  sort: number;
+}
+
+export interface EskaCatalogCache {
+  fetchedAt: number;
+  stations: RawEskaStation[];
+}
+
+export interface EskaTrack {
+  artists?: string[];
+  name?: string;
+  image?: string;
+  thumb?: string;
+}
+
+export interface EskaNowPlaying {
+  current?: EskaTrack | null;
+  pasts?: EskaTrack[];
+  futures?: EskaTrack[];
+}
+
 export interface RawTrack {
   order?: number;
   lenght?: string | number;

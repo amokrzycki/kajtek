@@ -41,7 +41,7 @@ function formatPlTime(start: string | null | undefined): string {
   return `${escapeHtml(`${parts[0]}:${parts[1]}`)}<span class="pl-time-sec">:${escapeHtml(parts[2] as string)}</span>`;
 }
 
-function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean, isPast: boolean): string {
+function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean): string {
   if (t.isBreak) {
     const breakDur = t.gapSec
       ? t.gapSec >= 60
@@ -81,11 +81,7 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
     </div>
     <div class="pl-actions">
       <span class="pl-dur">${durStr}</span>
-      ${
-        isPast || isCurrent
-          ? `<button type="button" class="sc-star pl-fav-star${isTrackFavorited(t) ? " on" : ""}" data-key="${escapeHtml(getTrackKey(t))}" aria-label="${isTrackFavorited(t) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">${ICONS.star(isTrackFavorited(t))}</button>`
-          : ""
-      }
+      <button type="button" class="sc-star pl-fav-star${isTrackFavorited(t) ? " on" : ""}" data-key="${escapeHtml(getTrackKey(t))}" aria-label="${isTrackFavorited(t) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">${ICONS.star(isTrackFavorited(t))}</button>
       <button type="button" class="sc-star pl-block-btn${isBlacklisted(t) ? " on" : ""}" data-artist="${escapeHtml(t.artist)}" data-title="${escapeHtml(t.title)}" aria-label="${isBlacklisted(t) ? "Odblokuj utwór" : "Zablokuj utwór"}" title="${isBlacklisted(t) ? "Odblokuj utwór" : "Zablokuj utwór"}">${ICONS.ban}</button>
     </div>
   `;
@@ -164,7 +160,7 @@ function buildHistorySignature(renderedItems: ClassifiedItem[]): string {
       isCurrent,
       isNext,
       isPast,
-      isPast || isCurrent ? isTrackFavorited(t) : false,
+      isTrackFavorited(t),
       t.isBreak ? false : isBlacklisted(t),
     ]),
   );
@@ -201,7 +197,7 @@ function reconcileHistoryDOM(targetItems: TargetItem[]): void {
       child.style.viewTransitionName = vtName;
       child.style.animationDelay = delayStr;
       child.className = `pl-item ${item.statusCls}${breakCls}`;
-      child.innerHTML = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext, item.isPast);
+      child.innerHTML = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext);
 
       const currentNodes = Array.from(els.historyList.children);
       if (idx < currentNodes.length && currentNodes[idx]) {
@@ -218,7 +214,7 @@ function reconcileHistoryDOM(targetItems: TargetItem[]): void {
         child.className = newClass;
       }
 
-      const newInner = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext, item.isPast);
+      const newInner = getTrackItemInnerHTML(item.t, item.isCurrent, item.isNext);
       if (child.innerHTML !== newInner) {
         child.innerHTML = newInner;
       }
