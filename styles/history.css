@@ -207,6 +207,16 @@
   color: var(--k-disp-next);
 }
 
+/* Nothing on the list carries a start time (ESKA without the ZPR tag) — drop the column instead of
+   indenting every row past an empty gutter. The span goes too, so the grid loses its gap as well. */
+#history-list.no-time .pl-item {
+  grid-template-columns: 14px 1fr auto;
+}
+
+#history-list.no-time .pl-time {
+  display: none;
+}
+
 .pl-dur {
   font-family: var(--k-font-mono);
   font-size: 0.62rem;

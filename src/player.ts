@@ -3,7 +3,7 @@ import { detectBlacklistedUpcoming, detectUpcomingAdBreak, resetBlacklistWarning
 import { getOrderedStations } from "./catalog.js";
 import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, SWITCH_RATE_LIMIT, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
-import { readZprTag, resetZprState } from "./providers/eska.js";
+import { readZprTag, startEskaSession } from "./providers/eska.js";
 import { rmfProvider } from "./providers/rmf.js";
 import { trojkaProvider } from "./providers/trojka.js";
 import { genericProvider, getFactsInfo, getProvider } from "./providers.js";
@@ -352,7 +352,7 @@ export function selectStation(s: Station) {
   pendingStationSlideIn = true;
   failoverTimestamps = [];
   resetBlacklistWarningState();
-  resetZprState();
+  startEskaSession(s.id);
   setHistoryLoadingState(true);
 
   ensureStationMetadata(s);

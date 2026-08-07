@@ -15,6 +15,9 @@ interface ZprState {
   blockStartSec: number | null;
   timeoutMs: number | null;
   updatedAt: number;
+  // set once the tag stops naming this block, so its timing survives the grace window but its
+  // ad/jingle classification does not
+  titleEmpty: boolean;
 }
 
 interface ZprTag {
@@ -56,7 +59,12 @@ export function readZprTag(frag: { tagList: string[][]; programDateTime: number 
   // min simultaneously across the national stations), and there the last song's time must not
   // stick to whatever REST reports next — drop it and let REST stand alone.
   if (!tag.data?.title) {
-    if (!zprState || Date.now() - zprState.updatedAt <= ZPR_EMPTY_GRACE_MS) return false;
+    if (!zprState || Date.now() - zprState.updatedAt <= ZPR_EMPTY_GRACE_MS) {
+      // Hold the timing so the row doesn't flicker, but stop asserting the old block is an ad —
+      // ESKA runs REKLAMA -> JINGLE -> untitled, and a stale "ad" would fire Ad Skip after the fact.
+      if (zprState) zprState.titleEmpty = true;
+      return false;
+    }
     zprState = null;
     return true;
   }
@@ -76,6 +84,7 @@ export function readZprTag(frag: { tagList: string[][]; programDateTime: number 
     blockStartSec,
     timeoutMs: tag.data.timeout ?? null,
     updatedAt: Date.now(),
+    titleEmpty: false,
   };
   return changed;
 }
@@ -85,8 +94,16 @@ function getZprState(stationId: string): ZprState | null {
   return Date.now() - zprState.updatedAt > ZPR_STALE_MS ? null : zprState;
 }
 
-export function resetZprState(): void {
+const SESSION_PASTS_MAX = 3;
+// ESKA always answers with pasts: [], so we keep our own for the session. A map rather than a
+// single slot because Ad Skip hops A->B->A and the history has to survive the return trip.
+const sessionPasts = new Map<string, TrackInfo[]>();
+const lastSeen = new Map<string, TrackInfo>();
+let playingStationId: string | null = null;
+
+export function startEskaSession(stationId: string): void {
   zprState = null;
+  playingStationId = stationId;
 }
 
 const loggedOddTitles = new Set<string>();
@@ -112,12 +129,38 @@ function toTrackInfo(item: EskaTrack, order: number): TrackInfo {
   };
 }
 
-// ZPR knows a song is playing but REST has no name for it. Artist comes out uppercase.
+const VOWEL = /[aeiouyąęó]/i;
+
+// ZPR shouts the artist in caps. A word with no vowel, or one carrying a digit, is an acronym or a
+// stage name (BTS, MGMT, TSA, U2) and is left alone; everything else drops to Title Case so the
+// row matches the REST-sourced ones beside it. Checked against 26 real artist names off the tags.
+function toTitleCase(s: string): string {
+  return s.replace(/\S+/g, (word) =>
+    VOWEL.test(word) && !/\d/.test(word)
+      ? word.toLowerCase().replace(/\p{L}[\p{L}'’]*/gu, (w) => w.charAt(0).toUpperCase() + w.slice(1))
+      : word,
+  );
+}
+
+const norm = (s: string) => s.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+
+// REST and ZPR change over at slightly different moments, so for a few seconds around every track
+// change they name different songs. Stamping the old block's time onto the new REST title puts a
+// wrong clock on the row and — worse — gives it the same getTrackKey as the row that just moved to
+// the past, which collides the view-transition names. Only trust the timing when both agree.
+function zprDescribes(zprTitle: string, track: TrackInfo): boolean {
+  const sep = zprTitle.indexOf(" - ");
+  const a = norm(sep === -1 ? zprTitle : zprTitle.slice(sep + 3));
+  const b = norm(track.title);
+  return a.length > 0 && b.length > 0 && (a.includes(b) || b.includes(a));
+}
+
+// ZPR knows a song is playing but REST has no name for it.
 function zprFallbackTrack(title: string): TrackInfo {
   const sep = title.indexOf(" - ");
   return sep === -1
     ? { order: 0, artist: "", title }
-    : { order: 0, artist: title.slice(0, sep), title: title.slice(sep + 3) };
+    : { order: 0, artist: toTitleCase(title.slice(0, sep)), title: title.slice(sep + 3) };
 }
 
 export const eskaProvider: Provider = {
@@ -136,38 +179,55 @@ export const eskaProvider: Provider = {
     const data = (await res.json()) as EskaNowPlaying | null;
     if (!data) return null;
 
-    const pasts = data.pasts || [];
-    const all: TrackInfo[] = [
-      ...pasts.map((t, i) => toTrackInfo(t, i - pasts.length)),
-      ...(data.current ? [toTrackInfo(data.current, 0)] : []),
-      ...(data.futures || []).map((t, i) => toTrackInfo(t, i + 1)),
-    ];
-    if (all.length === 0) return null;
-
     // Only the playing station has an HLS session, candidate polling (blacklistWarning) and
     // ad-break-ended polling both hit stations that don't, and must fall back to REST alone.
     const zpr = getZprState(station.id);
     const kind = zpr ? classifyZpr(zpr.title) : null;
 
     // A real signal, replacing the old "current == null means ads" guess. Jingles are ~7s station
-    // idents, treating them as breaks would make Ad Skip switch stations over an ident.
-    if (kind === "ad") {
-      return { current: { artist: station.name, title: DEFAULT_BREAK_LABEL, isLiveBreak: true }, all };
+    // idents, treating them as breaks would make Ad Skip switch stations over an ident. An "ad"
+    // held over from the grace window doesn't count — only a block the tag is still naming.
+    const breakTrack: TrackInfo = { artist: station.name, title: DEFAULT_BREAK_LABEL, isLiveBreak: true };
+    let current: TrackInfo;
+    if (kind === "ad" && !zpr?.titleEmpty) {
+      current = breakTrack;
+    } else if (data.current) {
+      current = toTrackInfo(data.current, 0);
+    } else if (kind === "song" && zpr) {
+      current = zprFallbackTrack(zpr.title);
+    } else {
+      // No ZPR (not playing, stale, or a jingle) and no REST current — the original inference.
+      current = breakTrack;
     }
-
-    const restCurrent = all.find((t) => t.order === 0);
 
     // REST owns the display names (ZPR uppercases the artist and " - " is ambiguous for tracks
     // that contain a dash); ZPR owns the timing, since it is the one synced to the audio.
-    if (kind === "song" && zpr && restCurrent) {
-      if (zpr.blockStartSec) restCurrent.start = new Date(zpr.blockStartSec * 1000).toLocaleTimeString("pl-PL");
-      if (zpr.timeoutMs) restCurrent.length = Math.round(zpr.timeoutMs / 1000);
+    if (kind === "song" && zpr && !current.isLiveBreak && zprDescribes(zpr.title, current)) {
+      if (zpr.blockStartSec) current.start = new Date(zpr.blockStartSec * 1000).toLocaleTimeString("pl-PL");
+      if (zpr.timeoutMs) current.length = Math.round(zpr.timeoutMs / 1000);
     }
 
-    if (restCurrent) return { current: restCurrent, all };
-    if (kind === "song" && zpr) return { current: zprFallbackTrack(zpr.title), all };
+    if (station.id === playingStationId && !current.isLiveBreak) {
+      const prev = lastSeen.get(station.id);
+      if (prev && (prev.artist !== current.artist || prev.title !== current.title)) {
+        sessionPasts.set(station.id, [...(sessionPasts.get(station.id) ?? []), prev].slice(-SESSION_PASTS_MAX));
+      }
+      // copied, so the next poll's timing edits can't reach back into the history
+      lastSeen.set(station.id, { ...current });
+    }
 
-    // No ZPR (not playing, stale, or a jingle) and no REST current — the original inference.
-    return { current: { artist: station.name, title: DEFAULT_BREAK_LABEL, isLiveBreak: true }, all };
+    const restPasts = data.pasts || [];
+    const pastItems = restPasts.length
+      ? restPasts.map((t, i) => toTrackInfo(t, i - restPasts.length))
+      : (sessionPasts.get(station.id) ?? []).map((t, i, a) => ({ ...t, order: i - a.length }));
+
+    const all: TrackInfo[] = [
+      ...pastItems,
+      ...(current.isLiveBreak ? [] : [current]),
+      ...(data.futures || []).map((t, i) => toTrackInfo(t, i + 1)),
+    ];
+    if (all.length === 0) return null;
+
+    return { current, all };
   },
 };

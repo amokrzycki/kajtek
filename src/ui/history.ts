@@ -291,6 +291,10 @@ export function updateHistoryUI(animateSlideIn = false): void {
     return !(t.isBreak && isPast && t.gapSec && t.gapSec < 150);
   });
 
+  // ESKA has no clock unless the ZPR tag supplies one; with nothing to show, drop the time column
+  // entirely rather than leaving an empty 8ch gutter indenting every row.
+  els.historyList.classList.toggle("no-time", !filtered.some((t) => t.start));
+
   const renderedItems = classifyHistoryItems(filtered, nowSec);
   const signature = buildHistorySignature(renderedItems);
 
