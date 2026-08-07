@@ -81,11 +81,7 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
     </div>
     <div class="pl-actions">
       <span class="pl-dur">${durStr}</span>
-      ${
-        isPast || isCurrent
-          ? `<button type="button" class="sc-star pl-fav-star${isTrackFavorited(t) ? " on" : ""}" data-key="${escapeHtml(getTrackKey(t))}" aria-label="${isTrackFavorited(t) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">${ICONS.star(isTrackFavorited(t))}</button>`
-          : ""
-      }
+      <button type="button" class="sc-star pl-fav-star${isTrackFavorited(t) ? " on" : ""}" data-key="${escapeHtml(getTrackKey(t))}" aria-label="${isTrackFavorited(t) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">${ICONS.star(isTrackFavorited(t))}</button>
       <button type="button" class="sc-star pl-block-btn${isBlacklisted(t) ? " on" : ""}" data-artist="${escapeHtml(t.artist)}" data-title="${escapeHtml(t.title)}" aria-label="${isBlacklisted(t) ? "Odblokuj utwór" : "Zablokuj utwór"}" title="${isBlacklisted(t) ? "Odblokuj utwór" : "Zablokuj utwór"}">${ICONS.ban}</button>
     </div>
   `;
@@ -164,7 +160,7 @@ function buildHistorySignature(renderedItems: ClassifiedItem[]): string {
       isCurrent,
       isNext,
       isPast,
-      isPast || isCurrent ? isTrackFavorited(t) : false,
+      isTrackFavorited(t),
       t.isBreak ? false : isBlacklisted(t),
     ]),
   );
@@ -290,10 +286,6 @@ export function updateHistoryUI(animateSlideIn = false): void {
     const isPast = t.endTimestamp ? nowSec >= t.endTimestamp : (t.order ?? 0) < 0;
     return !(t.isBreak && isPast && t.gapSec && t.gapSec < 150);
   });
-
-  // ESKA has no clock unless the ZPR tag supplies one; with nothing to show, drop the time column
-  // entirely rather than leaving an empty 8ch gutter indenting every row.
-  els.historyList.classList.toggle("no-time", !filtered.some((t) => t.start));
 
   const renderedItems = classifyHistoryItems(filtered, nowSec);
   const signature = buildHistorySignature(renderedItems);
