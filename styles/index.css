@@ -5,4 +5,10 @@
 @import "./controls.css";
 @import "./history.css";
 @import "./stations.css";
-@import "./catalog.css";
+@import "./modals/shell.css";
+@import "./modals/controls.css";
+@import "./modals/station-row.css";
+@import "./modals/catalog.css";
+@import "./modals/settings.css";
+@import "./modals/changelog.css";
+@import "./modals/onboarding.css";
