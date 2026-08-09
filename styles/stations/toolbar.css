@@ -1,0 +1,89 @@
+.station-list-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.btn-catalog-trigger {
+  flex: 1;
+  min-width: 0;
+  padding: 0.65rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  background: var(--k-bg-panel);
+  border: 1px dashed var(--k-border-2);
+  border-radius: var(--k-r);
+  color: var(--k-text);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-body);
+  cursor: pointer;
+  transition:
+    background var(--k-tr),
+    border-color var(--k-tr);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-catalog-trigger:hover {
+    background: var(--k-bg-inset);
+    border-color: var(--k-accent);
+  }
+}
+
+.view-toggle-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--k-bg-panel);
+  border: 1px solid var(--k-border-2);
+  border-radius: var(--k-r);
+  padding: 2px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.view-toggle-indicator {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 2px;
+  width: calc(50% - 3px);
+  background: var(--k-bg-inset);
+  border-radius: var(--k-rb);
+  box-shadow: var(--k-sh-inset);
+  transition: transform 260ms var(--k-ease-mech);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.view-toggle-group[data-view="grid"] .view-toggle-indicator {
+  transform: translateX(calc(100% + 2px));
+}
+
+.btn-view-toggle {
+  position: relative;
+  z-index: 1;
+  background: none;
+  border: none;
+  padding: 0.5rem 0.55rem;
+  border-radius: var(--k-rb);
+  color: var(--k-text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  transition: color var(--k-tr);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-view-toggle:hover {
+    color: var(--k-text);
+  }
+}
+
+.btn-view-toggle.active {
+  color: var(--k-accent-text);
+}

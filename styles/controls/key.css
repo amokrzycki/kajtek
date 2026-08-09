@@ -1,0 +1,46 @@
+/* Wspólny klawisz — .sleep-key i inne przyciski panelowe */
+
+.btn-key {
+  background: var(--k-bg-raised);
+  border: 1px solid var(--k-border-3);
+  border-radius: var(--k-rb);
+  box-shadow: var(--k-sh-btn);
+  color: var(--k-text-muted);
+  cursor: pointer;
+  transition:
+    background var(--k-tr),
+    border-color var(--k-tr),
+    box-shadow var(--k-tr-fast),
+    transform var(--k-tr-fast),
+    color var(--k-tr);
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-key:hover {
+    color: var(--k-text);
+  }
+}
+
+.btn-key:active {
+  box-shadow: var(--k-sh-inset);
+  transform: translateY(1px);
+}
+
+.btn-key.active {
+  background: var(--k-accent-dim);
+  border-color: var(--k-accent);
+  color: var(--k-accent-text);
+  box-shadow: var(--k-sh-inset);
+}
+
+.btn-key.active .sleep-val {
+  color: var(--k-accent-text);
+}
+
+.dark .btn-key.active {
+  background: color-mix(in srgb, var(--k-accent) 15%, var(--k-bg-inset));
+  box-shadow:
+    var(--k-sh-inset),
+    0 0 10px var(--k-accent-ring);
+}
