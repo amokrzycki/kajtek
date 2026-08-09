@@ -1,0 +1,204 @@
+/* ——— formanty modali: pole szukania, przyciski, formularz, przełącznik ———
+   Współdzielone przez catalog, blacklist, settings, onboarding. */
+
+.search-input-wrap {
+  flex: 1;
+  min-width: 200px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--k-text-muted);
+  pointer-events: none;
+}
+
+.k-input {
+  width: 100%;
+  padding: 0.45rem 0.6rem 0.45rem 1.8rem;
+  background: var(--k-bg-inset);
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-rb);
+  color: var(--k-text);
+  font-family: var(--k-font-body);
+  font-size: 0.82rem;
+  outline: none;
+}
+
+.k-input:focus {
+  border-color: var(--k-accent);
+}
+
+.btn-secondary {
+  padding: 0.45rem 0.75rem;
+  background: var(--k-bg-inset);
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-rb);
+  color: var(--k-text);
+  font-size: 0.75rem;
+  font-family: var(--k-font-mono);
+  cursor: pointer;
+  transition: border-color var(--k-tr);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-secondary:hover {
+    border-color: var(--k-border-3);
+  }
+}
+
+.btn-primary {
+  padding: 0.45rem 0.9rem;
+  background: var(--k-accent);
+  border: 1px solid var(--k-case-edge);
+  border-radius: var(--k-rb);
+  color: #fff;
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-body);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--k-tr);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-primary:hover {
+    background: var(--k-accent-2);
+  }
+}
+
+/* ——— rozwijany formularz (własna stacja, wpis blacklisty) ——— */
+
+.k-custom-form-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transition:
+    grid-template-rows 0.25s var(--k-ease-mech),
+    opacity 0.25s var(--k-ease-mech);
+}
+
+.k-custom-form-wrap.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.k-custom-form-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.k-custom-form {
+  padding: 0.75rem 1rem;
+  background: var(--k-bg-inset);
+  border-bottom: 1px solid var(--k-border);
+}
+
+.k-form-row {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.k-custom-form .k-input {
+  padding-left: 0.6rem;
+  flex: 1;
+  min-width: 140px;
+}
+
+/* ——— przełącznik on/off (katalog, ustawienia) ——— */
+
+.catalog-checkbox {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  pointer-events: none;
+}
+
+.catalog-toggle-switch {
+  display: inline-flex;
+  align-items: center;
+  width: 32px;
+  height: 18px;
+  margin: 0;
+  padding: 0 2px;
+  background: var(--k-bg-inset);
+  border: 1px solid var(--k-border-2);
+  border-radius: 10px;
+  box-shadow: var(--k-sh-inset);
+  flex-shrink: 0;
+  cursor: pointer;
+  user-select: none;
+  transition:
+    background var(--k-tr),
+    border-color var(--k-tr);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .catalog-toggle-switch:hover {
+    border-color: var(--k-border-3);
+  }
+}
+
+.catalog-toggle-switch::before {
+  content: "";
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--k-bg-raised);
+  border: 1px solid var(--k-text-disabled);
+  box-shadow: var(--k-sh-btn);
+  transition:
+    transform 230ms var(--k-ease-mech),
+    background var(--k-tr),
+    border-color var(--k-tr),
+    box-shadow var(--k-tr);
+}
+
+.catalog-toggle-switch:has(.catalog-checkbox:checked) {
+  background: var(--k-accent-dim);
+  border-color: var(--k-accent);
+}
+
+.catalog-toggle-switch:has(.catalog-checkbox:checked)::before {
+  transform: translateX(14px);
+  background: var(--k-accent);
+  border-color: var(--k-accent-2);
+  box-shadow: 0 0 3px var(--k-accent-ring);
+}
+
+.catalog-toggle-switch:has(.catalog-checkbox:focus-visible) {
+  box-shadow:
+    var(--k-sh-inset),
+    0 0 0 2px var(--k-accent-ring);
+}
+
+.btn-delete-custom {
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--k-text-muted);
+  padding: 0.25rem;
+  border-radius: var(--k-rb);
+  transition:
+    color var(--k-tr),
+    background var(--k-tr);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-delete-custom:hover {
+    color: var(--k-accent-text);
+    background: var(--k-accent-dim);
+  }
+}

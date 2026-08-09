@@ -1,0 +1,93 @@
+/* Widok kafelkowy — nadpisania .station-card/.sc-* pod .is-grid-view */
+
+.is-grid-view .station-grid {
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 0.5rem;
+}
+
+.is-grid-view .station-card {
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+  padding: 0.6rem 0.35rem;
+  gap: 0.35rem;
+  min-height: 86px;
+}
+
+.is-grid-view .sc-thumb,
+.is-grid-view .sc-thumb-placeholder {
+  width: 36px;
+  height: 36px;
+  margin: 0 auto;
+}
+
+.is-grid-view .sc-main {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.is-grid-view .sc-name {
+  font-size: 0.78rem;
+  line-height: 1.15;
+  white-space: normal;
+  word-break: break-word;
+  width: 100%;
+  text-align: center;
+}
+
+.is-grid-view .sc-meta {
+  display: none;
+}
+
+.is-grid-view .sc-short {
+  font-size: 0.62rem;
+  line-height: 1.15;
+  max-width: 100%;
+  white-space: normal;
+  word-break: break-word;
+  text-align: center;
+}
+
+.is-grid-view .sc-star {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  padding: 4px;
+}
+
+@media (min-width: 480px) {
+  .is-grid-view .sc-meta {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    margin-top: 1px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .is-grid-view .station-grid {
+    grid-template-columns: repeat(auto-fill, minmax(115px, 1fr));
+    gap: var(--k-s2);
+  }
+
+  .is-grid-view .station-card {
+    padding: 0.75rem 0.5rem;
+    min-height: 98px;
+  }
+
+  .is-grid-view .sc-thumb,
+  .is-grid-view .sc-thumb-placeholder {
+    width: 42px;
+    height: 42px;
+  }
+
+  .is-grid-view .sc-name {
+    font-size: 0.85rem;
+  }
+
+  .is-grid-view .sc-short {
+    font-size: 0.68rem;
+  }
+}

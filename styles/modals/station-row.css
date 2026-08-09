@@ -1,0 +1,97 @@
+/* ——— wiersz stacji na liście modala ———
+   Współdzielony przez katalog i blacklistę. */
+
+.k-catalog-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: var(--k-bg-panel);
+  border: 1px solid var(--k-border);
+  border-radius: var(--k-r);
+  gap: 0.5rem;
+  transition: border-color var(--k-tr);
+  cursor: pointer;
+}
+
+.k-catalog-row.enabled {
+  border-color: var(--k-border-2);
+}
+
+.catalog-col-info {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.catalog-thumb,
+.catalog-thumb-placeholder {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--k-rb);
+  flex-shrink: 0;
+}
+
+.catalog-thumb {
+  object-fit: cover;
+}
+
+.catalog-thumb-placeholder {
+  background: var(--k-bg-inset);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--k-text-muted);
+}
+
+.catalog-details {
+  min-width: 0;
+}
+
+.catalog-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--k-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.badge-custom {
+  font-size: 0.6rem;
+  font-family: var(--k-font-mono);
+  background: var(--k-accent);
+  color: #fff;
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.catalog-sub {
+  font-size: 0.7rem;
+  color: var(--k-text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.catalog-col-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.k-catalog-empty {
+  padding: 2rem 1rem;
+  text-align: center;
+  color: var(--k-text-faint);
+  font-size: 0.85rem;
+}
