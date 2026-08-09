@@ -1,13 +1,3 @@
-/* KAJTEK · themes.css — warianty kolorystyczne obudowy
-   Sześć kolorów PS-101: red (obecny), green, yellow, blue, pink, black.
-   Zakres wariantu = trzy grupy tokenów:
-     1. OBUDOWA  --k-case*, --k-sh-contact, --k-u-box-fg
-     2. AKCENT   --k-accent*, --k-led-active, --k-vol-3, --k-glow
-     3. SZYBA    --k-disp-bg, --k-art-empty  (tylko odcień tła, tekst bez zmian)
-   Reszta tokenów (blat, tekst, LED statusów, promienie, ruch) NIE zmienia się.
-   Ustawiane atrybutem data-case na document.documentElement. */
-
-/* ——— 1. CZERWONY · Rubin (obecny) ——————————————————————————— */
 [data-case="red"] {
   --k-case: linear-gradient(180deg, #e03228 0%, #c4221a 100%);
   --k-case-edge: #b21b14;
@@ -28,7 +18,6 @@
   --k-art-empty: linear-gradient(150deg, #1a0a05 0%, #7a2808 55%, #2a1005 100%);
 }
 
-/* ——— 2. ZIELONY · Limonka ——————————————————————————————————— */
 [data-case="green"] {
   --k-case: linear-gradient(180deg, #a6c53a 0%, #7f9e1c 100%);
   --k-case-edge: #6b8916;
@@ -49,7 +38,6 @@
   --k-art-empty: linear-gradient(150deg, #0d1405 0%, #3f5a0c 55%, #131c05 100%);
 }
 
-/* ——— 3. ŻÓŁTY · Bursztyn ———————————————————————————————————— */
 [data-case="yellow"] {
   --k-case: linear-gradient(180deg, #fac83c 0%, #e6a608 100%);
   --k-case-edge: #c88c04;
@@ -70,7 +58,6 @@
   --k-art-empty: linear-gradient(150deg, #150e02 0%, #6b4805 55%, #1e1403 100%);
 }
 
-/* ——— 4. NIEBIESKI · Kobalt —————————————————————————————————— */
 [data-case="blue"] {
   --k-case: linear-gradient(180deg, #74aee0 0%, #4d88c6 100%);
   --k-case-edge: #3f74ae;
@@ -91,7 +78,6 @@
   --k-art-empty: linear-gradient(150deg, #04101c 0%, #0d456f 55%, #061620 100%);
 }
 
-/* ——— 5. RÓŻOWY · Róż ———————————————————————————————————————— */
 [data-case="pink"] {
   --k-case: linear-gradient(180deg, #f6b3bf 0%, #e88fa2 100%);
   --k-case-edge: #d3798c;
@@ -112,7 +98,6 @@
   --k-art-empty: linear-gradient(150deg, #1a0810 0%, #6e2340 55%, #200a12 100%);
 }
 
-/* ——— 6. CZARNY · Grafit ————————————————————————————————————— */
 [data-case="black"] {
   --k-case: linear-gradient(180deg, #3a3733 0%, #1d1b19 100%);
   --k-case-edge: #100f0e;
@@ -133,7 +118,6 @@
   --k-art-empty: linear-gradient(150deg, #100f0c 0%, #4a3d16 55%, #16140f 100%);
 }
 
-/* ——— tryb ciemny: akcent do pisania musi się rozjaśnić ——————— */
 .dark [data-case="red"],
 [data-case="red"].dark {
   --k-accent-text: #ef5a4a;

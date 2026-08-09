@@ -319,7 +319,11 @@ function createStationRow(
 
   const safeName = escapeHtml(station.name);
   const logoHtml = renderStationThumbHtml(station.coverUrl, station.name, "catalog-thumb", "catalog-thumb-placeholder");
-  const providerLabel = opts.showProviderTag && !opts.isCustom ? PROVIDER_LABELS[station.provider] : undefined;
+  const label = PROVIDER_LABELS[station.provider];
+  const providerLabel =
+    opts.showProviderTag && !opts.isCustom && label && !new RegExp(`\\b${label}\\b`, "i").test(station.name)
+      ? label
+      : undefined;
   const localPillHtml = opts.showLocalPill ? '<span class="catalog-local-pill">● lokalna</span> ' : "";
 
   row.innerHTML = `
