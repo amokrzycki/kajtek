@@ -1,0 +1,209 @@
+/* KAJTEK · obudowa (strefa 1) — panel, boczne guziki, pas sterowania. */
+
+.np-panel {
+  position: relative;
+  background: var(--k-case);
+  border: 1px solid var(--k-case-edge);
+  border-radius: var(--k-r);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.4),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.35),
+    var(--k-sh-contact);
+  overflow: visible;
+  transition:
+    border-color var(--k-tr),
+    box-shadow var(--k-tr);
+}
+
+/* ——— boczne guziki obudowy ——— */
+
+.side-buttons {
+  position: absolute;
+  left: -8px;
+  top: 75px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  z-index: 10;
+  pointer-events: none;
+  user-select: none;
+}
+
+.side-buttons .side-nub {
+  width: 8px;
+  height: 30px;
+  border-radius: 4px 0 0 4px;
+  background: linear-gradient(90deg, #2a2622 0%, #151311 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    -1px 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* ——— pas sterowania obudowy ——— */
+
+.np-controls {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: var(--k-s4) 1.5rem;
+}
+
+.np-branding {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  user-select: none;
+}
+
+.np-branding .unitra-sub {
+  font-family: var(--k-font-mono);
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: var(--k-case-ink-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.np-branding .unitra-sub .u-box {
+  background: var(--k-case-ink);
+  color: var(--k-u-box-fg);
+  font-size: 0.46rem;
+  font-weight: 900;
+  padding: 1px 4px;
+  border-radius: 2px;
+  line-height: 1;
+}
+
+.np-branding .stereo-title {
+  font-family: var(--k-font-display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--k-case-ink);
+  text-align: center;
+  line-height: 1.1;
+  margin: 2px 0 1px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+}
+
+.np-branding .cassette-sub {
+  font-family: var(--k-font-mono);
+  font-size: 0.48rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  color: var(--k-case-ink-dim);
+}
+
+.play-btn {
+  width: 68px;
+  height: 68px;
+  border-radius: 20%;
+  background: var(--k-bg-raised);
+  border: 1px solid var(--k-border-3);
+  box-shadow: var(--k-sh-btn);
+  color: var(--k-text-2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition:
+    background var(--k-tr),
+    color var(--k-tr),
+    border-color var(--k-tr),
+    box-shadow var(--k-tr),
+    transform var(--k-tr);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.play-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .play-btn:not(:disabled):hover {
+    color: var(--k-accent-text);
+    background: var(--k-bg);
+    border-color: var(--k-accent);
+    box-shadow:
+      var(--k-sh-btn),
+      0 0 12px var(--k-accent-dim);
+    transform: scale(1.04);
+  }
+}
+
+.play-btn:not(:disabled):active {
+  box-shadow: var(--k-sh-inset);
+  transform: scale(0.96) translateY(1px);
+}
+
+.play-btn.playing {
+  color: var(--k-accent-text);
+  box-shadow: var(--k-sh-btn), var(--k-glow);
+}
+
+.history-btn {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--k-bg-inset);
+  border: 1px solid var(--k-border-2);
+  border-radius: var(--k-rb);
+  font-family: var(--k-font-mono);
+  font-size: 0.6rem;
+  letter-spacing: 0.09em;
+  color: var(--k-text-muted);
+  cursor: pointer;
+  box-shadow: var(--k-sh-inset);
+  transition:
+    color var(--k-tr),
+    background var(--k-tr);
+  -webkit-tap-highlight-color: transparent;
+  min-height: 34px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .history-btn:hover:not(:disabled):not(.disabled) {
+    color: var(--k-text);
+  }
+}
+
+.history-btn:disabled,
+.history-btn.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+.history-btn .history-arrow {
+  font-size: 0.46rem;
+  opacity: 0.7;
+  transition: transform var(--k-tr-panel);
+}
+
+.history-btn[aria-expanded="true"] .history-arrow {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 640px) {
+  .np-controls {
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .np-branding .stereo-title {
+    font-size: 1.05rem;
+    letter-spacing: 0.2em;
+  }
+}

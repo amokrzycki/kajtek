@@ -1,7 +1,11 @@
 @import "./variables.css";
 @import "./themes.css";
 @import "./layout.css";
-@import "./player.css";
+@import "./player/case.css";
+@import "./player/vu.css";
+@import "./player/display.css";
+@import "./player/reels.css";
+@import "./player/art.css";
 @import "./controls.css";
 @import "./history/panel.css";
 @import "./history/playlist.css";

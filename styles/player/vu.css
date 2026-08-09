@@ -1,0 +1,54 @@
+/* ——— wskaźnik wysterowania ——— */
+
+.vu-strip {
+  display: flex;
+  gap: 3px;
+  padding: 0.75rem 1.5rem 0;
+  height: 80px;
+  margin-bottom: 0.85rem;
+  user-select: none;
+}
+
+.vu-col {
+  position: relative;
+  flex: 1;
+  height: 100%;
+  border-radius: 1px;
+  overflow: hidden;
+  background:
+    repeating-linear-gradient(to top, transparent 0 3px, rgba(0, 0, 0, 0.5) 3px 4px),
+    linear-gradient(
+      to top,
+      rgba(74, 222, 58, 0.22) 0 58%,
+      rgba(255, 210, 61, 0.22) 58% 84%,
+      rgba(255, 69, 58, 0.22) 84% 100%
+    ),
+    var(--k-vu-track);
+}
+
+.vu-fill {
+  position: absolute;
+  inset: 0;
+  --vu-level: 0%;
+  clip-path: inset(calc(100% - var(--vu-level)) 0 0 0);
+  background:
+    repeating-linear-gradient(to top, transparent 0 3px, rgba(0, 0, 0, 0.55) 3px 4px),
+    linear-gradient(to top, var(--k-vu-led-green) 0 58%, var(--k-vu-led-yellow) 58% 84%, var(--k-vu-led-red) 84% 100%);
+  filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.35));
+}
+
+.vu-cap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: #ffffff;
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.9);
+}
+
+@media (max-width: 640px) {
+  .vu-strip {
+    padding: 1rem 1rem 0;
+  }
+}

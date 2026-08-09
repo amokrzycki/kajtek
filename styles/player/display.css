@@ -1,0 +1,229 @@
+/* KAJTEK · wyświetlacz (strefa 2) — okno zawsze ciemne, licznik taśmy
+   we własnej kolumnie gridu, pod spodem dane utworu. */
+
+.np-body {
+  position: relative;
+  display: grid;
+  grid-template-columns: 30px 44px 128px 1fr 44px 22px;
+  align-items: center;
+  gap: var(--k-s3);
+  padding: 18px;
+  margin: 0 18px;
+  background: var(--k-disp-bg);
+  border-radius: var(--k-rc);
+}
+
+/* Szyba: ramka, pinstripe u góry i dołu, refleks */
+.np-body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--k-rc);
+  border: 1px solid var(--k-disp-frame);
+  box-shadow:
+    inset 0 0 16px rgba(0, 0, 0, 0.6),
+    0 2px 6px rgba(0, 0, 0, 0.35);
+  background:
+    repeating-linear-gradient(90deg, var(--k-disp-rule) 0 1px, transparent 1px 4px) top 3px center / calc(100% - 16px)
+    8px no-repeat,
+    repeating-linear-gradient(90deg, var(--k-disp-rule) 0 1px, transparent 1px 4px) bottom 3px center /
+    calc(100% - 16px) 8px no-repeat,
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.02) 45%, transparent 65%);
+  pointer-events: none;
+  z-index: 4;
+}
+
+.np-tape-scale {
+  writing-mode: vertical-rl;
+  font-family: var(--k-font-mono);
+  font-size: 0.44rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--k-disp-dim);
+  white-space: nowrap;
+  justify-self: center;
+  user-select: none;
+}
+
+.kajtek-stripe {
+  height: 100%;
+  min-height: 128px;
+  background: linear-gradient(180deg, #f8f8fa 0%, #e2e2e8 50%, #d4d4dc 100%);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 3px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-around;
+  padding: 6px 0;
+  box-shadow:
+    inset 0 1px 0 #fff,
+    0 1px 3px rgba(0, 0, 0, 0.12);
+  z-index: 2;
+  user-select: none;
+}
+
+.kajtek-stripe span {
+  font-family: var(--k-font-display);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #151311;
+  letter-spacing: 0.04em;
+}
+
+/* ——— dane utworu ——— */
+
+.np-info {
+  flex: 1;
+  min-width: 0;
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.np-short-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.35rem;
+}
+
+.np-short-val {
+  font-family: var(--k-font-display);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--k-disp-accent);
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+.np-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--k-disp-live);
+  box-shadow: 0 0 8px var(--k-disp-live);
+  opacity: 0;
+  transition: opacity var(--k-tr);
+}
+
+.np-live-dot.on {
+  opacity: 1;
+  animation: live-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+/* line-height 1.2 — polskie ogonki (ą, ę, j, y) muszą się zmieścić w wierszu */
+.np-station {
+  font-family: var(--k-font-display);
+  font-size: var(--k-fs-display);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--k-disp-text);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.np-station.empty {
+  font-size: 1rem;
+  font-weight: 400;
+  font-family: var(--k-font-body);
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.62);
+  text-shadow: none;
+}
+
+.np-track {
+  margin-top: 0.4rem;
+  min-width: 0;
+  opacity: 0;
+  transition: opacity 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.np-track.visible {
+  opacity: 1;
+}
+
+.np-artist {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--k-disp-accent);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  margin-bottom: 2px;
+}
+
+.np-title {
+  font-size: var(--k-fs-lead);
+  color: var(--k-disp-text-2);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+  overflow-wrap: anywhere;
+  display: block;
+}
+
+.fade-in {
+  animation: fade-in-anim 280ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+@keyframes fade-in-anim {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Mobile: grid przechodzi na dwa rzędy — szpule i okładka u góry, dane pod.
+   Przypisania grid-area dla szpul i okładki siedzą w reels.css i art.css. */
+@media (max-width: 640px) {
+  .np-body {
+    grid-template-columns: 44px 1fr 44px;
+    grid-template-areas:
+      "reel-l art  reel-r"
+      "info   info info";
+    justify-items: center;
+    gap: 0.85rem 0.7rem;
+    padding: 1.4rem 1rem;
+    margin: 0 12px;
+  }
+
+  .kajtek-stripe {
+    display: none;
+  }
+
+  .np-tape-scale {
+    display: none;
+  }
+
+  .np-info {
+    grid-area: info;
+    width: 100%;
+    min-height: auto;
+    text-align: center;
+    margin-top: 0.2rem;
+  }
+
+  .np-short-row {
+    justify-content: center;
+  }
+
+  .np-station {
+    font-size: 1.5rem;
+  }
+}
