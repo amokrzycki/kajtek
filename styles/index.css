@@ -3,7 +3,10 @@
 @import "./layout.css";
 @import "./player.css";
 @import "./controls.css";
-@import "./history.css";
+@import "./history/panel.css";
+@import "./history/playlist.css";
+@import "./history/favorites.css";
+@import "./history/blacklist-warning.css";
 @import "./stations.css";
 @import "./modals/shell.css";
 @import "./modals/controls.css";

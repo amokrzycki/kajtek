@@ -1,0 +1,64 @@
+/* ——— wiersz ulubionych ———
+   Nadpisuje .pl-* z playlist.css, więc musi być importowany po nim. */
+
+.fav-item {
+  grid-template-columns: 12ch 14px 1fr auto;
+}
+
+.fav-item .pl-track {
+  flex-direction: column;
+  gap: 1px;
+}
+
+.fav-time {
+  color: var(--k-disp-text-3);
+}
+
+.fav-dot {
+  background: var(--k-led-active);
+}
+
+.fav-station {
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-data);
+  color: var(--k-disp-dim);
+  white-space: nowrap;
+}
+
+.fav-goto {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  padding: 2px;
+  color: var(--k-disp-dim);
+  cursor: pointer;
+  transition: color var(--k-tr);
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fav-goto:hover {
+    color: var(--k-disp-accent);
+  }
+}
+
+.fav-star.sc-star {
+  padding: 2px;
+  color: var(--k-led-active);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fav-star.sc-star:not(:disabled):hover {
+    color: var(--k-disp-accent);
+  }
+}
+
+@media (max-width: 640px) {
+  /* .fav-item i mobilne .pl-item mają tę samą specyficzność — dopóki oba żyły
+     w jednym pliku, wygrywało .pl-item (stało niżej). Po podziale kolejność
+     się odwraca, więc powtarzamy kolumny zamiast polegać na kolejności. */
+  .fav-item {
+    grid-template-columns: min-content 10px 1fr auto;
+  }
+}
