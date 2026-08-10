@@ -2,10 +2,11 @@
 
 ## 0.10
 
-Sieć ESKA dołącza do Kajtka! Radio ESKA gra od razu po aktualizacji, a w katalogu znajdziesz całą resztę sieci.
+Sieć ESKA dołącza do Kajtka!
 
-- Radio ESKA dostępne od razu, bez żadnej konfiguracji, wyszukiwarka katalogu znajdzie stację po nazwie Twojego miasta
+- Radio ESKA dostępne od razu, bez żadnej konfiguracji, 65 kanałów regionalnych i tematycznych (ESKA Do Pracy, K-POP, GORĄCA 100, Impreska i inne)
 - Cała sieć ESKA w katalogu stacji: 65 kanałów regionalnych i tematycznych (ESKA Do Pracy, K-POP, GORĄCA 100, Impreska i inne), kliknij „Odśwież listę”
+- Filtrowanie katalogu wg sieci nadawców (chipy) w zakładce WSZYSTKIE
 
 ## 0.9
 
