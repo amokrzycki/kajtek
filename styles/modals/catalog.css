@@ -1,7 +1,3 @@
-/* ——— modal katalogu: nagłówki sekcji, indeks A-Z, tag nadawcy ——— */
-
-/* nagłówki sekcji (litery A-Z, "Stacje lokalne", "Własne stacje") */
-
 .catalog-sec-head {
   display: flex;
   align-items: center;
@@ -29,8 +25,6 @@
   font-size: 0.58rem;
   color: var(--k-text-faint);
 }
-
-/* ——— widok WSZYSTKIE A-Z: lista + sticky indeks liter ——— */
 
 .catalog-az-panel {
   display: flex;
@@ -98,8 +92,6 @@
   }
 }
 
-/* ——— tag nadawcy i pigułka "lokalna" ——— */
-
 .catalog-provider-tag {
   font-family: var(--k-font-mono);
   font-size: 0.56rem;
@@ -126,6 +118,80 @@
   padding: 0.15rem 0.45rem;
   border-radius: 99px;
   text-transform: uppercase;
+}
+
+.catalog-chips {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  background: var(--k-bg-panel);
+  border-bottom: 1px solid var(--k-border);
+}
+
+.catalog-chips[hidden] {
+  display: none;
+}
+
+.catalog-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+  font-family: var(--k-font-mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--k-text-2);
+  background: var(--k-bg-inset);
+  border: 1px solid var(--k-border);
+  border-radius: 99px;
+  padding: 0.28rem 0.6rem;
+  cursor: pointer;
+  transition:
+    color var(--k-tr),
+    background var(--k-tr),
+    border-color var(--k-tr);
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .catalog-chip:hover {
+    color: var(--k-text);
+    border-color: var(--k-border-2);
+  }
+}
+
+.catalog-chip[aria-pressed="true"] {
+  color: var(--k-accent-text);
+  background: var(--k-accent-dim);
+  border-color: var(--k-accent-text);
+}
+
+.catalog-chip-count {
+  color: var(--k-text-faint);
+}
+
+.catalog-chip[aria-pressed="true"] .catalog-chip-count {
+  color: inherit;
+  opacity: 0.75;
+}
+
+.catalog-result-count {
+  font-family: var(--k-font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  color: var(--k-text-faint);
+  padding: 0 0.1rem 0.35rem;
+}
+
+.catalog-az-list > .is-filtered-out {
+  display: none;
+}
+
+.catalog-idxrail span:not(.has) a {
+  pointer-events: none;
 }
 
 .catalog-empty-note {

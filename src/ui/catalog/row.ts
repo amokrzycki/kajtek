@@ -4,7 +4,7 @@ import { notifyState } from "../../state.js";
 import type { Station } from "../../types.js";
 import { escapeHtml, renderStationThumbHtml } from "../../utils.js";
 
-const PROVIDER_LABELS: Record<string, string> = {
+export const PROVIDER_LABELS: Record<string, string> = {
   rmf: "RMF",
   eska: "ESKA",
 };

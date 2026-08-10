@@ -1,15 +1,26 @@
 import { getAllKnownStations, getCustomStations, getStoredRmfCatalog } from "../../catalog.js";
+import type { Station } from "../../types.js";
+import { escapeHtml } from "../../utils.js";
 import { openBlacklistModal } from "../blacklist/modal.js";
 import { animateTabSwitch, bindModalDismiss, closeModal, openModal } from "../modal.js";
 import { handleCustomStationSubmit } from "./form.js";
 import { CATALOG_MODAL_HTML } from "./markup.js";
 import { formatDate, getErrorMessage, refreshCatalog } from "./refresh.js";
-import { type CatalogViewDeps, renderAllTab, renderCustomTab, renderLocalTab } from "./views.js";
+import { PROVIDER_LABELS } from "./row.js";
+import {
+  applyAllTabFilters,
+  type CatalogViewDeps,
+  countByNetwork,
+  renderAllTab,
+  renderCustomTab,
+  renderLocalTab,
+} from "./views.js";
 
 type CatalogTab = "all" | "local" | "custom";
 
 let modalEl: HTMLElement | null = null;
 let searchQuery = "";
+let activeNetwork: string | null = null;
 let showCustomForm = false;
 let previousActiveElement: HTMLElement | null = null;
 let activeTab: CatalogTab = "all";
@@ -22,6 +33,7 @@ const viewDeps: CatalogViewDeps = {
 
 export function openCatalogModal(): void {
   previousActiveElement = document.activeElement as HTMLElement | null;
+  activeNetwork = null;
 
   if (!modalEl) {
     createModalElements();
@@ -66,7 +78,24 @@ function createModalElements(): void {
   const searchInput = modalEl.querySelector<HTMLInputElement>("#catalog-search-input");
   searchInput?.addEventListener("input", (e) => {
     searchQuery = (e.target as HTMLInputElement).value;
-    renderModalBody();
+    const listContainer = modalEl?.querySelector<HTMLElement>("#catalog-list-container");
+    if (activeTab === "all" && listContainer) {
+      applyAllTabFilters(listContainer, normalizedQuery(), activeNetwork);
+    } else {
+      renderModalBody();
+    }
+  });
+
+  const chipsRow = modalEl.querySelector<HTMLElement>("#catalog-network-chips");
+  chipsRow?.addEventListener("click", (e) => {
+    const chip = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-network]");
+    if (!chip) return;
+    activeNetwork = chip.dataset.network || null;
+    chipsRow.querySelectorAll<HTMLButtonElement>("[data-network]").forEach((btn) => {
+      btn.setAttribute("aria-pressed", String((btn.dataset.network || null) === activeNetwork));
+    });
+    const listContainer = modalEl?.querySelector<HTMLElement>("#catalog-list-container");
+    if (listContainer) applyAllTabFilters(listContainer, normalizedQuery(), activeNetwork);
   });
 
   const refreshBtn = modalEl.querySelector("#catalog-refresh-btn");
@@ -127,9 +156,14 @@ function createModalElements(): void {
   });
 }
 
+function normalizedQuery(): string {
+  return searchQuery.toLowerCase().trim();
+}
+
 function setActiveTab(tab: CatalogTab): void {
   if (tab === activeTab) return;
   activeTab = tab;
+  activeNetwork = null;
   const buttons = modalEl?.querySelectorAll<HTMLButtonElement>(".catalog-tab");
   let activeBtnId = "catalog-tab-all";
   buttons?.forEach((btn) => {
@@ -155,6 +189,26 @@ function updateTabCounts(localCount: number, customCount: number): void {
   const customCountEl = modalEl?.querySelector<HTMLElement>('[data-tab="custom"] .catalog-tab-count');
   if (localCountEl) localCountEl.textContent = String(localCount);
   if (customCountEl) customCountEl.textContent = String(customCount);
+}
+
+function renderNetworkChips(allStations: Station[]): void {
+  const chipsRow = modalEl?.querySelector<HTMLElement>("#catalog-network-chips");
+  if (!chipsRow) return;
+
+  chipsRow.hidden = activeTab !== "all";
+  if (chipsRow.hidden) return;
+
+  const chip = (network: string, label: string, count?: number) =>
+    `<button type="button" class="catalog-chip" data-network="${escapeHtml(network)}" aria-pressed="${
+      (network || null) === activeNetwork
+    }">${escapeHtml(label)}${count === undefined ? "" : `<span class="catalog-chip-count">${count}</span>`}</button>`;
+
+  chipsRow.innerHTML = [
+    chip("", "Wszystkie sieci"),
+    ...Array.from(countByNetwork(allStations), ([network, count]) =>
+      chip(network, PROVIDER_LABELS[network] ?? network, count),
+    ),
+  ].join("");
 }
 
 function renderModalBody(): void {
@@ -189,7 +243,9 @@ function renderModalBody(): void {
     allStations.filter((s) => customIds.has(s.id)).length,
   );
 
-  const ctx = { allStations, customIds, q: searchQuery.toLowerCase().trim(), cache };
+  renderNetworkChips(allStations);
+
+  const ctx = { allStations, customIds, q: normalizedQuery(), network: activeNetwork, cache };
   listContainer.innerHTML = "";
 
   if (activeTab === "local") {
