@@ -47,6 +47,8 @@ export const CATALOG_MODAL_HTML = `
         <button type="button" id="catalog-tab-custom" class="catalog-tab" role="tab" aria-selected="false" aria-controls="catalog-list-container" data-tab="custom">WŁASNE <span class="catalog-tab-count">0</span></button>
       </div>
 
+      <div id="catalog-network-chips" class="catalog-chips" role="group" aria-label="Filtr sieci nadawców"></div>
+
       <div id="catalog-error-banner" class="k-modal-error"></div>
 
       <div id="catalog-list-container" class="k-modal-list" role="tabpanel" aria-labelledby="catalog-tab-all"></div>
