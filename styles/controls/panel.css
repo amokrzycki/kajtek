@@ -32,7 +32,7 @@
   transition: color var(--k-tr);
 }
 
-/* Nagłówek pola — jeden wzorzec dla .k-panel i sekcji stacji */
+/* Field header — one pattern for .k-panel and station sections */
 .k-head {
   display: flex;
   align-items: center;

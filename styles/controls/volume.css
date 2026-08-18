@@ -54,7 +54,7 @@
   min-width: 0;
 }
 
-/* Drabinka LED pod suwakiem — zielony do 60, bursztyn do 85, czerwień wyżej */
+/* LED ladder under the slider — green up to 60, amber to 85, red above */
 .vol-ladder {
   position: absolute;
   inset: 0;

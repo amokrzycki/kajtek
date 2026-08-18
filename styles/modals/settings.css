@@ -1,4 +1,4 @@
-/* ——— modal ustawień ——— */
+/* ——— settings modal ——— */
 
 .k-settings-body {
   padding: 1rem;
@@ -53,7 +53,7 @@
   color: var(--k-text-faint);
 }
 
-/* ——— wybór motywu ——— */
+/* ——— theme picker ——— */
 
 .k-settings-swatches {
   display: grid;

@@ -1,4 +1,4 @@
-/* ——— szpule ——— */
+/* ——— reels ——— */
 
 .tape-reel {
   flex-shrink: 0;
@@ -14,7 +14,7 @@
   position: relative;
 }
 
-/* nawinięta taśma wokół piasty */
+/* tape wound around the hub */
 .tape-reel::before {
   content: "";
   position: absolute;
@@ -25,7 +25,7 @@
   opacity: 0.95;
 }
 
-/* trzy okienka szpuli */
+/* three reel windows */
 .tape-reel::after {
   content: "";
   position: absolute;
@@ -60,7 +60,7 @@
     box-shadow var(--k-tr);
 }
 
-/* zębatki napędu */
+/* drive sprocket teeth */
 .reel-hub::before {
   content: "";
   position: absolute;
@@ -101,7 +101,7 @@
   }
 }
 
-/* grid-areas definiuje .np-body w display.css */
+/* grid-areas defined by .np-body in display.css */
 @media (max-width: 640px) {
   #reel-left {
     grid-area: reel-l;

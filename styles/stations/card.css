@@ -39,7 +39,7 @@
   transform: translateY(0);
 }
 
-/* aktywna karta: wciśnięty klawisz, nie kolorowa plama */
+/* active card: pressed-key look, not a color splash */
 .station-card.active {
   background: var(--k-bg-inset);
   border-color: var(--k-border-3);

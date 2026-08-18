@@ -1,5 +1,5 @@
-/* ——— wiersz ulubionych ———
-   Nadpisuje .pl-* z playlist.css, więc musi być importowany po nim. */
+/* ——— favorites row ———
+   Overrides .pl-* from playlist.css, so must be imported after it. */
 
 .fav-item {
   grid-template-columns: 12ch 14px 1fr auto;
@@ -55,9 +55,9 @@
 }
 
 @media (max-width: 640px) {
-  /* .fav-item i mobilne .pl-item mają tę samą specyficzność — dopóki oba żyły
-     w jednym pliku, wygrywało .pl-item (stało niżej). Po podziale kolejność
-     się odwraca, więc powtarzamy kolumny zamiast polegać na kolejności. */
+  /* .fav-item and mobile .pl-item share specificity — .pl-item used to win by
+     source order when both lived in one file. Split apart, that order flips,
+     so we repeat the columns instead of relying on it. */
   .fav-item {
     grid-template-columns: min-content 10px 1fr auto;
   }

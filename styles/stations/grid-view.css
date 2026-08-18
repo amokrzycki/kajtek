@@ -1,4 +1,4 @@
-/* Widok kafelkowy — nadpisania .station-card/.sc-* pod .is-grid-view */
+/* Grid view — .station-card/.sc-* overrides under .is-grid-view */
 
 .is-grid-view .station-grid {
   grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));

@@ -1,5 +1,5 @@
-/* ——— wiersz stacji na liście modala ———
-   Współdzielony przez katalog i blacklistę. */
+/* ——— station row in modal list ———
+   Shared by catalog and blacklist. */
 
 .k-catalog-row {
   display: flex;

@@ -40,7 +40,6 @@ export function openCatalogModal(): void {
   }
   if (modalEl) openModal(modalEl);
 
-  // Load catalog cache or fetch if missing
   const cache = getStoredRmfCatalog();
   if (!cache) {
     handleRefreshCatalog();

@@ -155,7 +155,7 @@ async function parseJsonFromRes(res: Response): Promise<unknown> {
     try {
       return JSON.parse(json.contents);
     } catch (_) {
-      // Ignore parse errors
+      // ignore
     }
   }
   return json;
