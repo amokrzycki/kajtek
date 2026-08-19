@@ -1,5 +1,5 @@
-/* ——— formanty modali: pole szukania, przyciski, formularz, przełącznik ———
-   Współdzielone przez catalog, blacklist, settings, onboarding. */
+/* ——— modal controls: search field, buttons, form, toggle ———
+   Shared by catalog, blacklist, settings, onboarding. */
 
 .search-input-wrap {
   flex: 1;
@@ -72,7 +72,7 @@
   }
 }
 
-/* ——— rozwijany formularz (własna stacja, wpis blacklisty) ——— */
+/* ——— expandable form (custom station, blacklist entry) ——— */
 
 .k-custom-form-wrap {
   display: grid;
@@ -111,7 +111,7 @@
   min-width: 140px;
 }
 
-/* ——— przełącznik on/off (katalog, ustawienia) ——— */
+/* ——— on/off toggle (catalog, settings) ——— */
 
 .catalog-checkbox {
   position: absolute;

@@ -1,6 +1,5 @@
-/* ——— obudowa modala: overlay, okno, nagłówek, pasek narzędzi, zakładki ———
-   Współdzielone przez wszystkie modale (catalog, blacklist, settings,
-   changelog, onboarding). */
+/* ——— modal shell: overlay, window, header, toolbar, tabs ———
+   Shared by all modals (catalog, blacklist, settings, changelog, onboarding). */
 
 .k-modal-overlay {
   font-family: var(--k-font-body);
@@ -170,7 +169,7 @@
   opacity: 0;
 }
 
-/* ——— zakładki (katalog, blacklista) ——— */
+/* ——— tabs (catalog, blacklist) ——— */
 
 .catalog-tabbar {
   display: flex;

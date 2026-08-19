@@ -1,5 +1,5 @@
-/* KAJTEK · wyświetlacz (strefa 2) — okno zawsze ciemne, licznik taśmy
-   we własnej kolumnie gridu, pod spodem dane utworu. */
+/* KAJTEK · display (zone 2) — window always dark, tape counter in its own
+   grid column, track info below. */
 
 .np-body {
   position: relative;
@@ -13,7 +13,7 @@
   border-radius: var(--k-rc);
 }
 
-/* Szyba: ramka, pinstripe u góry i dołu, refleks */
+/* Glass: frame, pinstripe top and bottom, reflection */
 .np-body::before {
   content: "";
   position: absolute;
@@ -72,7 +72,7 @@
   letter-spacing: 0.04em;
 }
 
-/* ——— dane utworu ——— */
+/* ——— track info ——— */
 
 .np-info {
   flex: 1;
@@ -124,7 +124,7 @@
   }
 }
 
-/* line-height 1.2 — polskie ogonki (ą, ę, j, y) muszą się zmieścić w wierszu */
+/* line-height 1.2 — room for Polish descenders (ą, ę, j, y) */
 .np-station {
   font-family: var(--k-font-display);
   font-size: var(--k-fs-display);
@@ -189,8 +189,8 @@
   }
 }
 
-/* Mobile: grid przechodzi na dwa rzędy — szpule i okładka u góry, dane pod.
-   Przypisania grid-area dla szpul i okładki siedzą w reels.css i art.css. */
+/* Mobile: grid switches to two rows — reels and cover on top, info below.
+   Reel/cover grid-area assignments live in reels.css and art.css. */
 @media (max-width: 640px) {
   .np-body {
     grid-template-columns: 44px 1fr 44px;

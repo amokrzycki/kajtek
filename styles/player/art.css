@@ -1,4 +1,4 @@
-/* ——— okładka / logo stacji ——— */
+/* ——— cover art / station logo ——— */
 
 .album-art {
   position: relative;
@@ -20,7 +20,7 @@
     box-shadow var(--k-tr);
 }
 
-/* delikatna faktura druku na okładce */
+/* subtle print texture on the cover */
 .album-art::after {
   content: "";
   position: absolute;
@@ -110,7 +110,7 @@
   color: rgba(255, 255, 255, 0.14);
 }
 
-/* logo stacji zastępuje inicjał — nic się na nie nie nakłada */
+/* station logo replaces the initial — nothing else layers over it */
 .album-art.has-logo .album-art-initial {
   opacity: 0;
 }
@@ -119,7 +119,7 @@
   opacity: 0.45;
 }
 
-/* grid-areas definiuje .np-body w display.css */
+/* grid-areas defined by .np-body in display.css */
 @media (max-width: 640px) {
   #album-art {
     grid-area: art;

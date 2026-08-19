@@ -62,7 +62,6 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
     });
   }
 
-  // Remove existing content except topBar
   Array.from(els.stationListContainer.children).forEach((child) => {
     if (child !== topBar) child.remove();
   });
