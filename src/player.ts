@@ -98,7 +98,7 @@ async function playStreamUrl(url: string | undefined): Promise<void> {
     if (error instanceof DOMException && error.name === "AbortError") return;
     state.playing = false;
     notifyState();
-    setPlaybackStatus("Nie udało się uruchomić — naciśnij PLAY");
+    setPlaybackStatus("Nie udało się uruchomić — naciśnij PLAY", "failed");
   });
 }
 
@@ -119,7 +119,7 @@ function handleAudioFailover() {
       title: "Błąd odtwarzania streamu",
     });
     notifyState();
-    setPlaybackStatus("Brak połączenia — naciśnij PLAY, aby ponowić");
+    setPlaybackStatus("Brak połączenia — naciśnij PLAY, aby ponowić", "failed");
     return;
   }
 
@@ -137,10 +137,10 @@ radioAudio.addEventListener("error", () => {
   }
 });
 radioAudio.addEventListener("stalled", () => {
-  setPlaybackStatus("Buforowanie…");
+  setPlaybackStatus("Buforowanie…", "buffering");
   if (!hlsInstance) handleAudioFailover();
 });
-radioAudio.addEventListener("waiting", () => setPlaybackStatus("Buforowanie…"));
+radioAudio.addEventListener("waiting", () => setPlaybackStatus("Buforowanie…", "buffering"));
 radioAudio.addEventListener("playing", () => setPlaybackStatus("Na żywo"));
 radioAudio.addEventListener("pause", () => {
   if (!state.playing) setPlaybackStatus("Pauza");

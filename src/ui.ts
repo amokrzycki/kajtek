@@ -55,8 +55,10 @@ export function updateSleepUI(): void {
   });
 }
 
-export function setPlaybackStatus(message: string): void {
+export function setPlaybackStatus(message: string, dotState?: "buffering" | "failed"): void {
   els.npStatus.textContent = message;
+  els.npLiveDot.classList.toggle("buffering", dotState === "buffering");
+  els.npLiveDot.classList.toggle("failed", dotState === "failed");
 }
 
 export function updateNowPlayingTrack(track: TrackInfo | null): void {

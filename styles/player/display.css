@@ -114,6 +114,17 @@
   animation: live-pulse 2.4s ease-in-out infinite;
 }
 
+.np-live-dot.buffering {
+  background: var(--k-vu-led-yellow);
+  box-shadow: 0 0 8px var(--k-vu-led-yellow);
+}
+
+.np-live-dot.failed {
+  background: var(--k-vu-led-red);
+  box-shadow: 0 0 8px var(--k-vu-led-red);
+  opacity: 1;
+}
+
 @keyframes live-pulse {
   0%,
   100% {
