@@ -273,11 +273,11 @@ export function getAllKnownStations(): Station[] {
         short: raw.name,
         cat: "national",
         provider: "eska",
-        stream: raw.stream_url,
+        stream: raw.stream_ic || raw.stream_url,
         apiBaseUrl: `${API_ENDPOINTS.ESKA_NOW_PLAYING_BASE}/${raw.now_playing_url}`,
       };
-      // Direct AAC mount as the failover target for the HLS stream, both are same-origin-open.
-      if (raw.stream_ic) st._streams = [raw.stream_url, raw.stream_ic];
+      // hls.js/MSE degrades the stereo HE-AAC stream published by ZPR; use the direct AAC mount first.
+      if (raw.stream_ic) st._streams = [raw.stream_ic, raw.stream_url];
       if (raw.cover) st.coverUrl = raw.cover;
       return st;
     });

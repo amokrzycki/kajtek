@@ -66,8 +66,8 @@ export const INIT_STATIONS: Station[] = [
     short: "Hity na czasie",
     cat: "national",
     provider: "eska",
-    stream: "https://liveradio.timesa.pl/2980-1.aac/playlist.m3u8",
-    _streams: ["https://liveradio.timesa.pl/2980-1.aac/playlist.m3u8", "https://waw.ic.smcdn.pl/2980-1.aac"],
+    stream: "https://waw.ic.smcdn.pl/2980-1.aac",
+    _streams: ["https://waw.ic.smcdn.pl/2980-1.aac", "https://liveradio.timesa.pl/2980-1.aac/playlist.m3u8"],
     apiBaseUrl: `${API_ENDPOINTS.ESKA_NOW_PLAYING_BASE}/2980`,
     coverUrl: "https://cdn.music.smcloud.net/t/logo/2f7b5979-4b66-4586-aefb-ca31e4b8580d_eska_1500x1500_500x500.jpg",
   },
@@ -93,5 +93,5 @@ export const VU_COUNT = 24;
 export const STATIONS_WITH_FACTS = ["rmf", "rmf24"];
 export const VOL_LEDS = 18;
 export const MAX_CONSECUTIVE_FAILURES = 5;
-export const DEFAULT_VERSION = "0.9";
+export const DEFAULT_VERSION = "0.10.1";
 export const TROJKA_PLAYLIST_REFRESH_MS = 60_000;
