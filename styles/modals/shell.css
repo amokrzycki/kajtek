@@ -136,37 +136,74 @@
 }
 
 .k-modal-manage {
-  flex: 0 0 auto;
-}
-
-.k-modal-manage[open] {
-  flex-basis: 100%;
+  flex: 1 0 100%;
+  interpolate-size: allow-keywords;
 }
 
 .k-modal-manage > summary {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   list-style: none;
   text-align: center;
   width: 100%;
+  transition:
+    background var(--k-tr),
+    border-color var(--k-tr),
+    box-shadow var(--k-tr),
+    transform 120ms var(--k-ease-mech);
 }
 
 .k-modal-manage > summary::-webkit-details-marker {
   display: none;
 }
 
+.k-modal-manage > summary:focus-visible {
+  outline: none;
+  border-color: var(--k-accent);
+  box-shadow: 0 0 0 3px var(--k-accent-ring);
+}
+
 .k-modal-manage[open] > summary {
-  margin-bottom: 0.5rem;
+  background: var(--k-bg-deep);
+  box-shadow: var(--k-sh-inset);
+  transform: translateY(1px);
+}
+
+.k-modal-manage[open] > summary:focus-visible {
+  box-shadow:
+    var(--k-sh-inset),
+    0 0 0 3px var(--k-accent-ring);
+}
+
+.k-modal-manage-chevron {
+  display: inline-flex;
+  transition: transform 220ms var(--k-ease-mech);
+}
+
+.k-modal-manage[open] .k-modal-manage-chevron {
+  transform: rotate(90deg);
+}
+
+.k-modal-manage .k-modal-actions-row {
+  padding-top: 0.5rem;
 }
 
 .k-modal-manage::details-content {
+  block-size: 0;
+  overflow: clip;
   opacity: 0;
   transform: translateY(-4px);
   transition:
-    opacity var(--k-tr),
-    transform var(--k-tr),
-    content-visibility var(--k-tr) allow-discrete;
+    block-size 260ms var(--k-ease-mech),
+    opacity 180ms ease,
+    transform 220ms var(--k-ease-mech),
+    content-visibility 260ms allow-discrete;
 }
 
 .k-modal-manage[open]::details-content {
+  block-size: auto;
   opacity: 1;
   transform: none;
 }
@@ -177,6 +214,10 @@
     transition:
       opacity 120ms ease,
       content-visibility 120ms ease allow-discrete;
+  }
+
+  .k-modal-manage-chevron {
+    transition-duration: 0ms;
   }
 }
 

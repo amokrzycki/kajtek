@@ -18,7 +18,10 @@ export const CATALOG_MODAL_HTML = `
           <input type="search" id="catalog-search-input" class="k-input catalog-search" placeholder="Szukaj stacji…" autocomplete="off" autofocus />
         </div>
         <details class="k-modal-manage">
-          <summary class="btn-secondary">Zarządzaj</summary>
+          <summary class="btn-secondary">
+            <span>Opcje stacji</span>
+            <span class="k-modal-manage-chevron" aria-hidden="true">${ICONS.chevron}</span>
+          </summary>
           <div class="k-modal-actions-row">
             <button type="button" id="catalog-refresh-btn" class="btn-secondary">Odśwież listę</button>
             <button type="button" id="catalog-custom-toggle-btn" class="btn-secondary" aria-expanded="false" aria-controls="catalog-custom-form-wrap">+ Własna stacja</button>
