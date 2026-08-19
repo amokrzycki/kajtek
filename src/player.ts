@@ -10,6 +10,7 @@ import { genericProvider, getFactsInfo, getProvider } from "./providers.js";
 import { intervals, notifyState, radioAudio, state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import {
+  els,
   resolveAlbumCoverUrl,
   setHistoryLoadingState,
   setPlaybackStatus,
@@ -143,7 +144,7 @@ radioAudio.addEventListener("stalled", () => {
 radioAudio.addEventListener("waiting", () => setPlaybackStatus("Buforowanie…", "buffering"));
 radioAudio.addEventListener("playing", () => setPlaybackStatus("Na żywo"));
 radioAudio.addEventListener("pause", () => {
-  if (!state.playing) setPlaybackStatus("Pauza");
+  if (!state.playing && !els.npLiveDot.classList.contains("failed")) setPlaybackStatus("Pauza");
 });
 
 function navigateStation(direction: 1 | -1) {

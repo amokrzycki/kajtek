@@ -34,7 +34,7 @@ export function bindModalDismiss(modalEl: HTMLElement, close: () => void): void 
   modalEl.addEventListener("click", (e) => {
     if (e.target === modalEl) close();
   });
-  window.addEventListener("keydown", (e) => {
+  modalEl.addEventListener("keydown", (e) => {
     const topmostModal = Array.from(document.querySelectorAll<HTMLElement>(".k-modal-overlay.is-open")).at(-1);
     if (topmostModal !== modalEl) return;
     if (e.key === "Escape") {

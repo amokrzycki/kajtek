@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.11
+## 0.11.0
 
 Usprawnienia w obrębie całego interfejsu Kajtka, poprawki błędów i optymalizacje.
 
