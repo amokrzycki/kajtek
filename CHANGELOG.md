@@ -1,5 +1,9 @@
 # Changelog
 
+# 0.10.1
+
+Poprawione stereo i jakość dźwięku stacji ESKA :)
+
 ## 0.10
 
 Sieć ESKA dołącza do Kajtka!
