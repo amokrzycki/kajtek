@@ -2,10 +2,12 @@ import { addToBlacklist, isBlacklisted, normalizeTrackKey, removeFromBlacklist }
 import { dismissBlacklistWarning, returnToPreviousStation, switchBlacklistCandidateNow } from "./blacklistWarning.js";
 import { getAllKnownStations } from "./catalog.js";
 import { checkForNewChangelog } from "./changelog.js";
+import { STORAGE_KEYS } from "./consts.js";
 import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
 import { currentTrack, selectStation, togglePlay } from "./player.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { notifyState, state, subscribeState } from "./state.js";
+import type { Station } from "./types.js";
 import { openCatalogModal } from "./ui/catalog/modal.js";
 import { openChangelogModal } from "./ui/changelog/modal.js";
 import { removeFavTrackByKey } from "./ui/favorites.js";
@@ -23,7 +25,12 @@ import {
 import { getTrackKey } from "./utils.js";
 
 function refresh() {
-  updateUI(currentTrack(), selectStation, toggleFav);
+  updateUI(currentTrack(), selectRememberedStation, toggleFav);
+}
+
+function selectRememberedStation(station: Station): void {
+  localStorage.setItem(STORAGE_KEYS.LAST_STATION, station.id);
+  selectStation(station);
 }
 
 function setVersion() {
@@ -151,13 +158,15 @@ function attachEvents() {
     if (gotoBtn) {
       const stationId = gotoBtn.getAttribute("data-station-id");
       const station = getAllKnownStations().find((s) => s.id === stationId);
-      if (station) selectStation(station);
+      if (station) selectRememberedStation(station);
     }
   });
 }
 
 function init() {
   const isFirstVisit = shouldShowOnboarding();
+  const lastStationId = localStorage.getItem(STORAGE_KEYS.LAST_STATION);
+  state.station = getAllKnownStations().find((station) => station.id === lastStationId) ?? null;
 
   setVersion();
   initVU();

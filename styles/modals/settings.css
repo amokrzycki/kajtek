@@ -36,6 +36,14 @@
   margin-top: var(--k-s2);
 }
 
+.k-settings-row:has(.catalog-checkbox:disabled) {
+  opacity: 0.55;
+}
+
+.k-settings-row:has(.catalog-checkbox:disabled) .catalog-toggle-switch {
+  cursor: not-allowed;
+}
+
 .k-settings-row-text {
   display: flex;
   flex-direction: column;

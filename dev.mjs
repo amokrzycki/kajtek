@@ -2,10 +2,12 @@
 import fs from "node:fs";
 import http from "node:http";
 import https from "node:https";
+import os from "node:os";
 import path from "node:path";
 import { context } from "esbuild";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
+const port = Number.parseInt(process.env.KAJTEK_PORT ?? "3000", 10);
 
 const ctx = await context({
   entryPoints: [
@@ -163,15 +165,22 @@ http
     }
 
     // check dist/ then public/ so compiled/static assets shadow raw root files
-    let filePath = req.url === "/" ? "./index.html" : `.${req.url}`;
-    if (req.url !== "/") {
-      const distPath = `./dist${req.url}`;
-      const publicPath = `./public${req.url}`;
+    const pathname = new URL(req.url ?? "/", "http://localhost").pathname;
+    let filePath = pathname === "/" ? "./index.html" : "";
+    if (pathname !== "/") {
+      const distPath = `./dist${pathname}`;
+      const publicPath = `./public${pathname}`;
       if (fs.existsSync(distPath) && !fs.statSync(distPath).isDirectory()) {
         filePath = distPath;
       } else if (fs.existsSync(publicPath) && !fs.statSync(publicPath).isDirectory()) {
         filePath = publicPath;
       }
+    }
+
+    if (!filePath) {
+      res.writeHead(404);
+      res.end("Not found");
+      return;
     }
 
     fs.readFile(filePath, (err, data) => {
@@ -201,6 +210,11 @@ http
       res.end(data);
     });
   })
-  .listen(3000, () => {
-    console.log("Dev server running at http://localhost:3000");
+  .listen(port, "0.0.0.0", () => {
+    console.log(`Dev server running at http://localhost:${port}`);
+    for (const addresses of Object.values(os.networkInterfaces())) {
+      for (const address of addresses ?? []) {
+        if (address.family === "IPv4" && !address.internal) console.log(`Network: http://${address.address}:${port}`);
+      }
+    }
   });

@@ -81,7 +81,7 @@ function createModalElements(): void {
           <div class="k-settings-row">
             <div class="k-settings-row-text">
               <span>Automatyczny powrót po reklamie</span>
-              <span class="k-settings-row-sub">Wróć na poprzednią stację, gdy blok reklamowy się skończy</span>
+              <span id="settings-adskip-autoreturn-help" class="k-settings-row-sub">Wróć na poprzednią stację, gdy blok reklamowy się skończy</span>
             </div>
             <label class="catalog-toggle-switch" id="settings-adskip-autoreturn-switch">
               <input
@@ -89,6 +89,7 @@ function createModalElements(): void {
                 id="settings-adskip-autoreturn-toggle"
                 class="catalog-checkbox"
                 aria-label="Automatyczny powrót po reklamie"
+                aria-describedby="settings-adskip-autoreturn-help"
               />
             </label>
           </div>
@@ -124,6 +125,7 @@ function createModalElements(): void {
   modalEl.querySelector<HTMLInputElement>("#settings-adskip-toggle")?.addEventListener("change", (e) => {
     state.adSkipEnabled = (e.target as HTMLInputElement).checked;
     setStoredJSON(STORAGE_KEYS.AD_SKIP_ENABLED, state.adSkipEnabled);
+    syncAdSkipToggle();
     notifyState();
   });
 
@@ -170,7 +172,16 @@ function syncAdSkipToggle(): void {
 
   const autoReturnToggle = modalEl?.querySelector<HTMLInputElement>("#settings-adskip-autoreturn-toggle");
   const autoReturnLabel = modalEl?.querySelector<HTMLLabelElement>("#settings-adskip-autoreturn-switch");
-  if (!autoReturnToggle || !autoReturnLabel) return;
+  const autoReturnHelp = modalEl?.querySelector<HTMLElement>("#settings-adskip-autoreturn-help");
+  if (!autoReturnToggle || !autoReturnLabel || !autoReturnHelp) return;
   autoReturnToggle.checked = state.adSkipAutoReturnEnabled;
-  autoReturnLabel.title = state.adSkipAutoReturnEnabled ? "Wyłącz automatyczny powrót" : "Włącz automatyczny powrót";
+  autoReturnToggle.disabled = !state.adSkipEnabled;
+  autoReturnHelp.textContent = state.adSkipEnabled
+    ? "Wróć na poprzednią stację, gdy blok reklamowy się skończy"
+    : "Najpierw włącz pomijanie reklam";
+  autoReturnLabel.title = !state.adSkipEnabled
+    ? "Najpierw włącz pomijanie reklam"
+    : state.adSkipAutoReturnEnabled
+      ? "Wyłącz automatyczny powrót"
+      : "Włącz automatyczny powrót";
 }

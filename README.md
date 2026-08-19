@@ -72,7 +72,8 @@ Run local dev server with hot esbuild recompilation and built-in proxy for APIs 
 npm run dev
 ```
 
-Then open `http://localhost:3000` in your web browser.
+Open `http://localhost:3000` locally. The server also prints network addresses for testing on phones connected to the
+same network. Set `KAJTEK_PORT` when port 3000 is busy.
 
 ### Production Build
 

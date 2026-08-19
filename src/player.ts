@@ -142,9 +142,21 @@ radioAudio.addEventListener("stalled", () => {
   if (!hlsInstance) handleAudioFailover();
 });
 radioAudio.addEventListener("waiting", () => setPlaybackStatus("Buforowanie…", "buffering"));
-radioAudio.addEventListener("playing", () => setPlaybackStatus("Na żywo"));
+radioAudio.addEventListener("playing", () => {
+  if (!state.playing) {
+    state.playing = true;
+    startTrackRotation();
+    notifyState();
+  }
+  setPlaybackStatus("Na żywo");
+});
 radioAudio.addEventListener("pause", () => {
-  if (!state.playing && !els.npLiveDot.classList.contains("failed")) setPlaybackStatus("Pauza");
+  if (state.playing) {
+    state.playing = false;
+    stopTrackRotation();
+    notifyState();
+  }
+  if (!els.npLiveDot.classList.contains("failed")) setPlaybackStatus("Pauza");
 });
 
 function navigateStation(direction: 1 | -1) {
@@ -159,8 +171,12 @@ function navigateStation(direction: 1 | -1) {
 }
 
 if ("mediaSession" in navigator) {
-  navigator.mediaSession.setActionHandler("play", togglePlay);
-  navigator.mediaSession.setActionHandler("pause", togglePlay);
+  navigator.mediaSession.setActionHandler("play", () => {
+    if (!state.playing) togglePlay();
+  });
+  navigator.mediaSession.setActionHandler("pause", () => {
+    if (state.playing) togglePlay();
+  });
   navigator.mediaSession.setActionHandler("previoustrack", () => navigateStation(-1));
   navigator.mediaSession.setActionHandler("nexttrack", () => navigateStation(1));
 }
