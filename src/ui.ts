@@ -56,7 +56,7 @@ export function updateSleepUI(): void {
 }
 
 export function setPlaybackStatus(message: string, dotState?: "buffering" | "failed"): void {
-  els.npStatus.textContent = message;
+  triggerFade(els.npStatus, message);
   els.npLiveDot.classList.toggle("buffering", dotState === "buffering");
   els.npLiveDot.classList.toggle("failed", dotState === "failed");
 }

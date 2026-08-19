@@ -7,6 +7,7 @@ Usprawnienia w obrębie całego interfejsu Kajtka, poprawki błędów i optymali
 - Płynniejsze wyciszanie przy szybkich kliknięciach oraz blokada przewijania tła w oknach dialogowych.
 - Czytelniejszy pierwszy start, widoczny stan połączenia i pełna obsługa katalogu oraz listy stacji klawiaturą.
 - Wskaźnik transmisji zmienia kolor podczas buforowania i po błędzie odtwarzania.
+- Płynniejsze rozwijanie zarządzania katalogiem, zmiany statusu odtwarzania i wciskanie kart stacji.
 
 ## 0.10.2
 

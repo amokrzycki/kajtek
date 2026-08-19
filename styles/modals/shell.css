@@ -157,6 +157,29 @@
   margin-bottom: 0.5rem;
 }
 
+.k-modal-manage::details-content {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition:
+    opacity var(--k-tr),
+    transform var(--k-tr),
+    content-visibility var(--k-tr) allow-discrete;
+}
+
+.k-modal-manage[open]::details-content {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .k-modal-manage::details-content {
+    transform: none;
+    transition:
+      opacity 120ms ease,
+      content-visibility 120ms ease allow-discrete;
+  }
+}
+
 .k-form-error,
 .k-modal-error {
   display: grid;

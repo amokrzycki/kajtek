@@ -48,7 +48,7 @@
 }
 
 .station-card:has(.station-select:active) {
-  transform: translateY(0);
+  transform: translateY(1px);
 }
 
 /* active card: pressed-key look, not a color splash */
@@ -63,6 +63,12 @@
   background: rgba(0, 0, 0, 0.28);
   border-color: var(--k-border-2);
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .station-card:has(.station-select:active) {
+    transform: translateY(0.5px);
+  }
 }
 
 .sc-led-dot {
@@ -160,7 +166,6 @@
   background: none;
   border: none;
   padding: 6px;
-  margin-right: 6px;
   cursor: pointer;
   color: var(--k-text-faint);
   line-height: 0;

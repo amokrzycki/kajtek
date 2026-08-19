@@ -222,6 +222,21 @@
   }
 }
 
+@keyframes status-fade-reduced {
+  from {
+    opacity: 0.8;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .np-status.fade-in {
+    animation: status-fade-reduced 120ms ease !important;
+  }
+}
+
 /* Mobile: grid switches to two rows — reels and cover on top, info below.
    Reel/cover grid-area assignments live in reels.css and art.css. */
 @media (max-width: 640px) {
