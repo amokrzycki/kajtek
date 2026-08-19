@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.10.2
+
+Naprawienie problemów z odtwarzaniem stacji radiowych z sieci ESKA w Kajtku.
+
 ## 0.10.1
 
 Poprawione stereo i jakość dźwięku stacji ESKA :)
