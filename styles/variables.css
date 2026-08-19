@@ -184,11 +184,18 @@ body {
 }
 
 * {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
+  scrollbar-width: thin;
+  scrollbar-color: var(--k-text-disabled) transparent;
 }
 *::-webkit-scrollbar {
-  display: none;
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--k-text-disabled);
+  border: 2px solid transparent;
+  border-radius: var(--k-rb);
+  background-clip: padding-box;
 }
 
 .hidden {
@@ -196,8 +203,7 @@ body {
 }
 
 /* Focus: one pattern for the whole app */
-:where(a, button, input, select, textarea, [tabindex]):focus-visible,
-.station-card:focus-visible,
+:where(a, button, input, select, summary, textarea, [tabindex]):focus-visible,
 .k-catalog-row:focus-visible {
   outline: 2px solid var(--k-accent-2);
   outline-offset: 2px;

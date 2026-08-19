@@ -6,6 +6,7 @@ import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.j
 import { currentTrack, selectStation, togglePlay } from "./player.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { notifyState, state, subscribeState } from "./state.js";
+import { openCatalogModal } from "./ui/catalog/modal.js";
 import { openChangelogModal } from "./ui/changelog/modal.js";
 import { removeFavTrackByKey } from "./ui/favorites.js";
 import { openOnboardingModal, shouldShowOnboarding } from "./ui/onboarding/modal.js";
@@ -32,7 +33,19 @@ function setVersion() {
   }
 }
 
+function focusStationSelection(): void {
+  const firstStation = els.stationListContainer.querySelector<HTMLButtonElement>(".station-select");
+  if (!firstStation) {
+    openCatalogModal();
+    return;
+  }
+  firstStation.scrollIntoView({ behavior: "smooth", block: "center" });
+  firstStation.focus({ preventScroll: true });
+}
+
 function attachEvents() {
+  els.helpBtn.addEventListener("click", () => openOnboardingModal(focusStationSelection));
+
   els.darkToggle.addEventListener("click", () => {
     state.dark = !state.dark;
     notifyState();
@@ -156,7 +169,7 @@ function init() {
 
   const newEntries = checkForNewChangelog();
   if (isFirstVisit) {
-    openOnboardingModal();
+    openOnboardingModal(focusStationSelection);
   } else if (newEntries) {
     openChangelogModal(newEntries);
   }

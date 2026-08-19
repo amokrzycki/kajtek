@@ -72,7 +72,10 @@ function createModalElements(): void {
   closeBtn?.addEventListener("click", closeCatalogModal);
 
   const blacklistBtn = modalEl.querySelector("#open-blacklist-btn");
-  blacklistBtn?.addEventListener("click", () => openBlacklistModal());
+  blacklistBtn?.addEventListener("click", () => {
+    closeCatalogModal();
+    openBlacklistModal();
+  });
 
   const searchInput = modalEl.querySelector<HTMLInputElement>("#catalog-search-input");
   searchInput?.addEventListener("input", (e) => {
@@ -103,6 +106,7 @@ function createModalElements(): void {
   const customToggleBtn = modalEl.querySelector("#catalog-custom-toggle-btn");
   customToggleBtn?.addEventListener("click", () => {
     showCustomForm = !showCustomForm;
+    customToggleBtn.setAttribute("aria-expanded", String(showCustomForm));
     const formWrap = modalEl?.querySelector<HTMLElement>("#catalog-custom-form-wrap");
     formWrap?.classList.toggle("is-open", showCustomForm);
   });
@@ -130,6 +134,7 @@ function createModalElements(): void {
         nameEl.value = "";
         urlEl.value = "";
         showCustomForm = false;
+        customToggleBtn?.setAttribute("aria-expanded", "false");
         const formWrap = modalEl?.querySelector<HTMLElement>("#catalog-custom-form-wrap");
         formWrap?.classList.remove("is-open");
         renderModalBody();

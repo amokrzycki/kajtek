@@ -135,6 +135,28 @@
   white-space: nowrap;
 }
 
+.k-modal-manage {
+  flex: 0 0 auto;
+}
+
+.k-modal-manage[open] {
+  flex-basis: 100%;
+}
+
+.k-modal-manage > summary {
+  list-style: none;
+  text-align: center;
+  width: 100%;
+}
+
+.k-modal-manage > summary::-webkit-details-marker {
+  display: none;
+}
+
+.k-modal-manage[open] > summary {
+  margin-bottom: 0.5rem;
+}
+
 .k-form-error,
 .k-modal-error {
   display: grid;

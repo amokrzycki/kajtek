@@ -1,7 +1,21 @@
+const previousFocus = new WeakMap<HTMLElement, HTMLElement>();
+
+function getFocusableElements(modalEl: HTMLElement): HTMLElement[] {
+  return Array.from(
+    modalEl.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), summary, textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    ),
+  ).filter((element) => element.getClientRects().length > 0 && element.getAttribute("aria-hidden") !== "true");
+}
+
 export function openModal(modalEl: HTMLElement): void {
+  if (document.activeElement instanceof HTMLElement) previousFocus.set(modalEl, document.activeElement);
   modalEl.removeAttribute("aria-hidden");
   document.body.style.overflow = "hidden";
-  requestAnimationFrame(() => modalEl.classList.add("is-open"));
+  requestAnimationFrame(() => {
+    modalEl.classList.add("is-open");
+    (modalEl.querySelector<HTMLElement>("[autofocus]") ?? getFocusableElements(modalEl)[0])?.focus();
+  });
 }
 
 export function closeModal(modalEl: HTMLElement, restoreFocusEl?: HTMLElement | null): void {
@@ -9,12 +23,11 @@ export function closeModal(modalEl: HTMLElement, restoreFocusEl?: HTMLElement | 
   if (document.activeElement && modalEl.contains(document.activeElement)) {
     (document.activeElement as HTMLElement).blur();
   }
-  if (restoreFocusEl && typeof restoreFocusEl.focus === "function") {
-    restoreFocusEl.focus();
-  }
   modalEl.classList.remove("is-open");
   modalEl.setAttribute("aria-hidden", "true");
-  document.body.style.overflow = "";
+  if (!document.querySelector(".k-modal-overlay.is-open")) document.body.style.overflow = "";
+  (restoreFocusEl ?? previousFocus.get(modalEl))?.focus();
+  previousFocus.delete(modalEl);
 }
 
 export function bindModalDismiss(modalEl: HTMLElement, close: () => void): void {
@@ -22,7 +35,26 @@ export function bindModalDismiss(modalEl: HTMLElement, close: () => void): void 
     if (e.target === modalEl) close();
   });
   window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && modalEl.classList.contains("is-open")) close();
+    const topmostModal = Array.from(document.querySelectorAll<HTMLElement>(".k-modal-overlay.is-open")).at(-1);
+    if (topmostModal !== modalEl) return;
+    if (e.key === "Escape") {
+      close();
+      return;
+    }
+    if (e.key !== "Tab") return;
+
+    const focusable = getFocusableElements(modalEl);
+    const first = focusable[0];
+    const last = focusable.at(-1);
+    if (!first || !last) {
+      e.preventDefault();
+    } else if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   });
 }
 

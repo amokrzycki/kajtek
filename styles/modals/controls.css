@@ -86,6 +86,7 @@
 .k-custom-form-wrap.is-open {
   grid-template-rows: 1fr;
   opacity: 1;
+  margin-top: 0.5rem;
 }
 
 .k-custom-form-inner {

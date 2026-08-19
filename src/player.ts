@@ -12,6 +12,7 @@ import type { Station, TrackInfo } from "./types.js";
 import {
   resolveAlbumCoverUrl,
   setHistoryLoadingState,
+  setPlaybackStatus,
   updateAlbumArt,
   updateHistoryUI,
   updateNowPlayingTrack,
@@ -66,6 +67,7 @@ async function attachHlsStream(url: string): Promise<void> {
       return;
     }
     recoveryAttempts++;
+    setPlaybackStatus("Odzyskiwanie połączenia…");
     switch (data.type) {
       case Hls.ErrorTypes.NETWORK_ERROR:
         hls.startLoad();
@@ -92,8 +94,11 @@ async function playStreamUrl(url: string | undefined): Promise<void> {
     radioAudio.src = url;
   }
   applyAudioVolume();
-  radioAudio.play().catch(() => {
-    // Ignore autoplay restriction errors
+  radioAudio.play().catch((error: unknown) => {
+    if (error instanceof DOMException && error.name === "AbortError") return;
+    state.playing = false;
+    notifyState();
+    setPlaybackStatus("Nie udało się uruchomić — naciśnij PLAY");
   });
 }
 
@@ -114,20 +119,31 @@ function handleAudioFailover() {
       title: "Błąd odtwarzania streamu",
     });
     notifyState();
+    setPlaybackStatus("Brak połączenia — naciśnij PLAY, aby ponowić");
     return;
   }
 
   const currentIdx = state.station._currentStreamIndex || 0;
   const nextIdx = (currentIdx + 1) % streams.length;
   state.station._currentStreamIndex = nextIdx;
+  setPlaybackStatus("Zmiana strumienia…");
   playStreamUrl(streams[nextIdx]);
 }
 
 radioAudio.addEventListener("error", () => {
-  if (!hlsInstance) handleAudioFailover();
+  if (!hlsInstance) {
+    setPlaybackStatus("Zmiana strumienia…");
+    handleAudioFailover();
+  }
 });
 radioAudio.addEventListener("stalled", () => {
+  setPlaybackStatus("Buforowanie…");
   if (!hlsInstance) handleAudioFailover();
+});
+radioAudio.addEventListener("waiting", () => setPlaybackStatus("Buforowanie…"));
+radioAudio.addEventListener("playing", () => setPlaybackStatus("Na żywo"));
+radioAudio.addEventListener("pause", () => {
+  if (!state.playing) setPlaybackStatus("Pauza");
 });
 
 function navigateStation(direction: 1 | -1) {
@@ -352,6 +368,7 @@ export function selectStation(s: Station) {
   resetBlacklistWarningState();
   startEskaSession(s.id);
   setHistoryLoadingState(true);
+  setPlaybackStatus("Łączenie…");
 
   ensureStationMetadata(s);
 
@@ -366,6 +383,7 @@ export function togglePlay() {
   state.playing = !state.playing;
 
   if (state.playing) {
+    setPlaybackStatus("Łączenie…");
     playStreamUrl(getCurrentStreamUrl(state.station));
     startTrackRotation();
   } else {

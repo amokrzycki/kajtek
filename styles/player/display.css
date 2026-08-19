@@ -145,6 +145,28 @@
   text-shadow: none;
 }
 
+.np-choose-station {
+  align-self: flex-start;
+  margin-top: 0.55rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--k-disp-dim);
+  border-radius: var(--k-rb);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--k-disp-text);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-label);
+  cursor: pointer;
+}
+
+.np-status {
+  min-height: 1rem;
+  margin-top: 0.4rem;
+  color: var(--k-disp-text-2);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-label);
+  letter-spacing: 0.04em;
+}
+
 .np-track {
   margin-top: 0.4rem;
   min-width: 0;
@@ -225,5 +247,9 @@
 
   .np-station {
     font-size: 1.5rem;
+  }
+
+  .np-choose-station {
+    align-self: center;
   }
 }

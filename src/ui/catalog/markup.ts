@@ -7,7 +7,6 @@ export const CATALOG_MODAL_HTML = `
           <h2 id="catalog-modal-title" class="k-modal-title">Katalog stacji radiowych</h2>
           <div class="k-modal-updated-row">
             <span id="catalog-updated-time" class="k-modal-updated"></span>
-            <button type="button" id="open-blacklist-btn" class="k-modal-icon-btn" title="Blacklista utworów" aria-label="Blacklista utworów">Czarna lista utworów</button>
           </div>
         </div>
         <button type="button" id="catalog-modal-close" class="k-modal-close" aria-label="Zamknij">&times;</button>
@@ -16,29 +15,28 @@ export const CATALOG_MODAL_HTML = `
       <div class="k-modal-toolbar">
         <div class="search-input-wrap">
           <span class="search-icon">${ICONS.search}</span>
-          <input type="search" id="catalog-search-input" class="k-input catalog-search" placeholder="Szukaj stacji…" autocomplete="off" />
+          <input type="search" id="catalog-search-input" class="k-input catalog-search" placeholder="Szukaj stacji…" autocomplete="off" autofocus />
         </div>
-        <div class="k-modal-actions-row">
-          <button type="button" id="catalog-refresh-btn" class="btn-secondary">
-            Odśwież listę
-          </button>
-          <button type="button" id="catalog-custom-toggle-btn" class="btn-secondary">
-            + Własna stacja
-          </button>
-        </div>
-      </div>
-
-      <div id="catalog-custom-form-wrap" class="k-custom-form-wrap">
-        <div class="k-custom-form-inner">
-          <form id="catalog-custom-form" class="k-custom-form">
-            <div class="k-form-row">
-              <input type="text" id="custom-name-input" class="k-input" placeholder="Nazwa stacji (np. Radio Rzeszów)" required />
-              <input type="url" id="custom-url-input" class="k-input" placeholder="URL streamu (http:// lub https://)" required />
-              <button type="submit" class="btn-primary">Dodaj</button>
+        <details class="k-modal-manage">
+          <summary class="btn-secondary">Zarządzaj</summary>
+          <div class="k-modal-actions-row">
+            <button type="button" id="catalog-refresh-btn" class="btn-secondary">Odśwież listę</button>
+            <button type="button" id="catalog-custom-toggle-btn" class="btn-secondary" aria-expanded="false" aria-controls="catalog-custom-form-wrap">+ Własna stacja</button>
+            <button type="button" id="open-blacklist-btn" class="btn-secondary">Czarna lista utworów</button>
+          </div>
+          <div id="catalog-custom-form-wrap" class="k-custom-form-wrap">
+            <div class="k-custom-form-inner">
+              <form id="catalog-custom-form" class="k-custom-form">
+                <div class="k-form-row">
+                  <input type="text" id="custom-name-input" class="k-input" placeholder="Nazwa stacji (np. Radio Rzeszów)" required />
+                  <input type="url" id="custom-url-input" class="k-input" placeholder="URL streamu (http:// lub https://)" required />
+                  <button type="submit" class="btn-primary">Dodaj</button>
+                </div>
+                <div id="custom-form-error" class="k-form-error" style="display: none;"></div>
+              </form>
             </div>
-            <div id="custom-form-error" class="k-form-error" style="display: none;"></div>
-          </form>
-        </div>
+          </div>
+        </details>
       </div>
 
       <div class="catalog-tabbar" role="tablist" aria-label="Kategorie stacji">
