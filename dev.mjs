@@ -63,6 +63,39 @@ http
       return;
     }
 
+    if (req.url?.startsWith("/api/eska/")) {
+      const targetPath = req.url.replace(/^\/api\/eska/, "");
+
+      const options = {
+        hostname: "front-api.grupazprmedia.pl",
+        port: 443,
+        path: targetPath,
+        method: req.method,
+        headers: {
+          ...req.headers,
+          host: "front-api.grupazprmedia.pl",
+          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        },
+      };
+
+      const proxyReq = https.request(options, (proxyRes) => {
+        const headers = {
+          ...proxyRes.headers,
+          "access-control-allow-origin": "*",
+        };
+        res.writeHead(proxyRes.statusCode || 200, headers);
+        proxyRes.pipe(res);
+      });
+
+      proxyReq.on("error", (err) => {
+        res.writeHead(502);
+        res.end(`Proxy error: ${err.message}`);
+      });
+
+      req.pipe(proxyReq);
+      return;
+    }
+
     if (req.url?.startsWith("/api/trojka/")) {
       const targetPath = req.url.replace(/^\/api\/trojka/, "");
 

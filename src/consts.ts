@@ -25,8 +25,8 @@ export const API_ENDPOINTS = {
   RMF_CATALOG_LOCAL: "/api/rmf/stations",
   RMF_CATALOG_REMOTE: "https://api.rmfon.pl/stations",
   RMF_STATIC_BASE: "https://static.rmf.pl",
-  ESKA_CATALOG: "https://front-api.grupazprmedia.pl/radios/v1/radio_stations/sc-cqM9-ELPm-JNjf/",
-  ESKA_NOW_PLAYING_BASE: "https://front-api.grupazprmedia.pl/music/v2/now_playing",
+  ESKA_CATALOG: "/api/eska/radios/v1/radio_stations/sc-cqM9-ELPm-JNjf/",
+  ESKA_NOW_PLAYING_BASE: "/api/eska/music/v2/now_playing",
 } as const;
 
 export const INIT_STATIONS: Station[] = [
