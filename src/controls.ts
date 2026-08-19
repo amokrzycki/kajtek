@@ -50,7 +50,7 @@ export function toggleMute(): void {
   const targetMuted = !state.muted;
   state.muted = targetMuted;
 
-  const startVal = targetMuted ? state.vol : 0;
+  const startVal = Number(els.volSlider.value);
   const endVal = targetMuted ? 0 : state.vol;
   const startTime = performance.now();
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;

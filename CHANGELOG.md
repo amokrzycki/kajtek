@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.11
+
+Usprawnienia w obrębie całego interfejsu Kajtka, poprawki błędów i optymalizacje.
+
+- Płynniejsze wyciszanie przy szybkich kliknięciach oraz blokada przewijania tła w oknach dialogowych.
+
 ## 0.10.2
 
 Naprawienie problemów z odtwarzaniem stacji radiowych z sieci ESKA w Kajtku.

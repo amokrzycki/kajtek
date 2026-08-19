@@ -20,6 +20,7 @@
   text-align: center;
   gap: var(--k-s2);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .k-onboarding-icon {

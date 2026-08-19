@@ -6,6 +6,7 @@
   flex-direction: column;
   gap: var(--k-s4);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .k-settings-label {
