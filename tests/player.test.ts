@@ -204,6 +204,10 @@ async function settlePlayback(): Promise<void> {
   await Promise.resolve();
 }
 
+async function settleMetadata(): Promise<void> {
+  for (let step = 0; step < 5; step++) await Promise.resolve();
+}
+
 function latestHls(): FakeHlsInstance {
   const instance = mocks.hlsInstances.at(-1);
   if (!instance) throw new Error("Expected an HLS instance");
@@ -540,6 +544,50 @@ describe("playback state and cleanup", () => {
 
     expect(secondHls.startLoad).toHaveBeenCalledOnce();
     expect(state.playing).toBe(true);
+  });
+});
+
+describe("RMF station metadata", () => {
+  it.each([
+    [
+      "a string",
+      "https://example.test/backup.mp3",
+      ["https://example.test/primary.mp3", "https://example.test/backup.mp3"],
+    ],
+    [
+      "an array",
+      ["https://example.test/primary.mp3", "https://example.test/backup.mp3", "https://example.test/backup.mp3"],
+      ["https://example.test/primary.mp3", "https://example.test/backup.mp3"],
+    ],
+  ])("accepts %s item_mp3 and removes duplicate streams", async (_label, itemMp3, expected) => {
+    fetchMock.mockImplementation(async (input) => {
+      const url = String(input);
+      if (url.endsWith("/streams")) return new Response(JSON.stringify({ playlistMp3: { item_mp3: itemMp3 } }));
+      return new Response("null");
+    });
+    const target = station({ provider: "rmf", apiBaseUrl: "/api/rmf/stations/101" });
+
+    player.selectStation(target);
+    await settleMetadata();
+
+    expect(target._streams).toEqual(expected);
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/rmf/stations/101/streams",
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    );
+  });
+
+  it("preserves the primary stream when stream metadata fails", async () => {
+    fetchMock.mockImplementation(async (input) => {
+      if (String(input).endsWith("/streams")) throw new Error("offline");
+      return new Response("null");
+    });
+    const target = station({ provider: "rmf", apiBaseUrl: "/api/rmf/stations/101" });
+
+    player.selectStation(target);
+    await settleMetadata();
+
+    expect(target._streams).toEqual([target.stream]);
   });
 });
 

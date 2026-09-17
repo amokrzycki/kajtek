@@ -1,0 +1,39 @@
+[
+  {
+    "uid": "ra-regional-silesia",
+    "station_id": 2220,
+    "now_playing_url": "2220",
+    "name": "Radio ESKA",
+    "dedicated_name": "ESKA Śląsk",
+    "cover": "https://example.test/eska-silesia.jpg",
+    "stream_url": "https://example.test/2220/playlist.m3u8",
+    "stream_ic": "https://example.test/2220.aac",
+    "sort": 20
+  },
+  {
+    "uid": "ra-regional-katowice",
+    "station_id": 2220,
+    "now_playing_url": "2220",
+    "name": "Radio ESKA",
+    "dedicated_name": "ESKA Katowice",
+    "cover": "",
+    "stream_url": "https://example.test/2220-katowice/playlist.m3u8",
+    "stream_ic": "https://example.test/2220-katowice.aac",
+    "sort": 10
+  },
+  {
+    "uid": "ra-fallback-name",
+    "station_id": 9999,
+    "now_playing_url": "9999",
+    "name": "   ",
+    "stream_url": "https://example.test/9999/playlist.m3u8",
+    "sort": 30
+  },
+  {
+    "uid": "missing-stream"
+  },
+  {
+    "stream_url": "https://example.test/missing-uid/playlist.m3u8"
+  },
+  null
+]

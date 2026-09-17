@@ -2,6 +2,9 @@
 
 Captured on 2026-09-17 between 15:04 and 15:08 UTC (17:04–17:08 CEST).
 
+- `catalog-stations.json`: sanitized catalog records from
+  `https://front-api.grupazprmedia.pl/radios/v1/radio_stations/sc-cqM9-ELPm-JNjf/`. It retains only fields consumed by
+  KAJTEK, including two observed UIDs sharing station ID 2220. Blank-name and invalid records are synthetic mutations.
 - `hls-song.m3u8` and `frag-song.json`: ESKA Warszawa 2380,
   `https://liveradio.eska.pl/2380/playlist.m3u8` and its child playlist. The captured four-segment manifest is raw; the
   fragment objects preserve the fields exposed by hls.js 1.6.16 that KAJTEK consumes.
