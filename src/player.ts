@@ -22,6 +22,7 @@ import { getFactsLabel, resolveProtocolRelativeUrl, withinRateLimit } from "./ut
 
 let failoverTimestamps: number[] = [];
 let hlsInstance: Hls | null = null;
+let playbackRequestId = 0;
 
 function getCurrentStreamUrl(station: Station): string {
   const streams = station._streams || [station.stream];
@@ -39,8 +40,9 @@ function isHlsStream(url: string): boolean {
 
 const MAX_HLS_RECOVERY_ATTEMPTS = 3;
 
-async function attachHlsStream(url: string): Promise<void> {
+async function attachHlsStream(url: string, requestId: number): Promise<void> {
   const { default: Hls } = await import("hls.js");
+  if (requestId !== playbackRequestId) return;
   if (!Hls.isSupported()) {
     // Real native HLS support (Safari/iOS) — MediaSource-based hls.js isn't needed there.
     radioAudio.src = url;
@@ -87,13 +89,15 @@ async function attachHlsStream(url: string): Promise<void> {
 
 async function playStreamUrl(url: string | undefined): Promise<void> {
   if (!url) return;
+  const requestId = ++playbackRequestId;
   destroyHls();
   radioAudio.crossOrigin = getProvider(state.station) === rmfProvider ? "use-credentials" : "anonymous";
   if (isHlsStream(url)) {
-    await attachHlsStream(url);
+    await attachHlsStream(url, requestId);
   } else {
     radioAudio.src = url;
   }
+  if (requestId !== playbackRequestId) return;
   applyAudioVolume();
   radioAudio.play().catch((error: unknown) => {
     if (error instanceof DOMException && error.name === "AbortError") return;

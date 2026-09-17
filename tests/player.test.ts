@@ -509,7 +509,7 @@ describe("playback state and cleanup", () => {
     expect(mocks.hlsInstances).toHaveLength(2);
   });
 
-  it("characterizes a stale initial HLS attach after an immediate MP3 switch", async () => {
+  it("discards a stale initial HLS attach after an immediate MP3 switch", async () => {
     player.selectStation(station({ stream: "https://example.test/slow-import.m3u8" }));
     const replacement = station({
       id: "replacement",
@@ -520,8 +520,9 @@ describe("playback state and cleanup", () => {
 
     mocks.audio.dispatch("error");
 
-    expect(mocks.hlsInstances).toHaveLength(1);
-    expect(replacement._currentStreamIndex).toBeUndefined();
+    expect(mocks.hlsInstances).toHaveLength(0);
+    expect(replacement._currentStreamIndex).toBe(1);
+    expect(mocks.audio.src).toBe("https://example.test/backup.mp3");
   });
 
   it("does not carry HLS recovery attempts into a new source", async () => {
