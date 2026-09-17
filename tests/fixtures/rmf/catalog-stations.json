@@ -1,0 +1,24 @@
+[
+  {
+    "id": 5,
+    "idname": "rmf",
+    "name": "RMF FM",
+    "short": "najlepsza muzyka",
+    "mountpoint_mp3": "rmf_fm",
+    "img": "/portal/stations/covers/rmf-fm.jpg",
+    "station_category": [{ "name": "national", "slug": "national" }],
+    "similar_stations": { "id_list": [101, "invalid", "102"] }
+  },
+  {
+    "id": 101,
+    "idname": "rmf-rock",
+    "name": "RMF Rock",
+    "short": "mocne granie",
+    "mountpoint_mp3": "rmf_rock",
+    "img": "/portal/stations/covers/rmf-rock.jpg",
+    "station_category": [{ "name": "rock", "slug": "rock" }],
+    "similar_stations": { "id_list": [5, "bad-id", 102] }
+  },
+  null,
+  "invalid"
+]

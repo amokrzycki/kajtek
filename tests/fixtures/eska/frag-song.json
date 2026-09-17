@@ -1,0 +1,38 @@
+[
+  {
+    "tagList": [
+      [
+        "EXT-X-ZPR",
+        "{\"data\":{\"title\":\"QVZJQ0lJICYgUklUQSBPUkEgLSBMb25lbHkgVG9nZXRoZXI=\",\"encoding\":\"base64\",\"timeout\":175004},\"duration\":41170,\"expired\":null}"
+      ]
+    ],
+    "programDateTime": 1789657614166
+  },
+  {
+    "tagList": [
+      [
+        "EXT-X-ZPR",
+        "{\"data\":{\"title\":\"QVZJQ0lJICYgUklUQSBPUkEgLSBMb25lbHkgVG9nZXRoZXI=\",\"encoding\":\"base64\",\"timeout\":175004},\"duration\":51411,\"expired\":null}"
+      ]
+    ],
+    "programDateTime": 1789657624407
+  },
+  {
+    "tagList": [
+      [
+        "EXT-X-ZPR",
+        "{\"data\":{\"title\":\"QVZJQ0lJICYgUklUQSBPUkEgLSBMb25lbHkgVG9nZXRoZXI=\",\"encoding\":\"base64\",\"timeout\":175004},\"duration\":61438,\"expired\":null}"
+      ]
+    ],
+    "programDateTime": 1789657634434
+  },
+  {
+    "tagList": [
+      [
+        "EXT-X-ZPR",
+        "{\"data\":{\"title\":\"QVZJQ0lJICYgUklUQSBPUkEgLSBMb25lbHkgVG9nZXRoZXI=\",\"encoding\":\"base64\",\"timeout\":175004},\"duration\":71679,\"expired\":null}"
+      ]
+    ],
+    "programDateTime": 1789657644674
+  }
+]

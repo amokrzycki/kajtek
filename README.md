@@ -44,12 +44,14 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 - `index.html` - Core HTML5 layout and structure.
 - `styles/` - Retro design system and CSS stylesheet modules.
 - `public/` - Static assets (favicons, touch icons) copied verbatim into the build.
+- `tests/` - Vitest coverage and captured provider fixtures.
 - `scripts/inject-hashes.mjs` - Injects hashed build asset filenames into `dist/index.html`.
 - `dist/` - Production build directory (generated assets).
 - `tsconfig.json` - Strict TypeScript configuration.
+- `tsconfig.test.json` - TypeScript configuration for source and test files.
 - `biome.json` - Code formatting and linting configuration.
 - `.github/workflows/` - Automated GitHub Actions workflows:
-  - `ci.yml` - Linting (Biome) and type checking (`tsc`) on pushes & PRs.
+  - `ci.yml` - Linting, source/test type checking, and Vitest on pushes & PRs.
   - `deploy.yml` - Automated build & deployment via rsync on release tags (`v*`).
 
 ---
@@ -107,5 +109,5 @@ Add a new `## <version>` section (matching `package.json`'s `version`) to the to
 
 ## CI / CD Pipelines
 
-- **CI Workflow (`ci.yml`)**: Executes on `push` and `pull_request` to `main`. Validates code style with Biome and performs type safety checks (`npm run check`).
+- **CI Workflow (`ci.yml`)**: Executes on `push` and `pull_request` to `main`. Runs Biome, source/test type checks, and Vitest.
 - **Deploy Workflow (`deploy.yml`)**: Executes on pushing version tags matching `v*`. Builds the application (`npm run build`) and deploys the contents of `dist/` to the host via SSH/rsync.

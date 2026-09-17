@@ -19,3 +19,7 @@ jobs:
         run: npx @biomejs/biome ci ./
       - name: Type check
         run: npx tsc --noEmit
+      - name: Test type check
+        run: npm run test:types
+      - name: Test
+        run: npm test
