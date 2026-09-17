@@ -497,6 +497,34 @@ describe("playback state and cleanup", () => {
     expect(mocks.setPlaybackStatus).toHaveBeenCalledWith("Nie udało się uruchomić — naciśnij PLAY", "failed");
   });
 
+  it("ignores a stale play failure after switching sources", async () => {
+    let rejectPlay: ((error: Error) => void) | undefined;
+    mocks.audio.play.mockReturnValueOnce(
+      new Promise((_resolve, reject) => {
+        rejectPlay = reject;
+      }),
+    );
+    player.selectStation(station());
+    player.selectStation(station({ id: "replacement", stream: "https://example.test/replacement.mp3" }));
+
+    rejectPlay?.(new Error("old source failed"));
+    await Promise.resolve();
+
+    expect(state.playing).toBe(true);
+    expect(mocks.setPlaybackStatus).not.toHaveBeenCalledWith("Nie udało się uruchomić — naciśnij PLAY", "failed");
+  });
+
+  it("does not resume a pending HLS request after pausing", async () => {
+    player.selectStation(station({ stream: "https://example.test/slow-import.m3u8" }));
+    player.togglePlay();
+    await settlePlayback();
+
+    expect(state.playing).toBe(false);
+    expect(mocks.audio.pause).toHaveBeenCalledOnce();
+    expect(mocks.audio.play).not.toHaveBeenCalled();
+    expect(mocks.hlsInstances).toHaveLength(0);
+  });
+
   it("destroys the previous HLS instance when selecting another source", async () => {
     player.selectStation(station({ stream: "https://example.test/first.m3u8" }));
     await settlePlayback();

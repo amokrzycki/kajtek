@@ -100,6 +100,7 @@ async function playStreamUrl(url: string | undefined): Promise<void> {
   if (requestId !== playbackRequestId) return;
   applyAudioVolume();
   radioAudio.play().catch((error: unknown) => {
+    if (requestId !== playbackRequestId) return;
     if (error instanceof DOMException && error.name === "AbortError") return;
     state.playing = false;
     notifyState();
@@ -408,6 +409,7 @@ export function togglePlay() {
     playStreamUrl(getCurrentStreamUrl(state.station));
     startTrackRotation();
   } else {
+    playbackRequestId++;
     radioAudio.pause();
     stopTrackRotation();
   }
