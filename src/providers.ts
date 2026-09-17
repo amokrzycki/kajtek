@@ -5,10 +5,17 @@ import { trojkaProvider } from "./providers/trojka.js";
 import type { PlaylistResult, Provider, RawTrack, Station, TrackInfo } from "./types.js";
 import { decodeEntities } from "./utils.js";
 
+const RMF_CLOCK = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Europe/Warsaw",
+  hour: "numeric",
+  minute: "numeric",
+  hourCycle: "h23",
+});
+
 function getRmfFactsTimeInfo(timestamp: number): { isFacts: boolean; targetHourStr: string } {
-  const d = new Date(timestamp * 1000);
-  const hour = d.getHours();
-  const min = d.getMinutes();
+  const parts = RMF_CLOCK.formatToParts(new Date(timestamp * 1000));
+  const hour = Number(parts.find((part) => part.type === "hour")?.value);
+  const min = Number(parts.find((part) => part.type === "minute")?.value);
 
   const isTopOfHour = min >= 55 || min <= 3;
   if (!isTopOfHour) {

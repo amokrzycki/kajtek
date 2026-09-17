@@ -47,7 +47,7 @@ async function result(): Promise<PlaylistResult> {
 
 beforeEach(async () => {
   vi.useFakeTimers();
-  vi.setSystemTime(new Date(2026, 8, 17, 15, 52, 0));
+  vi.setSystemTime(new Date("2026-09-17T13:52:00Z"));
   vi.stubGlobal("fetch", fetchMock);
   vi.resetModules();
   trojka = await import("../src/providers/trojka.js");
@@ -122,7 +122,7 @@ describe("trojkaProvider caches", () => {
     queuePlaylist();
     await result();
 
-    vi.setSystemTime(new Date(2026, 8, 18, 0, 0, 0));
+    vi.setSystemTime(new Date("2026-09-17T22:00:00Z"));
     fetchMock.mockResolvedValueOnce(new Response("error", { status: 500 }));
     const stale = await result();
 
@@ -133,7 +133,7 @@ describe("trojkaProvider caches", () => {
 
 describe("trojkaProvider current program", () => {
   it("treats programs as start-inclusive and stop-exclusive and falls back to the program as live", async () => {
-    vi.setSystemTime(new Date(2026, 8, 17, 15, 5, 0));
+    vi.setSystemTime(new Date("2026-09-17T13:05:00Z"));
     queueDiscovery();
     queueSchedule();
     queuePlaylist({ pageProps: { data: [] } });
@@ -142,13 +142,13 @@ describe("trojkaProvider current program", () => {
     expect(atStart.current).toEqual({ artist: "Trójka", title: "W tonacji Trójki", isLiveBreak: true });
     expect(atStart.all[0]).toMatchObject({ title: "W tonacji Trójki", isBreak: true });
 
-    vi.setSystemTime(new Date(2026, 8, 17, 17, 0, 0));
+    vi.setSystemTime(new Date("2026-09-17T15:00:00Z"));
     const atStop = await result();
     expect(atStop.current).toBeNull();
   });
 
   it("sorts captured songs and tolerates the last song through 60 seconds after its end", async () => {
-    vi.setSystemTime(new Date(2026, 8, 17, 15, 56, 51));
+    vi.setSystemTime(new Date("2026-09-17T13:56:51Z"));
     queueDiscovery();
     queueSchedule();
     queuePlaylist();

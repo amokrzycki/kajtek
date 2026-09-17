@@ -19,7 +19,7 @@ jobs:
       - run: npm run build
 
       - name: Deploy via rsync
-        uses: burnett01/rsync-deployments@7.1.0
+        uses: burnett01/rsync-deployments@33214bd98ba4ac2be90f5976672b3f030fce9ce4 # 7.1.0
         with:
           switches: -avzr --delete
           path: dist/

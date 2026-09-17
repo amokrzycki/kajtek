@@ -55,7 +55,7 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
       <span class="pl-dot"></span>
       <span class="pl-break-label">
         <span class="pl-tape-icon">${ICONS.tape}</span>
-        <span class="pl-break-text">${t.label}</span>
+        <span class="pl-break-text">${escapeHtml(t.label ?? "")}</span>
       </span>
       <span class="pl-dur">${breakDur}</span>
     `;
@@ -74,9 +74,9 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
           : ""
       }
       <div class="pl-line">
-        <span class="pl-artist">${t.artist}</span>
+        <span class="pl-artist">${escapeHtml(t.artist)}</span>
         <span class="pl-sep">·</span>
-        <span class="pl-title">${t.title}</span>
+        <span class="pl-title">${escapeHtml(t.title)}</span>
       </div>
     </div>
     <div class="pl-actions">

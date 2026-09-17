@@ -136,7 +136,7 @@ describe("readZprTag", () => {
     expect(cleared.current).not.toHaveProperty("length");
   });
 
-  it("ignores missing and malformed tags but characterizes invalid base64 as throwing", async () => {
+  it("ignores missing, malformed, and invalid-base64 tags", async () => {
     const first = songFragments[0];
     if (!first) throw new Error("Missing captured song fragment");
     eska.startEskaSession(station.id);
@@ -154,7 +154,7 @@ describe("readZprTag", () => {
         JSON.stringify({ data: { title: "%%%", encoding: "base64", timeout: null }, duration: 1, expired: null }),
       ],
     ];
-    expect(() => eska.readZprTag(invalidBase64, station.id)).toThrow();
+    expect(eska.readZprTag(invalidBase64, station.id)).toBe(false);
 
     const result = await fetchResult(restSong);
     expect(result.current?.title).toBe("Lonely Together");
