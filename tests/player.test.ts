@@ -172,15 +172,10 @@ vi.mock("../src/ui.js", () => ({
   updateHistoryUI: mocks.updateHistoryUI,
   updateNowPlayingTrack: mocks.updateNowPlayingTrack,
 }));
-vi.mock("../src/utils.js", () => ({
+vi.mock("../src/utils.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/utils.js")>()),
   getFactsLabel: vi.fn((hour: string) => hour),
   resolveProtocolRelativeUrl: vi.fn((url: string) => url),
-  withinRateLimit: (timestamps: number[], windowMs: number, max: number) => {
-    const recent = timestamps.filter((timestamp) => Date.now() - timestamp < windowMs);
-    return recent.length >= max
-      ? { timestamps: recent, limited: true }
-      : { timestamps: [...recent, Date.now()], limited: false };
-  },
 }));
 
 type PlayerModule = typeof import("../src/player.js");
@@ -219,6 +214,7 @@ beforeEach(async () => {
   vi.setSystemTime(new Date("2026-09-17T12:00:00.000Z"));
   vi.clearAllMocks();
   vi.resetModules();
+  vi.stubGlobal("DOMParser", class {});
   vi.stubGlobal("fetch", fetchMock);
   vi.spyOn(console, "warn").mockImplementation(() => undefined);
   fetchMock.mockReset().mockRejectedValue(new Error("offline test"));
