@@ -1,0 +1,32 @@
+{
+  "pageProps": {
+    "data": [
+      {
+        "id": 7507,
+        "title": "W tonacji Trójki",
+        "startTime": "2026-09-17T15:05:00",
+        "stopTime": "2026-09-17T16:00:00",
+        "playlistItems": [
+          {
+            "title": "Roses",
+            "artist": "DEUS",
+            "startTime": "2026-09-17T15:21:54.18",
+            "duration": 292
+          },
+          {
+            "title": "I Will Survive",
+            "artist": "CAKE",
+            "startTime": "2026-09-17T15:46:34.4",
+            "duration": 310
+          },
+          {
+            "title": "Krzyczę - jestem",
+            "artist": "O.N.A.",
+            "startTime": "2026-09-17T15:51:53.943",
+            "duration": 238
+          }
+        ]
+      }
+    ]
+  }
+}

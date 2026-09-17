@@ -1,0 +1,27 @@
+{
+  "pageProps": {
+    "data": [
+      {
+        "id": 15851,
+        "title": "Serwis Trójki",
+        "startTime": "15:00",
+        "fullStartTime": "2026-09-17T15:00:00",
+        "fullStopTime": "2026-09-17T15:05:00"
+      },
+      {
+        "id": 7507,
+        "title": "W tonacji Trójki",
+        "startTime": "15:05",
+        "fullStartTime": "2026-09-17T15:05:00",
+        "fullStopTime": "2026-09-17T16:00:00"
+      },
+      {
+        "id": 15314,
+        "title": "Centrum Świata",
+        "startTime": "16:00",
+        "fullStartTime": "2026-09-17T16:00:00",
+        "fullStopTime": "2026-09-17T17:00:00"
+      }
+    ]
+  }
+}
