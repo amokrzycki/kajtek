@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.1
+
+Poprawki błędów i optymalizacje.
+
+- Pauza anuluje oczekujące automatyczne przełączenie stacji, a ulubione utwory z różnych stacji nie kolidują ze sobą.
+- Poprawiono bezpieczeństwo danych programu, obsługę uszkodzonych metadanych ESKA i dostępność sterowania okładką oraz głośnością.
+- Godziny serwisów RMF i ramówka Trójki są poprawne również poza polską strefą czasową.
+
 ## 0.11.0
 
 Usprawnienia w obrębie całego interfejsu Kajtka, poprawki błędów i optymalizacje.

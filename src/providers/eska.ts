@@ -62,7 +62,12 @@ export function readZprTag(frag: { tagList: string[][]; programDateTime: number 
     return true;
   }
 
-  const title = decodeZprTitle(tag.data.title, tag.data.encoding);
+  let title: string;
+  try {
+    title = decodeZprTitle(tag.data.title, tag.data.encoding);
+  } catch (_) {
+    return false;
+  }
   const changed = zprState?.title !== title || zprState.stationId !== stationId;
 
   // Derive the block start from the tag, never from Date.now(): both terms advance by one segment length per poll, so their difference is constant for the whole block. A drifting value would rewrite t.start every tick and thrash the history signature and its view transitions

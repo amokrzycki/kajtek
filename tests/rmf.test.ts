@@ -20,19 +20,20 @@ const station: Station = {
 
 const noFactsStation = { ...station, id: "rmf-classic", name: "RMF Classic" };
 
-function localSec(hour: number, minute: number, second = 0): number {
-  return Math.floor(new Date(2026, 8, 17, hour, minute, second).getTime() / 1000);
+function warsawSec(hour: number, minute: number, second = 0): number {
+  const time = [hour, minute, second].map((part) => String(part).padStart(2, "0")).join(":");
+  return Math.floor(new Date(`2026-09-17T${time}+02:00`).getTime() / 1000);
 }
 
 function capturedInLocalTime(): RawTrack[] {
   return capturedPlaylist.map((track) => ({
     ...track,
-    timestamp: Math.floor(new Date(`2026-09-17T${track.start}`).getTime() / 1000),
+    timestamp: Math.floor(new Date(`2026-09-17T${track.start}+02:00`).getTime() / 1000),
   }));
 }
 
 function gapPlaylist(gapSec: number, endHour = 12, endMinute = 30): RawTrack[] {
-  const end = localSec(endHour, endMinute);
+  const end = warsawSec(endHour, endMinute);
   return [
     { order: -1, author: "Before", title: "Song A", timestamp: end - 180, length: 180, start: "12:27" },
     { order: 0, author: "After", title: "Song B", timestamp: end + gapSec, lenght: "180", start: "12:30" },
@@ -49,7 +50,7 @@ afterEach(() => {
 
 describe("rmfProvider", () => {
   it("uses the captured top-of-hour gap as Fakty and resolves the following song", () => {
-    vi.setSystemTime(new Date(2026, 8, 17, 17, 1, 40));
+    vi.setSystemTime(new Date("2026-09-17T15:01:40Z"));
 
     const result = rmfProvider.parse(capturedInLocalTime(), station);
 
@@ -64,7 +65,7 @@ describe("rmfProvider", () => {
     [119, false],
     [120, true],
   ])("characterizes the general break boundary at %i seconds", (gapSec, isBreak) => {
-    vi.setSystemTime(new Date((localSec(12, 30) + gapSec + 1) * 1000));
+    vi.setSystemTime(new Date((warsawSec(12, 30) + gapSec + 1) * 1000));
     const result = rmfProvider.parse(gapPlaylist(gapSec), noFactsStation);
 
     expect(result?.all.some((track) => track.isBreak && !track.isPredicted)).toBe(isBreak);
@@ -75,7 +76,7 @@ describe("rmfProvider", () => {
     [59, false],
     [60, true],
   ])("characterizes the Fakty break boundary at %i seconds", (gapSec, isBreak) => {
-    vi.setSystemTime(new Date((localSec(5, 59) + gapSec + 1) * 1000));
+    vi.setSystemTime(new Date((warsawSec(5, 59) + gapSec + 1) * 1000));
     const result = rmfProvider.parse(gapPlaylist(gapSec, 5, 59), station);
 
     expect(result?.all.some((track) => track.isBreak && !track.isPredicted)).toBe(isBreak);
@@ -83,17 +84,17 @@ describe("rmfProvider", () => {
   });
 
   it("characterizes Fakty clock boundaries", () => {
-    expect(getFactsInfo(station, localSec(5, 54))).toEqual({ isFacts: false, targetHourStr: "" });
-    expect(getFactsInfo(station, localSec(5, 55))).toEqual({ isFacts: true, targetHourStr: "06:00" });
-    expect(getFactsInfo(station, localSec(6, 0))).toEqual({ isFacts: true, targetHourStr: "06:00" });
-    expect(getFactsInfo(station, localSec(23, 3))).toEqual({ isFacts: true, targetHourStr: "23:00" });
-    expect(getFactsInfo(station, localSec(23, 55))).toEqual({ isFacts: false, targetHourStr: "00:00" });
-    expect(getFactsInfo(station, localSec(0, 3))).toEqual({ isFacts: false, targetHourStr: "00:00" });
+    expect(getFactsInfo(station, warsawSec(5, 54))).toEqual({ isFacts: false, targetHourStr: "" });
+    expect(getFactsInfo(station, warsawSec(5, 55))).toEqual({ isFacts: true, targetHourStr: "06:00" });
+    expect(getFactsInfo(station, warsawSec(6, 0))).toEqual({ isFacts: true, targetHourStr: "06:00" });
+    expect(getFactsInfo(station, warsawSec(23, 3))).toEqual({ isFacts: true, targetHourStr: "23:00" });
+    expect(getFactsInfo(station, warsawSec(23, 55))).toEqual({ isFacts: false, targetHourStr: "00:00" });
+    expect(getFactsInfo(station, warsawSec(0, 3))).toEqual({ isFacts: false, targetHourStr: "00:00" });
   });
 
   it("resolves current song, real break, and predicted break through public parse", () => {
     const data = gapPlaylist(120);
-    const gapStart = localSec(12, 30);
+    const gapStart = warsawSec(12, 30);
 
     vi.setSystemTime(new Date((gapStart - 1) * 1000));
     expect(rmfProvider.parse(data, noFactsStation)?.current?.title).toBe("Song A");
@@ -116,11 +117,11 @@ describe("rmfProvider", () => {
 
   it("accepts length and lenght, sorts a copy, and preserves the input", () => {
     const data: RawTrack[] = [
-      { order: 1, author: "B", title: "Second", timestamp: localSec(12, 4), lenght: "60" },
-      { order: 0, artist: "A &amp; B", title: "First", timestamp: localSec(12, 0), length: 120 },
+      { order: 1, author: "B", title: "Second", timestamp: warsawSec(12, 4), lenght: "60" },
+      { order: 0, artist: "A &amp; B", title: "First", timestamp: warsawSec(12, 0), length: 120 },
     ];
     const before = structuredClone(data);
-    vi.setSystemTime(new Date(localSec(12, 0, 30) * 1000));
+    vi.setSystemTime(new Date(warsawSec(12, 0, 30) * 1000));
 
     const result = rmfProvider.parse(data, noFactsStation);
 

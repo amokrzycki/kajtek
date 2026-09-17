@@ -5,13 +5,18 @@ import { escapeHtml, formatFavDateTime, getTrackKey } from "../utils.js";
 import { els } from "./elements.js";
 
 export function isTrackFavorited(t: TrackInfo): boolean {
-  const key = getTrackKey(t);
-  return state.favTracks.some((f) => f.key === key);
+  const stationId = state.station?.id ?? "";
+  const trackKey = getTrackKey(t);
+  return state.favTracks.some(
+    (f) => f.stationId === stationId && (f.key === trackKey || f.key === `${stationId}:${trackKey}`),
+  );
 }
 
 export function toggleFavTrack(t: TrackInfo, station: Station | null): void {
-  const key = getTrackKey(t);
-  const idx = state.favTracks.findIndex((f) => f.key === key);
+  const stationId = station?.id ?? "";
+  const trackKey = getTrackKey(t);
+  const key = `${stationId}:${trackKey}`;
+  const idx = state.favTracks.findIndex((f) => f.stationId === stationId && (f.key === trackKey || f.key === key));
   if (idx !== -1) {
     state.favTracks.splice(idx, 1);
   } else {
@@ -21,7 +26,7 @@ export function toggleFavTrack(t: TrackInfo, station: Station | null): void {
       artist: t.artist,
       title: t.title,
       stationTag: station?.name || "",
-      stationId: station?.id || "",
+      stationId,
     });
     state.favTracks.sort((a, b) => b.timestamp - a.timestamp);
   }

@@ -8,6 +8,45 @@ let trojkaPlaylistCache: { fetchedAt: number; items: PlaylistaBlock[] } | null =
 
 const TROJKA_UPCOMING_COUNT = 5;
 const TROJKA_PAST_COUNT = 4;
+const TROJKA_CLOCK = new Intl.DateTimeFormat("en-GB", {
+  timeZone: "Europe/Warsaw",
+  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+  hour: "numeric",
+  minute: "numeric",
+  second: "numeric",
+  hourCycle: "h23",
+});
+
+function warsawParts(timestampMs: number): Record<string, number> {
+  return Object.fromEntries(
+    TROJKA_CLOCK.formatToParts(new Date(timestampMs))
+      .filter((part) => part.type !== "literal")
+      .map((part) => [part.type, Number(part.value)]),
+  );
+}
+
+function parseTrojkaTime(value: string): number {
+  const wallTime = Date.parse(`${value}Z`);
+  if (!Number.isFinite(wallTime)) return Number.NaN;
+
+  let timestamp = wallTime;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const parts = warsawParts(timestamp);
+    const representedWallTime = Date.UTC(
+      parts.year ?? 0,
+      (parts.month ?? 1) - 1,
+      parts.day ?? 1,
+      parts.hour ?? 0,
+      parts.minute ?? 0,
+      parts.second ?? 0,
+    );
+    const offset = representedWallTime - Math.floor(timestamp / 1000) * 1000;
+    timestamp = wallTime - offset;
+  }
+  return timestamp;
+}
 
 async function getTrojkaBuildId(station: Station): Promise<string | null> {
   if (trojkaBuildIdCache) return trojkaBuildIdCache;
@@ -46,7 +85,8 @@ async function fetchTrojkaJson<T>(station: Station, file: "ramowka.json" | "play
 }
 
 function trojkaDayKey(d: Date): string {
-  return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  const parts = warsawParts(d.getTime());
+  return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
 async function getTrojkaSchedule(station: Station): Promise<RamowkaItem[] | null> {
@@ -74,8 +114,8 @@ async function getTrojkaPlaylist(station: Station): Promise<PlaylistaBlock[] | n
 function findActiveProgram(schedule: RamowkaItem[], nowMs: number): RamowkaItem | null {
   return (
     schedule.find((p) => {
-      const start = new Date(p.fullStartTime).getTime();
-      const stop = new Date(p.fullStopTime).getTime();
+      const start = parseTrojkaTime(p.fullStartTime);
+      const stop = parseTrojkaTime(p.fullStopTime);
       return nowMs >= start && nowMs < stop;
     }) || null
   );
@@ -83,12 +123,12 @@ function findActiveProgram(schedule: RamowkaItem[], nowMs: number): RamowkaItem 
 
 function buildUpcomingProgramItems(schedule: RamowkaItem[], nowMs: number): TrackInfo[] {
   return schedule
-    .filter((p) => new Date(p.fullStartTime).getTime() > nowMs)
-    .sort((a, b) => new Date(a.fullStartTime).getTime() - new Date(b.fullStartTime).getTime())
+    .filter((p) => parseTrojkaTime(p.fullStartTime) > nowMs)
+    .sort((a, b) => parseTrojkaTime(a.fullStartTime) - parseTrojkaTime(b.fullStartTime))
     .slice(0, TROJKA_UPCOMING_COUNT)
     .map((p): TrackInfo => {
-      const startSec = Math.floor(new Date(p.fullStartTime).getTime() / 1000);
-      const stopSec = Math.floor(new Date(p.fullStopTime).getTime() / 1000);
+      const startSec = Math.floor(parseTrojkaTime(p.fullStartTime) / 1000);
+      const stopSec = Math.floor(parseTrojkaTime(p.fullStopTime) / 1000);
       return {
         artist: "",
         title: p.title,
@@ -103,8 +143,8 @@ function buildUpcomingProgramItems(schedule: RamowkaItem[], nowMs: number): Trac
 }
 
 function buildProgramHistoryItem(program: RamowkaItem): TrackInfo {
-  const startSec = Math.floor(new Date(program.fullStartTime).getTime() / 1000);
-  const stopSec = Math.floor(new Date(program.fullStopTime).getTime() / 1000);
+  const startSec = Math.floor(parseTrojkaTime(program.fullStartTime) / 1000);
+  const stopSec = Math.floor(parseTrojkaTime(program.fullStopTime) / 1000);
   return {
     artist: "",
     title: program.title,
@@ -134,7 +174,7 @@ export const trojkaProvider: Provider = {
 
     const songs: TrackInfo[] = (block?.playlistItems || [])
       .map((item): TrackInfo => {
-        const startSec = Math.floor(new Date(item.startTime).getTime() / 1000);
+        const startSec = Math.floor(parseTrojkaTime(item.startTime) / 1000);
         return {
           artist: decodeEntities(item.artist),
           title: decodeEntities(item.title),
