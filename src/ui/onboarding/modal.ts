@@ -1,22 +1,17 @@
 import { STORAGE_KEYS } from "../../consts.js";
 import { ICONS } from "../../icons.js";
-import { openCatalogModal } from "../catalog/modal.js";
 import { bindModalDismiss, closeModal, openModal } from "../modal.js";
 
 const FEATURES: { icon: string; title: string; desc: string }[] = [
-  { icon: ICONS.play, title: "Duży przycisk PLAY", desc: "Włącza i zatrzymuje aktualnie wybraną stację." },
-  { icon: ICONS.star(true), title: "Gwiazdka przy stacji", desc: "Dodaje ją do ulubionych, trafia na górę listy." },
-  { icon: ICONS.radio, title: "Motywy Kajtka", desc: "Dostosuj dźwięk do swojego stylu." },
   {
-    icon: ICONS.ban,
-    title: "PROGRAM i czarna lista",
-    desc: "Historia utworów stacji jest pod odtwarzaczem. Utwór, którego już nie chcesz słyszeć, zablokujesz jednym przyciskiem.",
+    icon: ICONS.radio,
+    title: "1. Wybierz stację",
+    desc: "Wybierz stację z listy. Odtwarzanie ruszy od razu.",
   },
-  { icon: ICONS.plus, title: "Katalog stacji", desc: "Włączaj kolejne stacje albo dodaj własny stream." },
   {
-    icon: ICONS.adSkip,
-    title: "Pomijanie reklam",
-    desc: "Włącz w ustawieniach, automatycznie ominie blok reklamowy i wróci do audycji.",
+    icon: ICONS.play,
+    title: "2. Steruj przyciskiem PLAY",
+    desc: "Duży klawisz zatrzymuje i wznawia radio.",
   },
 ];
 
@@ -38,7 +33,7 @@ function featureHtml(f: { icon: string; title: string; desc: string }): string {
   `;
 }
 
-export function openOnboardingModal(): void {
+export function openOnboardingModal(onChooseStation: () => void): void {
   modalEl = document.createElement("div");
   modalEl.id = "onboarding-modal-overlay";
   modalEl.className = "k-modal-overlay";
@@ -50,16 +45,16 @@ export function openOnboardingModal(): void {
       <div class="k-onboarding-body">
         <span class="k-onboarding-icon">${ICONS.tape}</span>
         <h2 id="onboarding-modal-title" class="k-onboarding-title">WITAJ W KAJTKU</h2>
-        <p class="k-onboarding-subtitle">Zanim zaczniesz, krótka ściągawka</p>
+        <p class="k-onboarding-subtitle">Dwa ruchy i radio gra</p>
 
         <div class="k-onboarding-list">${FEATURES.map(featureHtml).join("")}</div>
 
         <div class="k-onboarding-note">
-          Na start włączyliśmy tylko 3 stacje, żeby lista była czytelna. Resztę znajdziesz i włączysz w katalogu, zrobisz to raz.
+          Na start włączyliśmy 3 stacje. Kolejne znajdziesz w katalogu pod odtwarzaczem.
         </div>
 
         <button type="button" id="onboarding-choose-stations-btn" class="btn-primary k-onboarding-cta">
-          ROZUMIEM, WYBIERAM STACJE ${ICONS.chevron}
+          WYBIERAM STACJĘ ${ICONS.chevron}
         </button>
         <button type="button" id="onboarding-skip-btn" class="k-onboarding-skip">zrobię to później</button>
       </div>
@@ -74,7 +69,7 @@ export function openOnboardingModal(): void {
   modalEl.querySelector("#onboarding-skip-btn")?.addEventListener("click", close);
   modalEl.querySelector("#onboarding-choose-stations-btn")?.addEventListener("click", () => {
     close();
-    openCatalogModal();
+    onChooseStation();
   });
 
   openModal(modalEl);

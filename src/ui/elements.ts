@@ -3,6 +3,7 @@ import { state } from "../state.js";
 import { isIOS } from "../utils.js";
 
 export const els = {
+  helpBtn: document.getElementById("help-btn") as HTMLButtonElement,
   darkToggle: document.getElementById("dark-toggle") as HTMLButtonElement,
   settingsToggle: document.getElementById("settings-toggle") as HTMLButtonElement,
   vuStrip: document.getElementById("vu-strip") as HTMLDivElement,
@@ -15,6 +16,7 @@ export const els = {
   npShort: document.getElementById("np-short") as HTMLSpanElement,
   npLiveDot: document.getElementById("np-live-dot") as HTMLSpanElement,
   npStation: document.getElementById("np-station") as HTMLDivElement,
+  npStatus: document.getElementById("np-status") as HTMLDivElement,
   npTrackWrap: document.getElementById("np-track") as HTMLDivElement,
   npArtist: document.getElementById("np-artist") as HTMLDivElement,
   npTitle: document.getElementById("np-title") as HTMLSpanElement,

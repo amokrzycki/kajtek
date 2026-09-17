@@ -6,6 +6,7 @@
   flex-direction: column;
   gap: var(--k-s4);
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .k-settings-label {
@@ -33,6 +34,14 @@
 
 .k-settings-row + .k-settings-row {
   margin-top: var(--k-s2);
+}
+
+.k-settings-row:has(.catalog-checkbox:disabled) {
+  opacity: 0.55;
+}
+
+.k-settings-row:has(.catalog-checkbox:disabled) .catalog-toggle-switch {
+  cursor: not-allowed;
 }
 
 .k-settings-row-text {

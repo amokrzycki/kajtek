@@ -114,6 +114,17 @@
   animation: live-pulse 2.4s ease-in-out infinite;
 }
 
+.np-live-dot.buffering {
+  background: var(--k-vu-led-yellow);
+  box-shadow: 0 0 8px var(--k-vu-led-yellow);
+}
+
+.np-live-dot.failed {
+  background: var(--k-vu-led-red);
+  box-shadow: 0 0 8px var(--k-vu-led-red);
+  opacity: 1;
+}
+
 @keyframes live-pulse {
   0%,
   100% {
@@ -143,6 +154,28 @@
   font-style: italic;
   color: rgba(255, 255, 255, 0.62);
   text-shadow: none;
+}
+
+.np-choose-station {
+  align-self: flex-start;
+  margin-top: 0.55rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--k-disp-dim);
+  border-radius: var(--k-rb);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--k-disp-text);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-label);
+  cursor: pointer;
+}
+
+.np-status {
+  min-height: 1rem;
+  margin-top: 0.4rem;
+  color: var(--k-disp-text-2);
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-label);
+  letter-spacing: 0.04em;
 }
 
 .np-track {
@@ -189,6 +222,21 @@
   }
 }
 
+@keyframes status-fade-reduced {
+  from {
+    opacity: 0.8;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .np-status.fade-in {
+    animation: status-fade-reduced 120ms ease !important;
+  }
+}
+
 /* Mobile: grid switches to two rows — reels and cover on top, info below.
    Reel/cover grid-area assignments live in reels.css and art.css. */
 @media (max-width: 640px) {
@@ -225,5 +273,9 @@
 
   .np-station {
     font-size: 1.5rem;
+  }
+
+  .np-choose-station {
+    align-self: center;
   }
 }

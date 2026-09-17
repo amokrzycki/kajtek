@@ -31,10 +31,10 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
       </button>
       <div class="view-toggle-group" data-view="${state.viewMode}" role="radiogroup" aria-label="Przełącznik widoku">
         <span class="view-toggle-indicator" aria-hidden="true"></span>
-        <button type="button" class="btn-view-toggle${state.viewMode === "list" ? " active" : ""}" data-view="list" title="Widok listy" aria-label="Widok listy">
+        <button type="button" class="btn-view-toggle${state.viewMode === "list" ? " active" : ""}" data-view="list" role="radio" aria-checked="${state.viewMode === "list"}" title="Widok listy" aria-label="Widok listy">
           ${ICONS.viewList}
         </button>
-        <button type="button" class="btn-view-toggle${state.viewMode === "grid" ? " active" : ""}" data-view="grid" title="Widok kafelków" aria-label="Widok kafelków">
+        <button type="button" class="btn-view-toggle${state.viewMode === "grid" ? " active" : ""}" data-view="grid" role="radio" aria-checked="${state.viewMode === "grid"}" title="Widok kafelków" aria-label="Widok kafelków">
           ${ICONS.viewGrid}
         </button>
       </div>
@@ -51,6 +51,16 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
           renderStationList(onSelect, onToggleFav);
         }
       });
+      btn.addEventListener("keydown", (e) => {
+        const direction =
+          e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
+        if (!direction) return;
+        e.preventDefault();
+        const buttons = Array.from(topBar?.querySelectorAll<HTMLButtonElement>(".btn-view-toggle") ?? []);
+        const next = buttons[(buttons.indexOf(btn) + direction + buttons.length) % buttons.length];
+        next?.click();
+        next?.focus();
+      });
     });
   }
 
@@ -58,7 +68,10 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
   if (toggleGroup) {
     toggleGroup.setAttribute("data-view", state.viewMode);
     toggleGroup.querySelectorAll<HTMLButtonElement>(".btn-view-toggle").forEach((btn) => {
-      btn.classList.toggle("active", btn.dataset.view === state.viewMode);
+      const isActive = btn.dataset.view === state.viewMode;
+      btn.classList.toggle("active", isActive);
+      btn.setAttribute("aria-checked", String(isActive));
+      btn.tabIndex = isActive ? 0 : -1;
     });
   }
 
@@ -111,31 +124,25 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
         const card = document.createElement("div");
         card.className = `station-card${isSelected ? " active" : ""}`;
         card.dataset.id = s.id;
-        card.setAttribute("role", "button");
-        card.setAttribute("tabindex", "0");
         card.innerHTML = `
-          ${logoHtml}
-          <div class="sc-main">
-            <div class="sc-name">${isSelected ? '<span class="sc-led-dot" aria-hidden="true"></span>' : ""}${safeName}</div>
-            <div class="sc-meta">
-              <span class="sc-short">${escapeHtml(s.short)}</span>
+          <button type="button" class="station-select" aria-pressed="${isSelected}">
+            ${logoHtml}
+            <div class="sc-main">
+              <div class="sc-name">${isSelected ? '<span class="sc-led-dot" aria-hidden="true"></span>' : ""}${safeName}</div>
+              <div class="sc-meta">
+                <span class="sc-short">${escapeHtml(s.short)}</span>
+              </div>
             </div>
-          </div>
-          <button class="sc-star${isFav ? " on" : ""}" aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">
+          </button>
+          <button type="button" class="sc-star${isFav ? " on" : ""}" aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">
             ${ICONS.star(isFav)}
           </button>
         `;
 
-        card.addEventListener("click", () => onSelect(s));
-        card.addEventListener("keydown", (e: KeyboardEvent) => {
-          if (e.key === "Enter") onSelect(s);
-        });
+        card.querySelector(".station-select")?.addEventListener("click", () => onSelect(s));
         const starBtn = card.querySelector(".sc-star");
         if (starBtn) {
-          starBtn.addEventListener("click", (e: Event) => {
-            e.stopPropagation();
-            onToggleFav(s.id);
-          });
+          starBtn.addEventListener("click", () => onToggleFav(s.id));
         }
 
         grid.appendChild(card);

@@ -49,6 +49,7 @@ Key architecture points:
 - **Design system** (`styles/`, `DESIGN.md`) is locked/canon per `PRODUCT.md` — extend deliberately, don't genericize or replace the retro PRL visual language.
 - Don't add a framework or new runtime dependency without strong justification — "ultra-lightweight, zero-framework" is a stated product principle.
 - CodeGraph index exists (`.codegraph/`) — agents with access should query it (`codegraph_explore` / `codegraph explore`) before grepping/reading files to locate symbols and call paths.
+- **Browser QA**: use Playwright directly only, never headless.
 
 ## Git / commits
 

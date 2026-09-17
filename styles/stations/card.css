@@ -3,13 +3,10 @@
   border: 1px solid var(--k-border);
   border-radius: var(--k-r);
   box-shadow: var(--k-sh-sm);
-  padding: var(--k-s2);
   display: flex;
   align-items: center;
-  gap: 0.55rem;
   min-width: 0;
   overflow: hidden;
-  cursor: pointer;
   user-select: none;
   position: relative;
   text-align: left;
@@ -27,6 +24,21 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+.station-select {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: var(--k-s2);
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
 @media (hover: hover) and (pointer: fine) {
   .station-card:hover {
     transform: translateY(-2px);
@@ -35,8 +47,8 @@
   }
 }
 
-.station-card:active {
-  transform: translateY(0);
+.station-card:has(.station-select:active) {
+  transform: translateY(1px);
 }
 
 /* active card: pressed-key look, not a color splash */
@@ -51,6 +63,12 @@
   background: rgba(0, 0, 0, 0.28);
   border-color: var(--k-border-2);
   box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.6);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .station-card:has(.station-select:active) {
+    transform: translateY(0.5px);
+  }
 }
 
 .sc-led-dot {

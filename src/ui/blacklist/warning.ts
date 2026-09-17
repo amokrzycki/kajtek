@@ -32,6 +32,7 @@ function buildMiniWarningHtml(warning: NonNullable<ReturnType<typeof getBlacklis
       <span class="bl-warn-mini-text">Pominięto reklamę na ${escapeHtml(warning.originStation.name)} · gra ${escapeHtml(warning.candidate.name)}</span>
       <span class="bl-warn-mini-clock">wracamy za ${formatMMSS(warning.secondsLeft)}</span>
       <button type="button" class="bl-warn-link bl-warn-revert">wróć</button>
+      <button type="button" class="bl-warn-link bl-warn-cancel-return">anuluj</button>
     </div>
   `;
 }

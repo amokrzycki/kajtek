@@ -215,6 +215,13 @@ export function returnToPreviousStation(): void {
   dismissedTrackKey = trackKey;
 }
 
+export function cancelAdSkipAutoReturn(): void {
+  if (!activeAdSkip) return;
+  activeAdSkip = null;
+  blacklistWarning = null;
+  notifyState();
+}
+
 async function checkAdBreakEnded(): Promise<void> {
   if (!activeAdSkip) return;
   const { originStation, trackKey, startedAt } = activeAdSkip;

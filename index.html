@@ -19,6 +19,11 @@
           <span class="brand-sub">radio internetowe</span>
         </div>
         <div class="header-actions">
+          <button id="help-btn" type="button" class="settings-toggle" aria-label="Jak słuchać?" title="Jak słuchać?">
+            <span class="settings-toggle-knob">
+              <span class="settings-toggle-icon" aria-hidden="true">?</span>
+            </span>
+          </button>
           <button id="dark-toggle" type="button" class="dark-toggle" aria-label="Przełącz tryb ciemny/jasny">
             <span class="dark-toggle-knob">
               <span class="dark-toggle-icon">
@@ -105,6 +110,7 @@
                 <span id="np-live-dot" class="np-live-dot"></span>
               </div>
               <div id="np-station" class="np-station empty">wybierz stację</div>
+              <div id="np-status" class="np-status" role="status">Gotowy</div>
               <div id="np-track" class="np-track">
                 <div id="np-artist" class="np-artist">—</div>
                 <span id="np-title" class="np-title">—</span>
@@ -186,7 +192,7 @@
           </section>
 
           <section class="k-panel" aria-label="Wyłącznik czasowy">
-            <div class="k-head"><span class="k-label">Sleep timer</span><span class="k-rule"></span></div>
+            <div class="k-head"><span class="k-label">Wyłącznik czasowy</span><span class="k-rule"></span></div>
             <div class="sleep-keys">
               <button type="button" class="sleep-key btn-key" data-min="15" aria-label="Wyłącz za 15 minut">
                 <span class="sleep-val">15</span><span class="sleep-unit">min</span>

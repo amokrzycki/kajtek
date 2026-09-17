@@ -10,8 +10,10 @@ import { genericProvider, getFactsInfo, getProvider } from "./providers.js";
 import { intervals, notifyState, radioAudio, state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import {
+  els,
   resolveAlbumCoverUrl,
   setHistoryLoadingState,
+  setPlaybackStatus,
   updateAlbumArt,
   updateHistoryUI,
   updateNowPlayingTrack,
@@ -66,6 +68,7 @@ async function attachHlsStream(url: string): Promise<void> {
       return;
     }
     recoveryAttempts++;
+    setPlaybackStatus("Odzyskiwanie połączenia…");
     switch (data.type) {
       case Hls.ErrorTypes.NETWORK_ERROR:
         hls.startLoad();
@@ -92,8 +95,11 @@ async function playStreamUrl(url: string | undefined): Promise<void> {
     radioAudio.src = url;
   }
   applyAudioVolume();
-  radioAudio.play().catch(() => {
-    // Ignore autoplay restriction errors
+  radioAudio.play().catch((error: unknown) => {
+    if (error instanceof DOMException && error.name === "AbortError") return;
+    state.playing = false;
+    notifyState();
+    setPlaybackStatus("Nie udało się uruchomić — naciśnij PLAY", "failed");
   });
 }
 
@@ -114,20 +120,43 @@ function handleAudioFailover() {
       title: "Błąd odtwarzania streamu",
     });
     notifyState();
+    setPlaybackStatus("Brak połączenia — naciśnij PLAY, aby ponowić", "failed");
     return;
   }
 
   const currentIdx = state.station._currentStreamIndex || 0;
   const nextIdx = (currentIdx + 1) % streams.length;
   state.station._currentStreamIndex = nextIdx;
+  setPlaybackStatus("Zmiana strumienia…");
   playStreamUrl(streams[nextIdx]);
 }
 
 radioAudio.addEventListener("error", () => {
-  if (!hlsInstance) handleAudioFailover();
+  if (!hlsInstance) {
+    setPlaybackStatus("Zmiana strumienia…");
+    handleAudioFailover();
+  }
 });
 radioAudio.addEventListener("stalled", () => {
+  setPlaybackStatus("Buforowanie…", "buffering");
   if (!hlsInstance) handleAudioFailover();
+});
+radioAudio.addEventListener("waiting", () => setPlaybackStatus("Buforowanie…", "buffering"));
+radioAudio.addEventListener("playing", () => {
+  if (!state.playing) {
+    state.playing = true;
+    startTrackRotation();
+    notifyState();
+  }
+  setPlaybackStatus("Na żywo");
+});
+radioAudio.addEventListener("pause", () => {
+  if (state.playing) {
+    state.playing = false;
+    stopTrackRotation();
+    notifyState();
+  }
+  if (!els.npLiveDot.classList.contains("failed")) setPlaybackStatus("Pauza");
 });
 
 function navigateStation(direction: 1 | -1) {
@@ -142,8 +171,12 @@ function navigateStation(direction: 1 | -1) {
 }
 
 if ("mediaSession" in navigator) {
-  navigator.mediaSession.setActionHandler("play", togglePlay);
-  navigator.mediaSession.setActionHandler("pause", togglePlay);
+  navigator.mediaSession.setActionHandler("play", () => {
+    if (!state.playing) togglePlay();
+  });
+  navigator.mediaSession.setActionHandler("pause", () => {
+    if (state.playing) togglePlay();
+  });
   navigator.mediaSession.setActionHandler("previoustrack", () => navigateStation(-1));
   navigator.mediaSession.setActionHandler("nexttrack", () => navigateStation(1));
 }
@@ -352,6 +385,7 @@ export function selectStation(s: Station) {
   resetBlacklistWarningState();
   startEskaSession(s.id);
   setHistoryLoadingState(true);
+  setPlaybackStatus("Łączenie…");
 
   ensureStationMetadata(s);
 
@@ -366,6 +400,7 @@ export function togglePlay() {
   state.playing = !state.playing;
 
   if (state.playing) {
+    setPlaybackStatus("Łączenie…");
     playStreamUrl(getCurrentStreamUrl(state.station));
     startTrackRotation();
   } else {

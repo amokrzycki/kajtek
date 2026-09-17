@@ -55,6 +55,12 @@ export function updateSleepUI(): void {
   });
 }
 
+export function setPlaybackStatus(message: string, dotState?: "buffering" | "failed"): void {
+  triggerFade(els.npStatus, message);
+  els.npLiveDot.classList.toggle("buffering", dotState === "buffering");
+  els.npLiveDot.classList.toggle("failed", dotState === "failed");
+}
+
 export function updateNowPlayingTrack(track: TrackInfo | null): void {
   if (!state.station) return;
 
@@ -189,6 +195,7 @@ export function updateUI(
     if (label) label.textContent = state.station.name;
     updateAlbumArt(resolveAlbumCoverUrl(currentTrack, state.station), currentTrack);
   } else {
+    setPlaybackStatus("Gotowy");
     els.npShortRow.classList.add("hidden");
     els.npShort.textContent = "—";
     els.npStation.textContent = "wybierz stację";
