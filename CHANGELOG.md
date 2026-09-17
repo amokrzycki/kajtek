@@ -10,6 +10,7 @@ Usprawnienia w obrębie całego interfejsu Kajtka, poprawki błędów i optymali
 - Płynniejsze rozwijanie zarządzania katalogiem, zmiany statusu odtwarzania i wciskanie kart stacji.
 - Stan odtwarzania poprawnie reaguje na pauzę wywołaną przez iOS, Androida i systemowe przyciski multimedialne.
 - Kajtek pamięta ostatnio wybraną stację bez automatycznego odtwarzania, a zależne ustawienia reklam pokazują swój stan wyraźniej.
+- Automatyczny powrót po pominięciu reklamy można anulować bez zmiany stacji.
 
 ## 0.10.2
 

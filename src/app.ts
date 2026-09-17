@@ -1,5 +1,10 @@
 import { addToBlacklist, isBlacklisted, normalizeTrackKey, removeFromBlacklist } from "./blacklist.js";
-import { dismissBlacklistWarning, returnToPreviousStation, switchBlacklistCandidateNow } from "./blacklistWarning.js";
+import {
+  cancelAdSkipAutoReturn,
+  dismissBlacklistWarning,
+  returnToPreviousStation,
+  switchBlacklistCandidateNow,
+} from "./blacklistWarning.js";
 import { getAllKnownStations } from "./catalog.js";
 import { checkForNewChangelog } from "./changelog.js";
 import { STORAGE_KEYS } from "./consts.js";
@@ -142,6 +147,7 @@ function attachEvents() {
     if (target.closest(".bl-warn-switch")) switchBlacklistCandidateNow();
     else if (target.closest(".bl-warn-play-anyway")) dismissBlacklistWarning();
     else if (target.closest(".bl-warn-revert")) returnToPreviousStation();
+    else if (target.closest(".bl-warn-cancel-return")) cancelAdSkipAutoReturn();
   });
 
   els.favoritesList.addEventListener("click", (e: Event) => {
