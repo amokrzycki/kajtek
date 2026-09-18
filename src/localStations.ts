@@ -16,7 +16,7 @@ export const LOCAL_STATIONS: Station[] = [
     short: "Rzeszów",
     cat: "local",
     provider: "generic",
-    stream: "https://streaming.g-news.pl:8040/rzeszow",
+    stream: "/stream/rzeszow",
   },
   {
     id: "leliwa",
@@ -24,6 +24,6 @@ export const LOCAL_STATIONS: Station[] = [
     short: "Leliwa",
     cat: "local",
     provider: "generic",
-    stream: "https://streaming.g-news.pl:8050/leliwa",
+    stream: "/stream/leliwa",
   },
 ];

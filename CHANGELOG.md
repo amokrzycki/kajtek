@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.11.2
+
+Naprawiono problem z odtwarzaniem lokalnych stacji radiowych w Kajtku na urządzeniach z systemem iOS.
+
 ## 0.11.1
 
 Poprawki błędów i optymalizacje.
