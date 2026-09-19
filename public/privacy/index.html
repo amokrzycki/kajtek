@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#eeebe3">
+    <title>Polityka prywatności - KAJTEK</title>
+    <meta
+      name="description"
+      content="Polityka prywatności radia internetowego KAJTEK: Cloudflare, OVHcloud, localStorage, zewnętrzne API i strumienie audio.">
+    <link rel="stylesheet" href="/style.css">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  </head>
+  <body class="legal-page">
+    <header class="legal-header">
+      <a class="legal-brand" href="/" aria-label="Wróć do radia KAJTEK">
+        <span class="legal-brand-name">KAJTEK</span>
+        <span class="legal-brand-sub">radio internetowe</span>
+      </a>
+    </header>
+
+    <main class="legal-main">
+      <article class="legal-document">
+        <h1>Polityka prywatności</h1>
+        <p class="legal-updated">Ostatnia aktualizacja: 19 września 2026 r.</p>
+        <p class="legal-lead">
+          Kajtek jest niezależnym odtwarzaczem radia internetowego. Nie wymaga konta, nie wyświetla reklam i nie
+          wykorzystuje danych użytkowników do profilowania ani reklamy behawioralnej. Ruch do serwisu przechodzi
+          jednak przez Cloudflare, a przeglądarka łączy się także z opisanymi niżej usługami zewnętrznymi.
+        </p>
+
+        <section>
+          <h2>1. Administrator i kontakt</h2>
+          <div class="legal-contact">
+            <p><strong>Adrian Mokrzycki</strong></p>
+            <p><a href="mailto:contact@amokrzycki.ovh">contact@amokrzycki.ovh</a></p>
+          </div>
+          <p>W sprawach dotyczących prywatności można skontaktować się na adres wskazany powyżej.</p>
+        </section>
+
+        <section>
+          <h2>2. Dane przetwarzane przez Kajtka</h2>
+          <p>
+            Kajtek nie prowadzi kont użytkowników i nie posiada własnego systemu identyfikowania użytkowników.
+            Losowy identyfikator nadawany własnej stacji służy jedynie do rozpoznania jej wpisu w pamięci danej
+            przeglądarki i nie jest wysyłany jako identyfikator osoby.
+          </p>
+          <p>
+            Kod aplikacji i lokalnego serwera deweloperskiego nie tworzy logów dostępowych ani nie zapisuje adresów
+            IP. Repozytorium nie zawiera jednak produkcyjnej konfiguracji nginx, dlatego na podstawie samego kodu nie
+            można potwierdzić ustawień logowania serwera źródłowego. Cloudflare i OVHcloud mogą niezależnie przetwarzać
+            dane techniczne połączenia na zasadach opisanych niżej.
+          </p>
+          <p>Kajtek nie wykorzystuje danych do sprzedaży, reklamy behawioralnej ani tworzenia profili marketingowych.</p>
+        </section>
+
+        <section>
+          <h2>3. Cloudflare</h2>
+          <p>
+            Domena Kajtka korzysta z Cloudflare jako reverse proxy oraz warstwy bezpieczeństwa. Żądania do serwisu są
+            obsługiwane przez infrastrukturę Cloudflare przed przekazaniem ich do serwera źródłowego. Cloudflare może
+            przetwarzać między innymi adres IP, żądany URL, dane routingu oraz techniczne informacje o połączeniu,
+            urządzeniu i bezpieczeństwie ruchu.
+          </p>
+          <p>
+            Więcej informacji zawiera
+            <a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener noreferrer"
+              >polityka prywatności Cloudflare</a
+            >.
+          </p>
+        </section>
+
+        <section>
+          <h2>4. Cloudflare Web Analytics</h2>
+          <p>
+            Produkcyjne wdrożenie korzysta z Cloudflare Web Analytics do zagregowanych statystyk ruchu i pomiarów
+            wydajności. Beacon jest automatycznie wstrzykiwany przez Cloudflare na warstwie brzegowej, dlatego nie
+            występuje w kodzie źródłowym aplikacji.
+          </p>
+          <p>
+            Według dokumentacji Cloudflare Web Analytics używa lekkiego skryptu beacon i nie używa cookies ani
+            <code>localStorage</code> do zbierania metryk analitycznych. Kajtek nie używa tych danych do śledzenia osoby
+            pomiędzy serwisami, reklamy ani profilowania.
+          </p>
+          <p>
+            Szczegóły opisuje
+            <a href="https://developers.cloudflare.com/web-analytics/" target="_blank" rel="noopener noreferrer"
+              >dokumentacja Cloudflare Web Analytics</a
+            >.
+          </p>
+        </section>
+
+        <section>
+          <h2>5. Pamięć lokalna przeglądarki</h2>
+          <p>Kajtek używa wyłącznie następujących kluczy <code>localStorage</code>:</p>
+          <ul>
+            <li><code>kajtek_theme</code>: jasny lub ciemny motyw,</li>
+            <li><code>kajtek_case</code>: wybrany kolor obudowy i akcentu,</li>
+            <li><code>kajtek_favs</code>: identyfikatory ulubionych stacji,</li>
+            <li><code>kajtek_fav_tracks</code>: ulubione utwory wraz z nazwą stacji i datą dodania,</li>
+            <li><code>kajtek_station_prefs</code>: włączenie i status ulubionych stacji,</li>
+            <li><code>kajtek_rmf_catalog</code>: cache katalogu RMF i data pobrania,</li>
+            <li><code>kajtek_eska_catalog</code>: cache katalogu ESKA i data pobrania,</li>
+            <li><code>kajtek_custom_stations</code>: nazwy i adresy streamów dodanych przez użytkownika,</li>
+            <li><code>kajtek_view_mode</code>: widok listy lub siatki,</li>
+            <li><code>kajtek_blacklist</code>: lista zablokowanych wykonawców i utworów,</li>
+            <li><code>kajtek_blacklist_enabled</code>: włączenie czarnej listy,</li>
+            <li><code>kajtek_ad_skip_enabled</code>: włączenie pomijania reklam,</li>
+            <li><code>kajtek_ad_skip_auto_return</code>: ustawienie automatycznego powrotu po reklamie,</li>
+            <li><code>kajtek_last_station</code>: identyfikator ostatnio wybranej stacji,</li>
+            <li><code>kajtek_volume</code>: poziom głośności,</li>
+            <li><code>kajtek_last_seen_version</code>: ostatnio widziana wersja aplikacji.</li>
+          </ul>
+          <p>
+            Dane te służą wyłącznie działaniu aplikacji, zapamiętywaniu preferencji i ograniczeniu ponownego pobierania
+            katalogów. Nie są używane do reklamy ani profilowania. Pozostają w przeglądarce do czasu usunięcia danych
+            witryny, usunięcia wpisu przez aplikację albo nadpisania go nowszą wartością.
+          </p>
+          <p>Kod Kajtka nie używa <code>sessionStorage</code>, IndexedDB ani własnych cookies.</p>
+        </section>
+
+        <section>
+          <h2>6. Hosting OVHcloud</h2>
+          <p>
+            Serwer źródłowy Kajtka działa na VPS w infrastrukturze OVHcloud. OVHcloud może przetwarzać dane techniczne
+            niezbędne do świadczenia, utrzymania i zabezpieczenia usługi. Kajtek nie przekazuje ich OVHcloud do celów
+            reklamowych.
+          </p>
+          <p>
+            Informacje dostawcy są dostępne na stronie
+            <a
+              href="https://www.ovhcloud.com/en/personal-data-protection/legal-privacy-security/"
+              target="_blank"
+              rel="noopener noreferrer"
+              >OVHcloud — ochrona danych i prywatność</a
+            >.
+          </p>
+        </section>
+
+        <section>
+          <h2>7. Reverse proxy zewnętrznych API</h2>
+          <p>
+            Zapytania o katalogi, ramówki i metadane RMF, ESKA/ZPR Media i Trójki są zwykle wysyłane przez
+            <code>/api/rmf</code>, <code>/api/eska</code> i <code>/api/trojka</code> do reverse proxy Kajtka. Proxy
+            deweloperskie obecne w repozytorium używa listy dozwolonych nagłówków i nie przekazuje upstreamom
+            nagłówków z adresem klienta, w tym <code>CF-Connecting-IP</code>, <code>X-Forwarded-For</code>,
+            <code>X-Real-IP</code> ani <code>Forwarded</code>.
+          </p>
+          <p>
+            Produkcyjna konfiguracja nginx nie znajduje się w repozytorium, dlatego ten dokument nie gwarantuje, że
+            wdrożony proxy stosuje identyczne reguły. Administrator powinien potwierdzić wyłączenie logów IP oraz
+            usunięcie wszystkich nagłówków ujawniających adres klienta przed kontaktem z upstream API.
+          </p>
+          <p>
+            Wyjątek stanowi awaryjne pobranie katalogu RMF bezpośrednio z <code>api.rmfon.pl</code>, uruchamiane w
+            przeglądarce, gdy lokalny endpoint katalogu RMF nie odpowiada. W takim przypadku operator RMF może otrzymać
+            adres IP i standardowe dane połączenia użytkownika.
+          </p>
+        </section>
+
+        <section>
+          <h2>8. Odtwarzanie radia i zasoby zewnętrzne</h2>
+          <p>
+            Strumienie RMF, ESKA, Trójki oraz własne streamy dodane przez użytkownika są pobierane bezpośrednio przez
+            przeglądarkę z adresu operatora stacji lub jego CDN. Operator może wtedy otrzymać adres IP, nagłówki
+            przeglądarki i dane techniczne odtwarzania.
+          </p>
+          <p>
+            Radio Rzeszów i Radio Leliwa są wyjątkami: ich wbudowane adresy prowadzą do tras
+            <code>/stream/rzeszow</code> i <code>/stream/leliwa</code> na serwerze Kajtka. Kod repozytorium nie zawiera
+            produkcyjnej konfiguracji nginx tych tras, więc nie pozwala potwierdzić jej nagłówków ani logowania.
+          </p>
+          <p>
+            Przeglądarka pobiera ponadto bezpośrednio z zewnętrznych domen okładki stacji i utworów zwracane przez
+            katalogi lub API oraz arkusz i pliki fontów Google Fonts. Te podmioty mogą otrzymać adres IP i standardowe
+            dane żądania. Beacon Cloudflare jest pobierany z infrastruktury Cloudflare.
+          </p>
+        </section>
+
+        <section>
+          <h2>9. Cookies</h2>
+          <p>
+            Kajtek nie ustawia własnych cookies do celów reklamowych ani analitycznych. Cloudflare Web Analytics nie
+            wymaga cookies analitycznych. Cloudflare może jednak stosować techniczne cookies lub podobne mechanizmy,
+            gdy są potrzebne do bezpieczeństwa i prawidłowego świadczenia jego usług.
+          </p>
+        </section>
+
+        <section>
+          <h2>10. Cele i podstawy przetwarzania</h2>
+          <p>Dane techniczne mogą być przetwarzane w celu:</p>
+          <ul>
+            <li>dostarczenia serwisu i odtwarzania wybranej stacji,</li>
+            <li>zabezpieczenia infrastruktury i zapobiegania nadużyciom,</li>
+            <li>diagnozowania awarii oraz mierzenia wydajności i zagregowanego użycia,</li>
+            <li>obsługi korespondencji wysłanej dobrowolnie przez użytkownika.</li>
+          </ul>
+          <p>
+            W zakresie, w którym administrator przetwarza dane osobowe, podstawą może być jego prawnie uzasadniony
+            interes zgodnie z art. 6 ust. 1 lit. f RODO, polegający na zapewnieniu działania, bezpieczeństwa i
+            diagnostyki serwisu. Dane z korespondencji są przetwarzane w celu udzielenia odpowiedzi i obsługi sprawy.
+          </p>
+        </section>
+
+        <section>
+          <h2>11. Odbiorcy i retencja</h2>
+          <p>Dane techniczne mogą być przetwarzane przez:</p>
+          <ul>
+            <li>Cloudflare: reverse proxy, bezpieczeństwo, sieć i Web Analytics,</li>
+            <li>OVHcloud: hosting serwera źródłowego,</li>
+            <li>operatorów stacji, transmisji, API, okładek i sieci CDN,</li>
+            <li>Google: dostarczenie arkusza i plików fontów Google Fonts.</li>
+          </ul>
+          <p>
+            Dane w <code>localStorage</code> są przechowywane zgodnie z sekcją 5. Cloudflare, OVHcloud i operatorzy
+            usług zewnętrznych stosują własne okresy retencji. Korespondencja może być przechowywana przez czas potrzebny
+            do obsługi sprawy, zabezpieczenia roszczeń i wykonania obowiązków prawnych.
+          </p>
+        </section>
+
+        <section>
+          <h2>12. Prawa użytkownika</h2>
+          <p>W przypadkach przewidzianych przez RODO użytkownikowi może przysługiwać prawo do:</p>
+          <ol>
+            <li>dostępu do danych i otrzymania ich kopii,</li>
+            <li>sprostowania lub usunięcia danych,</li>
+            <li>ograniczenia przetwarzania,</li>
+            <li>wniesienia sprzeciwu wobec przetwarzania,</li>
+            <li>wniesienia skargi do Prezesa Urzędu Ochrony Danych Osobowych.</li>
+          </ol>
+          <p>W celu realizacji praw dotyczących danych przetwarzanych przez administratora należy użyć kontaktu z sekcji 1.</p>
+        </section>
+
+        <section>
+          <h2>13. Zmiany polityki</h2>
+          <p>
+            Polityka może być aktualizowana wraz ze zmianą funkcji Kajtka, infrastruktury, sposobu przetwarzania danych
+            lub wymagań prawnych. Aktualna data dokumentu znajduje się na początku strony.
+          </p>
+        </section>
+      </article>
+    </main>
+
+    <footer class="legal-footer">
+      <p><a href="/">Radio KAJTEK</a> · <a href="/legal">Informacje prawne</a></p>
+    </footer>
+  </body>
+</html>

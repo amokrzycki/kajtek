@@ -41,9 +41,10 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
   - `md.d.ts` - Type declaration enabling `.md` file imports (used for `CHANGELOG.md`).
 - `CHANGELOG.md` - User-facing changelog, one `## <version>` section per release; drives the in-app changelog modal.
 - `dev.mjs` - Zero-dependency dev server with esbuild watching and RMF API proxying.
+- `server-utils.mjs` - Shared static-route resolution and privacy-safe upstream proxy headers.
 - `index.html` - Core HTML5 layout and structure.
-- `styles/` - Retro design system and CSS stylesheet modules.
-- `public/` - Static assets (favicons, touch icons) copied verbatim into the build.
+- `styles/` - Retro design system and CSS stylesheet modules, including the legal-document layout.
+- `public/` - Static assets and JavaScript-free `/privacy` and `/legal` pages copied verbatim into the build.
 - `tests/` - Vitest coverage and captured provider fixtures.
 - `scripts/inject-hashes.mjs` - Injects hashed build asset filenames into `dist/index.html`.
 - `dist/` - Production build directory (generated assets).

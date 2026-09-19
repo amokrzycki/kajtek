@@ -5,6 +5,7 @@ import https from "node:https";
 import os from "node:os";
 import path from "node:path";
 import { context } from "esbuild";
+import { createUpstreamHeaders, resolvePublicPathname } from "./server-utils.mjs";
 
 const pkg = JSON.parse(fs.readFileSync("./package.json", "utf-8"));
 const port = Number.parseInt(process.env.KAJTEK_PORT ?? "3000", 10);
@@ -40,11 +41,7 @@ http
         port: 443,
         path: targetPath,
         method: req.method,
-        headers: {
-          ...req.headers,
-          host: "api.rmfon.pl",
-          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        },
+        headers: createUpstreamHeaders(req.headers, "api.rmfon.pl"),
       };
 
       const proxyReq = https.request(options, (proxyRes) => {
@@ -73,11 +70,7 @@ http
         port: 443,
         path: targetPath,
         method: req.method,
-        headers: {
-          ...req.headers,
-          host: "front-api.grupazprmedia.pl",
-          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        },
+        headers: createUpstreamHeaders(req.headers, "front-api.grupazprmedia.pl"),
       };
 
       const proxyReq = https.request(options, (proxyRes) => {
@@ -106,11 +99,7 @@ http
         port: 443,
         path: targetPath,
         method: req.method,
-        headers: {
-          ...req.headers,
-          host: "trojka.polskieradio.pl",
-          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        },
+        headers: createUpstreamHeaders(req.headers, "trojka.polskieradio.pl"),
       };
 
       const proxyReq = https.request(options, (proxyRes) => {
@@ -139,11 +128,7 @@ http
         port: 443,
         path: targetPath,
         method: req.method,
-        headers: {
-          ...req.headers,
-          host: "streaming.g-news.pl",
-          "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-        },
+        headers: createUpstreamHeaders(req.headers, "streaming.g-news.pl"),
       };
 
       const proxyReq = https.request(options, (proxyRes) => {
@@ -165,7 +150,7 @@ http
     }
 
     // check dist/ then public/ so compiled/static assets shadow raw root files
-    const pathname = new URL(req.url ?? "/", "http://localhost").pathname;
+    const pathname = resolvePublicPathname(new URL(req.url ?? "/", "http://localhost").pathname);
     let filePath = pathname === "/" ? "./index.html" : "";
     if (pathname !== "/") {
       const distPath = `./dist${pathname}`;

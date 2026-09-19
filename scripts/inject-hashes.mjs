@@ -10,10 +10,17 @@ if (!jsFile || !cssFile) {
   throw new Error(`Hashed build output not found in ${dist}/ (js: ${jsFile}, css: ${cssFile})`);
 }
 
-const htmlPath = path.join(dist, "index.html");
-const html = fs
-  .readFileSync(htmlPath, "utf-8")
-  .replace('src="app.js"', `src="${jsFile}"`)
-  .replace('href="style.css"', `href="${cssFile}"`);
+const htmlPaths = [
+  path.join(dist, "index.html"),
+  path.join(dist, "privacy/index.html"),
+  path.join(dist, "legal/index.html"),
+];
 
-fs.writeFileSync(htmlPath, html);
+for (const htmlPath of htmlPaths) {
+  const html = fs
+    .readFileSync(htmlPath, "utf-8")
+    .replace('src="app.js"', `src="${jsFile}"`)
+    .replace(/href="\/?style\.css"/, `href="/${cssFile}"`);
+
+  fs.writeFileSync(htmlPath, html);
+}

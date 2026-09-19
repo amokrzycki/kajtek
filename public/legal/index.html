@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#eeebe3">
+    <title>Informacje prawne - KAJTEK</title>
+    <meta
+      name="description"
+      content="Informacje prawne o niezależnym projekcie KAJTEK, strumieniach radiowych, metadanych i zewnętrznych integracjach.">
+    <link rel="stylesheet" href="/style.css">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  </head>
+  <body class="legal-page">
+    <header class="legal-header">
+      <a class="legal-brand" href="/" aria-label="Wróć do radia KAJTEK">
+        <span class="legal-brand-name">KAJTEK</span>
+        <span class="legal-brand-sub">radio internetowe</span>
+      </a>
+    </header>
+
+    <main class="legal-main">
+      <article class="legal-document">
+        <h1>Informacje prawne</h1>
+        <p class="legal-updated">Ostatnia aktualizacja: 19 września 2026 r.</p>
+
+        <section>
+          <h2>1. O projekcie</h2>
+          <p>
+            Kajtek jest niezależnym, niekomercyjnym projektem służącym do odtwarzania internetowych stacji radiowych
+            oraz prezentowania związanych z nimi informacji. Nie jest oficjalnym produktem żadnego nadawcy radiowego.
+          </p>
+        </section>
+
+        <section>
+          <h2>2. Brak afiliacji</h2>
+          <p>
+            Kajtek nie jest powiązany, sponsorowany, zatwierdzony ani prowadzony przez RMF FM, Grupę RMF, Radio ESKA,
+            ZPR Media, Polskie Radio ani inne podmioty, których stacje lub materiały są prezentowane w aplikacji.
+          </p>
+          <p>
+            Nazwy stacji i audycji, logotypy, znaki towarowe oraz inne oznaczenia należą do ich odpowiednich właścicieli
+            i są używane wyłącznie w zakresie potrzebnym do identyfikacji stacji, audycji i usług.
+          </p>
+        </section>
+
+        <section>
+          <h2>3. Strumienie audio</h2>
+          <p>
+            Kajtek nie jest źródłem transmisji radiowych i nie hostuje nagrań ani katalogu plików audio. Strumienie są
+            dostarczane przez nadawców lub ich dostawców infrastruktury.
+          </p>
+          <p>
+            Dla stacji RMF, ESKA i Trójki oraz stacji dodanych samodzielnie przez użytkownika połączenie jest zwykle
+            nawiązywane bezpośrednio między przeglądarką a serwerem transmisji. Radio Rzeszów i Radio Leliwa korzystają
+            natomiast z technicznego reverse proxy pod adresami Kajtka <code>/stream/rzeszow</code> i
+            <code>/stream/leliwa</code>; proxy przekazuje transmisję pochodzącą z infrastruktury jej operatora.
+          </p>
+          <p>Dostępność, zawartość i jakość transmisji zależą od ich operatorów i pozostają poza kontrolą Kajtka.</p>
+        </section>
+
+        <section>
+          <h2>4. Metadane i zewnętrzne źródła danych</h2>
+          <p>
+            Kajtek prezentuje nazwy stacji, ramówki, informacje o aktualnie emitowanych utworach, okładki i inne
+            metadane. Część danych jest pobierana z interfejsów i zasobów używanych przez internetowe serwisy RMF,
+            ESKA/ZPR Media oraz Polskiego Radia.
+          </p>
+          <p>
+            Aplikacja korzysta z własnego reverse proxy do pobierania i ujednolicania większości tych danych. Awaryjne
+            pobranie katalogu RMF może odbyć się bezpośrednio z API RMF, jeśli endpoint proxy nie odpowiada.
+            Integracje są nieoficjalne i nie stanowią oficjalnych ani gwarantowanych API Kajtka.
+          </p>
+        </section>
+
+        <section>
+          <h2>5. Dostępność integracji</h2>
+          <p>
+            Zewnętrzne endpointy, adresy transmisji oraz formaty danych mogą zostać zmienione, ograniczone lub wyłączone
+            przez ich operatorów bez uprzedzenia. Nie ma gwarancji ciągłej dostępności stacji, programów, metadanych,
+            okładek ani innych danych pochodzących ze źródeł zewnętrznych.
+          </p>
+        </section>
+
+        <section>
+          <h2>6. Prawa do treści</h2>
+          <p>
+            Kajtek nie rości sobie praw do transmisji radiowych, materiałów nadawców, nazw stacji, audycji, logotypów,
+            znaków towarowych ani innych chronionych materiałów podmiotów trzecich. Prawa do nich pozostają przy
+            odpowiednich właścicielach.
+          </p>
+          <p>Kod i elementy stworzone samodzielnie dla Kajtka podlegają zasadom określonym przez autora projektu.</p>
+        </section>
+
+        <section>
+          <h2>7. Brak gwarancji</h2>
+          <p>
+            Kajtek jest udostępniany w aktualnie dostępnej formie. Administrator nie gwarantuje nieprzerwanego działania
+            aplikacji, dostępności zewnętrznych transmisji i API ani kompletności i aktualności informacji pochodzących
+            z systemów podmiotów trzecich.
+          </p>
+        </section>
+
+        <section>
+          <h2>8. Zgłoszenia</h2>
+          <div class="legal-contact">
+            <p>
+              W sprawach dotyczących działania projektu, praw do treści, znaków towarowych lub integracji można
+              skontaktować się z administratorem:
+            </p>
+            <p><a href="mailto:contact@amokrzycki.ovh">contact@amokrzycki.ovh</a></p>
+          </div>
+          <p>Uzasadnione zgłoszenia dotyczące materiałów lub integracji będą analizowane indywidualnie.</p>
+        </section>
+      </article>
+    </main>
+
+    <footer class="legal-footer">
+      <p><a href="/">Radio KAJTEK</a> · <a href="/privacy">Polityka prywatności</a></p>
+    </footer>
+  </body>
+</html>

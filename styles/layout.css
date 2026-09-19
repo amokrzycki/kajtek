@@ -180,6 +180,24 @@
   margin-top: 0.35rem;
 }
 
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 0.55rem;
+  margin-top: 0.55rem;
+}
+
+.kajtek-footer a {
+  color: inherit;
+  text-underline-offset: 0.2em;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .kajtek-footer a:hover {
+    color: var(--k-text);
+  }
+}
+
 @media (max-width: 480px) {
   .header-brand .brand-name {
     font-size: 2.1rem;
