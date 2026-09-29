@@ -52,6 +52,10 @@ function isReturningUser(): boolean {
   return RETURNING_USER_SIGNAL_KEYS.some((key) => localStorage.getItem(key) !== null);
 }
 
+export function latestChangelog(): ChangelogEntry[] {
+  return CHANGELOG.slice(0, 1);
+}
+
 export function checkForNewChangelog(): ChangelogEntry[] | null {
   const lastSeen = localStorage.getItem(STORAGE_KEYS.LAST_SEEN_VERSION);
 

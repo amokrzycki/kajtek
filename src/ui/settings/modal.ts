@@ -7,13 +7,13 @@ import { setStoredJSON } from "../../utils.js";
 import { openBlacklistModal } from "../blacklist/modal.js";
 import { bindModalDismiss, closeModal, openModal } from "../modal.js";
 
-const CASE_SWATCHES: { slug: CaseSlug; label: string; hex: string }[] = [
-  { slug: "red", label: "Czerwony", hex: "#c4221a" },
-  { slug: "green", label: "Zielony", hex: "#7f9e1c" },
-  { slug: "yellow", label: "Żółty", hex: "#e6a608" },
-  { slug: "blue", label: "Niebieski", hex: "#4d88c6" },
-  { slug: "pink", label: "Różowy", hex: "#e88fa2" },
-  { slug: "black", label: "Czarny", hex: "#1d1b19" },
+const CASE_SWATCHES: { slug: CaseSlug; label: string }[] = [
+  { slug: "red", label: "Czerwony" },
+  { slug: "green", label: "Zielony" },
+  { slug: "yellow", label: "Żółty" },
+  { slug: "blue", label: "Niebieski" },
+  { slug: "pink", label: "Różowy" },
+  { slug: "black", label: "Czarny" },
 ];
 
 let modalEl: HTMLElement | null = null;
@@ -43,7 +43,7 @@ function swatchesHtml(): string {
   return CASE_SWATCHES.map(
     (s) => `
       <button type="button" class="k-settings-swatch" data-case="${s.slug}" aria-pressed="false">
-        <span class="k-settings-swatch-dot" style="background:${s.hex};"></span>
+        <span class="k-settings-swatch-dot"></span>
         <span class="k-settings-swatch-label">${s.label}</span>
       </button>
     `,

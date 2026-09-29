@@ -219,3 +219,21 @@
       max(1rem, calc(env(safe-area-inset-right) + 0.75rem));
   }
 }
+
+.footer-version {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .footer-version:hover {
+    color: var(--k-text);
+  }
+}

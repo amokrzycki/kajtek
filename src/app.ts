@@ -7,7 +7,7 @@ import {
   undoBlacklistBlock,
 } from "./blacklistWarning.js";
 import { getAllKnownStations } from "./catalog.js";
-import { checkForNewChangelog } from "./changelog.js";
+import { checkForNewChangelog, latestChangelog } from "./changelog.js";
 import { STORAGE_KEYS } from "./consts.js";
 import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
 import { currentTrack, selectStation, togglePlay } from "./player.js";
@@ -43,6 +43,7 @@ function setVersion() {
   const versionEl = document.getElementById("version");
   if (versionEl) {
     versionEl.textContent = `${state.version}`;
+    versionEl.addEventListener("click", () => openChangelogModal(latestChangelog()));
   }
 }
 

@@ -136,11 +136,24 @@
 }
 
 .k-settings-swatch-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
   flex-shrink: 0;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+  background: var(--k-case);
+  border: 1px solid var(--k-case-edge);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.4),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.35),
+    1px 2px 3px rgba(0, 0, 0, 0.2);
+}
+
+.k-settings-swatch[data-case="black"] .k-settings-swatch-dot {
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.4),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.35),
+    0 0 0 1px var(--k-bg-raised),
+    0 0 0 2px rgba(150, 140, 125, 0.7);
 }
 
 .k-settings-swatch-label {

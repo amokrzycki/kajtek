@@ -66,6 +66,10 @@ export function setPlaybackStatus(message: string, dotState?: "buffering" | "fai
 export function updateNowPlayingTrack(track: TrackInfo | null): void {
   if (!state.station) return;
 
+  document.title = track?.title
+    ? `${track.artist ? `${track.artist} – ` : ""}${track.title} · ${state.station.name} · KAJTEK`
+    : `${state.station.name} · KAJTEK`;
+
   if (!track && state.station.apiBaseUrl) {
     els.npTrackWrap.classList.remove("visible");
     return;
@@ -201,6 +205,7 @@ export function updateUI(
     if (label) label.textContent = state.station.name;
     updateAlbumArt(resolveAlbumCoverUrl(currentTrack, state.station), currentTrack);
   } else {
+    document.title = "KAJTEK";
     setPlaybackStatus("Gotowy");
     els.npShortRow.classList.add("hidden");
     els.npShort.textContent = "—";

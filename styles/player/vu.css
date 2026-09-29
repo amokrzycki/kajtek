@@ -19,9 +19,9 @@
     repeating-linear-gradient(to top, transparent 0 3px, rgba(0, 0, 0, 0.5) 3px 4px),
     linear-gradient(
       to top,
-      rgba(74, 222, 58, 0.22) 0 58%,
-      rgba(255, 210, 61, 0.22) 58% 84%,
-      rgba(255, 69, 58, 0.22) 84% 100%
+      rgba(74, 222, 58, 0.3) 0 58%,
+      rgba(255, 210, 61, 0.3) 58% 84%,
+      rgba(255, 69, 58, 0.3) 84% 100%
     ),
     var(--k-vu-track);
 }
