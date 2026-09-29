@@ -71,6 +71,8 @@ export function applyHistoryTabVisibility(): void {
   const showProgram = state.historyTab === "program";
   els.historyTabProgram.classList.toggle("active", showProgram);
   els.historyTabFavorites.classList.toggle("active", !showProgram);
+  els.historyTabProgram.setAttribute("aria-selected", String(showProgram));
+  els.historyTabFavorites.setAttribute("aria-selected", String(!showProgram));
   els.programView.classList.toggle("active", showProgram);
   els.favoritesView.classList.toggle("active", !showProgram);
 }

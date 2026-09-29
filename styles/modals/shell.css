@@ -24,6 +24,9 @@
   opacity: 1;
   visibility: visible;
   pointer-events: auto;
+  transition:
+    opacity 0.25s var(--k-ease-mech),
+    visibility 0s;
 }
 
 .k-modal {
