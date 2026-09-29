@@ -5,6 +5,10 @@
 Ogólne usprawnienia w obrębie całego interfejsu Kajtka, poprawki błędów i optymalizacje.
 
 - Poprawiono układ nagłówka i katalogu na telefonach, dostęp do czarnej listy w ustawieniach oraz czytelność zależnych przełączników.
+- Pomijanie reklam ma teraz fizyczny przełącznik „REKLAMY: GRAJ / POMIŃ” na obudowie i jest domyślnie włączone (wcześniej wyłączone; jeśli je wyłączysz, ustawienie zostaje zapamiętane).
+- Skróty klawiszowe: spacja – odtwarzaj/pauza, ←/→ – poprzednia/następna stacja, M – wyciszenie, 1–4 – wyłącznik czasowy (15/30/60/90 min).
+- W katalogu można posłuchać stacji przyciskiem ▶, bez dodawania jej do listy.
+- Wyłącznik czasowy wycisza dźwięk płynnie w ostatnich 8 sekundach, a miniatury własnych stacji mają literę w kolorze obudowy.
 - Uściślono wskazówkę o stacjach przy pierwszym uruchomieniu.
 - Ujednolicono nazwy i komunikaty: „Czarna lista”, „Obudowa”, osobne „Ulubione stacje” i „Ulubione utwory”, czytelniejsze etykiety przycisków oraz formularz własnej stacji z ostrzeżeniem o adresach http://.
 

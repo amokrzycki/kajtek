@@ -122,7 +122,13 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
         const isFav = state.favs.has(s.id);
 
         const safeName = escapeHtml(s.name);
-        const logoHtml = renderStationThumbHtml(s.coverUrl, s.name, "sc-thumb", "sc-thumb-placeholder");
+        const logoHtml = renderStationThumbHtml(
+          s.coverUrl,
+          s.name,
+          "sc-thumb",
+          "sc-thumb-placeholder",
+          s.cat === "custom",
+        );
 
         const card = document.createElement("div");
         card.className = `station-card${isSelected ? " active" : ""}`;

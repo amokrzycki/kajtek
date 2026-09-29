@@ -295,3 +295,39 @@
 .k-input[type="search"]::-webkit-search-cancel-button:hover {
   background: var(--k-text);
 }
+
+.btn-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  background: var(--k-bg-raised);
+  border: 1px solid var(--k-border-2);
+  border-radius: var(--k-rb);
+  box-shadow: var(--k-sh-btn);
+  color: var(--k-text-muted);
+  cursor: pointer;
+  transition:
+    color var(--k-tr),
+    background var(--k-tr),
+    border-color var(--k-tr);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .btn-preview:hover {
+    color: var(--k-accent-text);
+    border-color: var(--k-accent);
+  }
+}
+
+.btn-preview.on {
+  background: var(--k-accent-dim);
+  border-color: var(--k-accent);
+  color: var(--k-accent-text);
+}
+
+.btn-preview[hidden] {
+  display: none;
+}

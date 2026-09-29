@@ -111,3 +111,9 @@
 .k-catalog-empty-actions[hidden] {
   display: none;
 }
+
+.catalog-thumb-placeholder.is-custom {
+  background: var(--k-accent-dim);
+  color: var(--k-accent-text);
+  box-shadow: inset 0 0 0 1px var(--k-accent-ring);
+}

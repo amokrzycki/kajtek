@@ -232,6 +232,7 @@ export function updateUI(
   }
 
   updateSleepUI();
+  els.adSkipSwitch.setAttribute("aria-checked", String(state.adSkipEnabled));
 
   const isGeneric = Boolean(state.station && getProvider(state.station) === genericProvider);
   if (isGeneric && state.showHistory) {

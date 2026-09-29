@@ -121,7 +121,26 @@
           </div>
 
           <div class="np-controls">
-            <button type="button" id="play-btn" class="play-btn" disabled aria-label="Odtwarzaj"></button>
+            <button
+              type="button"
+              id="play-btn"
+              class="play-btn"
+              disabled
+              aria-label="Odtwarzaj"
+              aria-keyshortcuts="Space"></button>
+            <button
+              type="button"
+              id="adskip-switch"
+              class="adskip-switch"
+              role="switch"
+              aria-checked="true"
+              aria-label="Pomijaj reklamy">
+              <span class="adskip-legend" aria-hidden="true">REKLAMY</span>
+              <span class="adskip-slot" aria-hidden="true"><span class="adskip-knob"></span></span>
+              <span class="adskip-pos" aria-hidden="true"
+                ><span class="adskip-pos-off">GRAJ</span><span class="adskip-pos-on">POMIŃ</span></span
+              >
+            </button>
             <div class="np-branding" aria-hidden="true">
               <div class="unitra-sub"><span class="u-box">U</span> UNITRA zrk</div>
               <div class="stereo-title">STEREO</div>
@@ -195,7 +214,7 @@
           <section id="volume-panel" class="k-panel" aria-label="Panel głośności">
             <h2 class="k-head"><span class="k-label">Głośność</span><span class="k-rule"></span></h2>
             <div class="volume-row">
-              <button type="button" id="mute-btn" class="mute-btn" aria-label="Wycisz"></button>
+              <button type="button" id="mute-btn" class="mute-btn" aria-label="Wycisz" aria-keyshortcuts="M"></button>
               <div class="vol-wrap">
                 <div id="vol-ladder" class="vol-ladder" aria-hidden="true"></div>
                 <input
@@ -214,16 +233,36 @@
           <section class="k-panel" aria-label="Wyłącznik czasowy">
             <h2 class="k-head"><span class="k-label">Wyłącznik czasowy</span><span class="k-rule"></span></h2>
             <div class="sleep-keys">
-              <button type="button" class="sleep-key btn-key" data-min="15" aria-label="Wyłącz za 15 minut">
+              <button
+                type="button"
+                class="sleep-key btn-key"
+                data-min="15"
+                aria-keyshortcuts="1"
+                aria-label="Wyłącz za 15 minut">
                 <span class="sleep-val">15</span><span class="sleep-unit">min</span>
               </button>
-              <button type="button" class="sleep-key btn-key" data-min="30" aria-label="Wyłącz za 30 minut">
+              <button
+                type="button"
+                class="sleep-key btn-key"
+                data-min="30"
+                aria-keyshortcuts="2"
+                aria-label="Wyłącz za 30 minut">
                 <span class="sleep-val">30</span><span class="sleep-unit">min</span>
               </button>
-              <button type="button" class="sleep-key btn-key" data-min="60" aria-label="Wyłącz za 60 minut">
+              <button
+                type="button"
+                class="sleep-key btn-key"
+                data-min="60"
+                aria-keyshortcuts="3"
+                aria-label="Wyłącz za 60 minut">
                 <span class="sleep-val">60</span><span class="sleep-unit">min</span>
               </button>
-              <button type="button" class="sleep-key btn-key" data-min="90" aria-label="Wyłącz za 90 minut">
+              <button
+                type="button"
+                class="sleep-key btn-key"
+                data-min="90"
+                aria-keyshortcuts="4"
+                aria-label="Wyłącz za 90 minut">
                 <span class="sleep-val">90</span><span class="sleep-unit">min</span>
               </button>
             </div>

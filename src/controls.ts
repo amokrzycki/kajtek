@@ -5,13 +5,33 @@ import { intervals, notifyState, radioAudio, state } from "./state.js";
 import { els, renderVolLadder, updateSleepUI } from "./ui.js";
 import { isIOS, setStoredJSON } from "./utils.js";
 
+const SLEEP_FADE_MS = 8000;
+
 let volAnimFrame: number | null = null;
+let sleepFade: ReturnType<typeof setInterval> | null = null;
+
+function stopSleepFade(): void {
+  if (sleepFade !== null) clearInterval(sleepFade);
+  sleepFade = null;
+}
+
+// Interval, not rAF: a locked phone throttles rAF to zero, which is exactly when a sleep timer fires.
+function startSleepFade(): void {
+  if (isIOS() || state.muted || sleepFade !== null) return;
+  const from = radioAudio.volume;
+  const start = Date.now();
+  sleepFade = setInterval(() => {
+    const p = Math.min((Date.now() - start) / SLEEP_FADE_MS, 1);
+    radioAudio.volume = from * (1 - p) ** 2;
+  }, 100);
+}
 
 export function isVolAnimating(): boolean {
   return volAnimFrame !== null;
 }
 
 export function cancelVolAnim(): void {
+  stopSleepFade();
   if (volAnimFrame !== null) {
     cancelAnimationFrame(volAnimFrame);
     volAnimFrame = null;
@@ -111,6 +131,7 @@ export function setSleepTimer(minutes: number): void {
       notifyState();
     } else if (state.sleepSec !== null) {
       state.sleepSec--;
+      if (state.sleepSec === SLEEP_FADE_MS / 1000 && state.playing) startSleepFade();
       updateSleepUI();
     }
   }, 1000);
@@ -119,10 +140,20 @@ export function setSleepTimer(minutes: number): void {
 }
 
 export function cancelSleepTimer(): void {
+  if (sleepFade !== null) {
+    stopSleepFade();
+    applyAudioVolume();
+  }
   state.sleepMin = null;
   state.sleepSec = null;
   if (intervals.sleep) clearInterval(intervals.sleep);
   intervals.sleep = null;
+  notifyState();
+}
+
+export function setAdSkipEnabled(enabled: boolean): void {
+  state.adSkipEnabled = enabled;
+  setStoredJSON(STORAGE_KEYS.AD_SKIP_ENABLED, enabled);
   notifyState();
 }
 

@@ -192,3 +192,10 @@
     fill var(--k-tr),
     stroke var(--k-tr);
 }
+
+/* custom streams have no logo — tint the initial with the case accent */
+.sc-thumb-placeholder.is-custom {
+  background: var(--k-accent-dim);
+  color: var(--k-accent-text);
+  box-shadow: inset 0 0 0 1px var(--k-accent-ring);
+}

@@ -6,10 +6,10 @@ import {
   switchBlacklistCandidateNow,
   undoBlacklistBlock,
 } from "./blacklistWarning.js";
-import { getAllKnownStations } from "./catalog.js";
+import { getAllKnownStations, getOrderedStations } from "./catalog.js";
 import { checkForNewChangelog, latestChangelog } from "./changelog.js";
 import { STORAGE_KEYS } from "./consts.js";
-import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
+import { setAdSkipEnabled, setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
 import { currentTrack, selectStation, togglePlay } from "./player.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { notifyState, state, subscribeState } from "./state.js";
@@ -57,7 +57,37 @@ function focusStationSelection(): void {
   firstStation.focus({ preventScroll: true });
 }
 
+const SLEEP_KEY_MINUTES = [15, 30, 60, 90];
+
+function stepStation(direction: 1 | -1): void {
+  const list = getOrderedStations();
+  if (list.length === 0) return;
+  const at = list.findIndex((s) => s.id === state.station?.id);
+  const next = list[at === -1 ? (direction === 1 ? 0 : list.length - 1) : (at + direction + list.length) % list.length];
+  if (next) selectRememberedStation(next);
+}
+
+function handleShortcut(e: KeyboardEvent): void {
+  if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (document.querySelector(".k-modal-overlay.is-open")) return;
+  const target = e.target as HTMLElement;
+  if (target.closest("input, textarea, select, [contenteditable]")) return;
+
+  if (e.key === " ") {
+    // a focused button/link/tab already handles Space natively
+    if (target.closest("button, a, summary, [role=tab]")) return;
+    togglePlay();
+  } else if (e.key === "ArrowRight") stepStation(1);
+  else if (e.key === "ArrowLeft") stepStation(-1);
+  else if (e.key.toLowerCase() === "m") toggleMute();
+  else if (/^[1-4]$/.test(e.key)) setSleepTimer(SLEEP_KEY_MINUTES[Number(e.key) - 1] ?? 15);
+  else return;
+  e.preventDefault();
+}
+
 function attachEvents() {
+  document.addEventListener("keydown", handleShortcut);
+
   els.helpBtn.addEventListener("click", () => openOnboardingModal(focusStationSelection));
 
   els.darkToggle.addEventListener("click", () => {
@@ -73,6 +103,8 @@ function attachEvents() {
   });
 
   els.playBtn.addEventListener("click", () => togglePlay());
+
+  els.adSkipSwitch.addEventListener("click", () => setAdSkipEnabled(!state.adSkipEnabled));
 
   els.historyToggleBtn.addEventListener("click", () => {
     if (state.station && getProvider(state.station) === genericProvider) {

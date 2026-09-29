@@ -1,6 +1,7 @@
 import { getBlacklist } from "../../blacklist.js";
 import type { CaseSlug } from "../../consts.js";
 import { STORAGE_KEYS } from "../../consts.js";
+import { setAdSkipEnabled } from "../../controls.js";
 import { ICONS } from "../../icons.js";
 import { notifyState, state } from "../../state.js";
 import { setStoredJSON } from "../../utils.js";
@@ -136,10 +137,8 @@ function createModalElements(): void {
   });
 
   modalEl.querySelector<HTMLInputElement>("#settings-adskip-toggle")?.addEventListener("change", (e) => {
-    state.adSkipEnabled = (e.target as HTMLInputElement).checked;
-    setStoredJSON(STORAGE_KEYS.AD_SKIP_ENABLED, state.adSkipEnabled);
+    setAdSkipEnabled((e.target as HTMLInputElement).checked);
     syncAdSkipToggle();
-    notifyState();
   });
 
   modalEl.querySelector<HTMLInputElement>("#settings-adskip-autoreturn-toggle")?.addEventListener("change", (e) => {
