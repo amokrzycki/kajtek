@@ -16,6 +16,7 @@ function isPreviewing(id: string): boolean {
 
 function syncPreviewButton(btn: HTMLButtonElement): void {
   const on = isPreviewing(btn.dataset.id ?? "");
+  if (btn.firstChild && btn.classList.contains("on") === on) return;
   btn.classList.toggle("on", on);
   btn.setAttribute("aria-pressed", String(on));
   btn.title = on ? "Zatrzymaj podgląd" : "Posłuchaj";

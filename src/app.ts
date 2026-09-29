@@ -71,7 +71,7 @@ function handleShortcut(e: KeyboardEvent): void {
   if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
   if (document.querySelector(".k-modal-overlay.is-open")) return;
   const target = e.target as HTMLElement;
-  if (target.closest("input, textarea, select, [contenteditable]")) return;
+  if (target.closest("input, textarea, select, [contenteditable], [role=tab]")) return;
 
   if (e.key === " ") {
     // a focused button/link/tab already handles Space natively

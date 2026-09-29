@@ -9,9 +9,9 @@ const FEATURES: { icon: string; title: string; desc: string }[] = [
     desc: "Wybierz stację z listy. Odtwarzanie ruszy od razu.",
   },
   {
-    icon: ICONS.ban,
+    icon: ICONS.adSkip,
     title: "2. Pomijaj reklamy",
-    desc: "Kajtek może sam przełączać stację na czas reklam. Włączysz to w Ustawieniach.",
+    desc: "Kajtek sam przełącza stację na czas reklam. Wyłączysz to przełącznikiem na obudowie lub w Ustawieniach.",
   },
 ];
 
