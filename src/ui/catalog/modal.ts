@@ -29,6 +29,14 @@ let tabSwitchTimer: number | undefined;
 const viewDeps: CatalogViewDeps = {
   rerender: () => renderModalBody(),
   onRetry: () => handleRefreshCatalog(),
+  onClearSearch: () => {
+    searchQuery = "";
+    activeNetwork = null;
+    const input = modalEl?.querySelector<HTMLInputElement>("#catalog-search-input");
+    if (input) input.value = "";
+    renderModalBody();
+  },
+  onSearchAll: () => setActiveTab("all"),
 };
 
 export function openCatalogModal(): void {
@@ -124,7 +132,7 @@ function createModalElements(): void {
     const errEl = modalEl?.querySelector<HTMLElement>("#custom-form-error");
 
     if (!nameEl || !urlEl) return;
-    if (errEl) errEl.style.display = "none";
+    errEl?.classList.remove("is-visible");
 
     handleCustomStationSubmit(
       nameEl.value,
@@ -132,7 +140,7 @@ function createModalElements(): void {
       (msg) => {
         if (errEl) {
           errEl.textContent = msg;
-          errEl.style.display = "block";
+          errEl.classList.add("is-visible");
         }
       },
       () => {

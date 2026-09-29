@@ -45,6 +45,9 @@ function buildWarningHtml(warning: NonNullable<ReturnType<typeof getBlacklistWar
   const blockSub = isAdSkip
     ? `na ${escapeHtml(warning.originStation.name)}`
     : `leci teraz na ${escapeHtml(warning.originStation.name)}`;
+  const unblockBtn = isAdSkip
+    ? ""
+    : '<button type="button" class="bl-warn-link bl-warn-unblock">Cofnij blokadę</button>';
   const dismissLabel = isAdSkip ? "zostań mimo to" : "zagraj mimo to";
 
   if (warning.phase === "warning") {
@@ -71,6 +74,7 @@ function buildWarningHtml(warning: NonNullable<ReturnType<typeof getBlacklistWar
       <div class="bl-warn-actions">
         <button type="button" class="btn-primary bl-warn-switch">Przełącz teraz</button>
         <button type="button" class="bl-warn-link bl-warn-play-anyway">${dismissLabel}</button>
+        ${unblockBtn}
       </div>
     `;
   }
@@ -78,14 +82,17 @@ function buildWarningHtml(warning: NonNullable<ReturnType<typeof getBlacklistWar
     ? `Pominięto reklamę na ${escapeHtml(warning.originStation.name)}`
     : `Zablokowano: ${blockedTrackText(warning.track)} (${escapeHtml(warning.originStation.name)})`;
   return `
-    <div class="bl-warn-head"><span>ZA CHWILĘ</span><span class="k-rule"></span><span class="bl-warn-clock">0:00</span></div>
+    <div class="bl-warn-head"><span>ZA CHWILĘ</span><span class="k-rule"></span></div>
     <div class="bl-warn-row bl-warn-candidate">
       <span class="bl-warn-tag bl-warn-tag-ok">przełączono</span>
       <span class="bl-warn-dot bl-warn-dot-ok"></span>
       <div class="bl-warn-info"><div class="bl-warn-title">${escapeHtml(warning.candidate.name)}</div></div>
     </div>
     <div class="bl-warn-blocked-note">${blockedNote}</div>
-    <button type="button" class="bl-warn-link bl-warn-revert">wróć do poprzedniej stacji</button>
+    <div class="bl-warn-actions">
+      <button type="button" class="bl-warn-link bl-warn-revert">wróć do poprzedniej stacji</button>
+      ${unblockBtn}
+    </div>
   `;
 }
 

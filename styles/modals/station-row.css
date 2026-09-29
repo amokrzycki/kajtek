@@ -95,3 +95,19 @@
   color: var(--k-text-faint);
   font-size: 0.85rem;
 }
+
+.k-catalog-empty-text {
+  display: block;
+}
+
+.k-catalog-empty-actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.k-catalog-empty-actions[hidden] {
+  display: none;
+}

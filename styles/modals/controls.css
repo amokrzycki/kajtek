@@ -204,16 +204,20 @@
     box-shadow var(--k-tr);
 }
 
-.catalog-toggle-switch:has(.catalog-checkbox:checked:not(:disabled)) {
+.catalog-toggle-switch:has(.catalog-checkbox:checked) {
   background: var(--k-accent-dim);
   border-color: var(--k-accent);
 }
 
-.catalog-toggle-switch:has(.catalog-checkbox:checked:not(:disabled))::before {
+.catalog-toggle-switch:has(.catalog-checkbox:checked)::before {
   transform: translateX(14px);
   background: var(--k-accent);
   border-color: var(--k-accent-2);
   box-shadow: 0 0 3px var(--k-accent-ring);
+}
+
+.catalog-toggle-switch:has(.catalog-checkbox:disabled) {
+  filter: saturate(0.25);
 }
 
 .catalog-toggle-switch:has(.catalog-checkbox:focus-visible) {
@@ -221,6 +225,34 @@
     var(--k-sh-inset),
     0 0 0 2px var(--k-bg),
     0 0 0 4px var(--k-focus);
+}
+
+.catalog-delete-confirm {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-data);
+}
+
+.btn-delete-custom[hidden],
+.catalog-toggle-switch[hidden],
+.catalog-delete-confirm[hidden] {
+  display: none;
+}
+
+.catalog-delete-confirm button {
+  background: none;
+  border: none;
+  padding: 0.35rem 0;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  color: var(--k-text-muted);
+}
+
+.catalog-delete-confirm .btn-delete-yes {
+  color: var(--k-accent-text);
 }
 
 .btn-delete-custom {

@@ -237,6 +237,11 @@
     padding var(--k-tr-panel);
 }
 
+.k-form-error.is-visible {
+  grid-template-rows: 1fr;
+  padding: 0.5rem 1rem;
+}
+
 .k-modal-error.is-visible {
   grid-template-rows: 1fr;
   padding: 0.5rem 1rem;

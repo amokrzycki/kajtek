@@ -42,7 +42,7 @@ export const CATALOG_MODAL_HTML = `
                   <button type="submit" class="btn-primary">Dodaj</button>
                 </div>
                 <div id="custom-url-hint" class="k-field-hint" hidden>Adres http:// często nie zadziała — przeglądarka blokuje niezabezpieczone streamy na stronie https. Jeśli stacja ma adres https://, użyj go.</div>
-                <div id="custom-form-error" class="k-form-error" style="display: none;"></div>
+                <div id="custom-form-error" class="k-form-error"></div>
               </form>
             </div>
           </div>

@@ -4,6 +4,7 @@ import {
   dismissBlacklistWarning,
   returnToPreviousStation,
   switchBlacklistCandidateNow,
+  undoBlacklistBlock,
 } from "./blacklistWarning.js";
 import { getAllKnownStations } from "./catalog.js";
 import { checkForNewChangelog } from "./changelog.js";
@@ -146,6 +147,7 @@ function attachEvents() {
     const target = e.target as HTMLElement;
     if (target.closest(".bl-warn-switch")) switchBlacklistCandidateNow();
     else if (target.closest(".bl-warn-play-anyway")) dismissBlacklistWarning();
+    else if (target.closest(".bl-warn-unblock")) undoBlacklistBlock();
     else if (target.closest(".bl-warn-revert")) returnToPreviousStation();
     else if (target.closest(".bl-warn-cancel-return")) cancelAdSkipAutoReturn();
   });

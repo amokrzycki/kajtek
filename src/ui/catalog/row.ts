@@ -45,7 +45,11 @@ export function createStationRow(station: Station, opts: StationRowOpts, rerende
     <div class="catalog-col-actions">
       ${
         opts.isCustom
-          ? `<button type="button" class="btn-delete-custom" title="Usuń własną stację" aria-label="Usuń ${safeName}">${ICONS.trash}</button>`
+          ? `<button type="button" class="btn-delete-custom" title="Usuń własną stację" aria-label="Usuń ${safeName}">${ICONS.trash}</button>
+      <span class="catalog-delete-confirm" role="group" aria-label="Usunąć ${safeName}?" hidden>
+        <button type="button" class="btn-delete-yes">Usuń</button>
+        <button type="button" class="btn-delete-no">Anuluj</button>
+      </span>`
           : ""
       }
       <label class="catalog-toggle-switch" title="${enabled ? "Wyłącz stację" : "Włącz stację"}">
@@ -67,17 +71,25 @@ export function createStationRow(station: Station, opts: StationRowOpts, rerende
   });
 
   const deleteBtn = row.querySelector<HTMLButtonElement>(".btn-delete-custom");
-  deleteBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    if (confirm(`Czy na pewno chcesz usunąć stację "${station.name}"?`)) {
-      deleteCustomStation(station.id);
-      notifyState();
-      rerender();
-    }
+  const confirmEl = row.querySelector<HTMLElement>(".catalog-delete-confirm");
+  const setConfirming = (on: boolean) => {
+    if (!deleteBtn || !confirmEl || !toggleSwitch) return;
+    deleteBtn.hidden = on;
+    toggleSwitch.hidden = on;
+    confirmEl.hidden = !on;
+    (on ? confirmEl.querySelector<HTMLButtonElement>(".btn-delete-no") : deleteBtn)?.focus();
+  };
+  deleteBtn?.addEventListener("click", () => setConfirming(true));
+  row.querySelector(".btn-delete-no")?.addEventListener("click", () => setConfirming(false));
+  row.querySelector(".btn-delete-yes")?.addEventListener("click", () => {
+    deleteCustomStation(station.id);
+    notifyState();
+    rerender();
   });
 
   row.addEventListener("click", (e) => {
-    if ((e.target as HTMLElement).closest(".catalog-toggle-switch, .btn-delete-custom")) return;
+    if ((e.target as HTMLElement).closest(".catalog-toggle-switch, .btn-delete-custom, .catalog-delete-confirm"))
+      return;
     checkbox?.click();
   });
 
