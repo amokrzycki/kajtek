@@ -17,6 +17,7 @@ export const CATALOG_MODAL_HTML = `
           <span class="search-icon">${ICONS.search}</span>
           <input type="search" id="catalog-search-input" class="k-input catalog-search" placeholder="Szukaj stacji…" autocomplete="off" autofocus />
         </div>
+        <button type="button" id="catalog-filters-btn" class="btn-secondary catalog-filters-btn" aria-expanded="false" aria-controls="catalog-network-chips" hidden>Filtry<span class="catalog-filters-dot" aria-hidden="true"></span></button>
         <details class="k-modal-manage">
           <summary class="btn-secondary">
             <span>Opcje stacji</span>

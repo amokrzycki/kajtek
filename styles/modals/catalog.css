@@ -224,3 +224,48 @@
   align-items: flex-start;
   padding-top: max(1rem, 6vh);
 }
+
+.catalog-filters-btn {
+  display: none;
+  position: relative;
+}
+
+.catalog-filters-dot {
+  display: none;
+  width: 6px;
+  height: 6px;
+  margin-left: 0.4rem;
+  border-radius: 50%;
+  background: var(--k-accent);
+}
+
+.catalog-filters-btn.has-filter .catalog-filters-dot {
+  display: inline-block;
+}
+
+@media (max-width: 640px) {
+  .catalog-filters-btn:not([hidden]) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+  }
+
+  .k-modal:not(.filters-open) .catalog-chips,
+  .k-modal:not(.filters-open) .catalog-idxrail {
+    display: none;
+  }
+
+  .catalog-chips {
+    flex-shrink: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .k-modal .k-modal-toolbar {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .search-input-wrap {
+    min-width: 0;
+  }
+}

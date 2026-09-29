@@ -65,6 +65,9 @@
 
 @media (max-width: 640px) {
   .controls-row {
+    position: sticky;
+    bottom: max(0.5rem, env(safe-area-inset-bottom));
+    z-index: 5;
     order: 1;
     grid-template-columns: 1fr;
     gap: 0;
@@ -108,8 +111,28 @@
     margin: 0;
   }
 
+  .controls-row .k-panel {
+    padding: 0.35rem 0.75rem;
+  }
+
+  .controls-row .k-panel:nth-child(2) .k-head {
+    display: none;
+  }
+
+  .controls-row .sleep-keys {
+    gap: 0.35rem;
+  }
+
   .controls-row .sleep-key {
     min-height: 44px;
+    flex-direction: row;
+    justify-content: center;
+    align-items: baseline;
+    gap: 0.25em;
     padding: 0.35rem 0.2rem;
+  }
+
+  .controls-row .sleep-count.on {
+    margin-top: 0.4rem;
   }
 }
