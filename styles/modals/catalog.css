@@ -67,9 +67,47 @@
   text-decoration: none;
 }
 
-@media (max-width: 479px) {
-  .catalog-idxrail {
+@media (max-width: 640px) {
+  .catalog-az-panel {
+    flex-direction: column;
+    align-items: stretch;
+    min-width: 0;
+    gap: 0.4rem;
+  }
+
+  .catalog-az-panel .catalog-idxrail {
+    order: -1;
+    align-self: stretch;
+    z-index: 2;
+    flex-direction: row;
+    gap: 0;
+    padding: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    background: var(--k-bg-panel);
+    border-bottom: 1px solid var(--k-border);
+    font-size: 0.75rem;
+  }
+
+  .catalog-idxrail span:not(.has) {
     display: none;
+  }
+
+  .catalog-idxrail span {
+    flex: none;
+    padding: 0;
+  }
+
+  .catalog-idxrail span a {
+    display: block;
+    min-width: 44px;
+    height: 44px;
+    line-height: 44px;
+    text-align: center;
+  }
+
+  .catalog-sec-head {
+    scroll-margin-top: 52px;
   }
 }
 

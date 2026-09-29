@@ -212,3 +212,10 @@
     gap: var(--k-s1);
   }
 }
+
+@media (max-width: 640px) {
+  .kajtek-main {
+    padding-inline: max(1rem, calc(env(safe-area-inset-left) + 0.75rem))
+      max(1rem, calc(env(safe-area-inset-right) + 0.75rem));
+  }
+}

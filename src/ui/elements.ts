@@ -67,7 +67,7 @@ export function initVolumeControlUI(): void {
   }
   if (!isIOS()) return;
   state.vol = 100;
-  els.volumePanel?.classList.add("hidden");
+  els.volumePanel?.closest(".controls-row")?.classList.add("is-ios");
 }
 
 export function initVU(): void {

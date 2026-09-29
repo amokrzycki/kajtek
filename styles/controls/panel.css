@@ -4,9 +4,64 @@
   gap: var(--k-s4);
 }
 
-@media (max-width: 560px) {
+.controls-row.is-ios {
+  grid-template-columns: auto 1fr;
+}
+
+.controls-row.is-ios .vol-wrap,
+.controls-row.is-ios .vol-val,
+.controls-row.is-ios .k-head {
+  display: none;
+}
+
+@media (max-width: 640px) {
   .controls-row {
+    order: 1;
     grid-template-columns: 1fr;
+    gap: 0;
+    background: var(--k-bg-panel);
+    border: 1px solid var(--k-border-2);
+    border-radius: var(--k-r);
+    box-shadow: var(--k-sh-sm);
+  }
+
+  .controls-row .k-panel {
+    background: none;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    padding: 0.7rem 1rem;
+  }
+
+  .controls-row .k-panel + .k-panel {
+    border-top: 1px dashed var(--k-border-3);
+  }
+
+  .controls-row.is-ios {
+    grid-template-columns: auto 1fr;
+  }
+
+  .controls-row.is-ios .k-panel + .k-panel {
+    border-top: none;
+    padding-left: 0;
+  }
+
+  .controls-row .k-head {
+    margin-bottom: 0.5rem;
+  }
+
+  .controls-row #volume-panel .k-head {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    margin: 0;
+  }
+
+  .controls-row .sleep-key {
+    min-height: 44px;
+    padding: 0.35rem 0.2rem;
   }
 }
 

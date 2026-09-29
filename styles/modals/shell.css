@@ -270,6 +270,7 @@
   flex: 1;
   text-align: center;
   padding: 0.55rem 0.3rem;
+  white-space: nowrap;
   font-family: var(--k-font-mono);
   font-size: 0.66rem;
   font-weight: 600;
@@ -300,4 +301,16 @@
   font-family: var(--k-font-mono);
   font-size: var(--k-fs-tag);
   color: var(--k-text-faint);
+}
+
+@media (max-width: 480px) {
+  .catalog-tabbar {
+    padding-inline: 0.5rem;
+  }
+
+  .catalog-tab {
+    flex: 1 1 auto;
+    padding-inline: 0.2rem;
+    letter-spacing: 0.02em;
+  }
 }

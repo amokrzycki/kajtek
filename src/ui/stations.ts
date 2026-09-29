@@ -98,6 +98,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
     }
 
     const secDiv = document.createElement("div");
+    if (sec.key === "fav" && sec.list.length === 0) secDiv.className = "section-fav-empty";
 
     const header = document.createElement("h2");
     header.className = "section-header";

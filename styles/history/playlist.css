@@ -2,7 +2,7 @@
 
 .pl-item {
   display: grid;
-  grid-template-columns: 8ch 14px 1fr auto;
+  grid-template-columns: 8ch 14px minmax(0, 1fr) auto;
   column-gap: 0.55rem;
   align-items: center;
   padding: 0.32rem 0.4rem;
@@ -310,7 +310,7 @@
 
 @media (max-width: 640px) {
   .pl-item {
-    grid-template-columns: min-content 10px 1fr auto;
+    grid-template-columns: min-content 10px minmax(0, 1fr) auto;
     column-gap: 0.4rem;
     padding: 0.35rem 0.25rem;
   }
@@ -343,6 +343,24 @@
     font-size: 0.72rem;
     max-width: 100%;
     line-height: 1.25;
+  }
+
+  .pl-actions {
+    gap: 0;
+  }
+
+  .pl-actions .sc-star,
+  .pl-actions .fav-goto {
+    box-sizing: border-box;
+    min-width: 44px;
+    min-height: 44px;
+    margin-block: -7px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .pl-actions .sc-star {
+    display: inline-flex;
   }
 
   .pl-break-label {
