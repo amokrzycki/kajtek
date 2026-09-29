@@ -99,7 +99,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
 
     const secDiv = document.createElement("div");
 
-    const header = document.createElement("div");
+    const header = document.createElement("h2");
     header.className = "section-header";
     header.innerHTML = `<span class="section-title">${sec.label}</span><span class="k-rule"></span><span class="section-count">${sec.list.length}</span>`;
     secDiv.appendChild(header);
@@ -155,7 +155,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
   });
 
   // LAST, INVERT, PLAY: Animate cards smoothly from old position to new position
-  if (firstPositions.size > 0) {
+  if (firstPositions.size > 0 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     requestAnimationFrame(() => {
       const newCards = els.stationListContainer.querySelectorAll<HTMLElement>(".station-card[data-id]");
       newCards.forEach((card) => {

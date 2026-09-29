@@ -15,10 +15,12 @@
 
   /* ——— text ——— */
   --k-text: #272320;
-  --k-text-2: #554e49;
-  --k-text-muted: #5f5a54;
-  --k-text-faint: #6b665f;
+  --k-text-2: #4c4641;
+  --k-text-muted: #56504a;
+  --k-text-faint: #5b5650;
   --k-text-disabled: #8d8880;
+
+  --k-focus: #272320;
 
   --k-accent: #c4251b;
   --k-accent-2: #d83428;
@@ -96,8 +98,8 @@
   --k-fs-lead: 1.05rem;
   --k-fs-body: 0.78rem;
   --k-fs-data: 0.7rem;
-  --k-fs-label: 0.65rem;
-  --k-fs-tag: 0.54rem;
+  --k-fs-label: 0.7rem;
+  --k-fs-tag: 0.625rem;
   --k-tracking-label: 0.18em;
 
   /* ——— motion ——— */
@@ -129,6 +131,8 @@
   --k-text-muted: #a39b91;
   --k-text-faint: #9c948a;
   --k-text-disabled: #6f6a64;
+
+  --k-focus: #f0eae1;
 
   --k-accent: #c4251b;
   --k-accent-2: #d83428;
@@ -205,7 +209,7 @@ body {
 /* Focus: one pattern for the whole app */
 :where(a, button, input, select, summary, textarea, [tabindex]):focus-visible,
 .k-catalog-row:focus-visible {
-  outline: 2px solid var(--k-accent-2);
+  outline: 2px solid var(--k-focus);
   outline-offset: 2px;
 }
 

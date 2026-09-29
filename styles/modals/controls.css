@@ -35,6 +35,11 @@
   border-color: var(--k-accent);
 }
 
+.k-input:focus-visible {
+  outline: 2px solid var(--k-focus);
+  outline-offset: 2px;
+}
+
 .btn-secondary {
   padding: 0.45rem 0.75rem;
   background: var(--k-bg-inset);
@@ -179,7 +184,8 @@
 .catalog-toggle-switch:has(.catalog-checkbox:focus-visible) {
   box-shadow:
     var(--k-sh-inset),
-    0 0 0 2px var(--k-accent-ring);
+    0 0 0 2px var(--k-bg),
+    0 0 0 4px var(--k-focus);
 }
 
 .btn-delete-custom {

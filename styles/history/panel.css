@@ -102,7 +102,7 @@
 
 .history-clock {
   font-family: var(--k-font-mono);
-  font-size: 0.58rem;
+  font-size: 0.625rem;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
   color: var(--k-disp-text-3);

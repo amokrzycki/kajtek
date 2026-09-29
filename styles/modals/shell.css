@@ -163,9 +163,8 @@
 }
 
 .k-modal-manage > summary:focus-visible {
-  outline: none;
-  border-color: var(--k-accent);
-  box-shadow: 0 0 0 3px var(--k-accent-ring);
+  outline: 2px solid var(--k-focus);
+  outline-offset: 2px;
 }
 
 .k-modal-manage[open] > summary {
@@ -175,9 +174,7 @@
 }
 
 .k-modal-manage[open] > summary:focus-visible {
-  box-shadow:
-    var(--k-sh-inset),
-    0 0 0 3px var(--k-accent-ring);
+  box-shadow: var(--k-sh-inset);
 }
 
 .k-modal-manage-chevron {

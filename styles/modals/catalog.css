@@ -22,7 +22,7 @@
 
 .catalog-sec-count {
   font-family: var(--k-font-mono);
-  font-size: 0.58rem;
+  font-size: 0.625rem;
   color: var(--k-text-faint);
 }
 
@@ -47,7 +47,7 @@
   flex-direction: column;
   gap: 1px;
   font-family: var(--k-font-mono);
-  font-size: 0.56rem;
+  font-size: 0.625rem;
   color: var(--k-text-faint);
   flex-shrink: 0;
   padding: 0.2rem 0.25rem 0.2rem 0;
@@ -75,7 +75,7 @@
 
 .catalog-provider-tag {
   font-family: var(--k-font-mono);
-  font-size: 0.56rem;
+  font-size: 0.625rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   color: var(--k-text-2);
@@ -93,7 +93,7 @@
   background: var(--k-accent-dim);
   color: var(--k-accent-text);
   font-family: var(--k-font-mono);
-  font-size: 0.56rem;
+  font-size: 0.625rem;
   font-weight: 600;
   letter-spacing: 0.06em;
   padding: 0.15rem 0.45rem;

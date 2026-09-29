@@ -34,6 +34,7 @@
 
 /* Field header — one pattern for .k-panel and station sections */
 .k-head {
+  font: inherit;
   display: flex;
   align-items: center;
   gap: 0.55rem;
