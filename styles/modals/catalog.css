@@ -219,3 +219,8 @@
   color: var(--k-text-faint);
   padding: 0.4rem 0.1rem 0;
 }
+
+#catalog-modal-overlay {
+  align-items: flex-start;
+  padding-top: max(1rem, 6vh);
+}

@@ -44,8 +44,50 @@
   cursor: not-allowed;
 }
 
-.k-settings-manage {
+.k-settings-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
   margin-top: var(--k-s2);
+  padding: 0.5rem 0.85rem;
+  background: none;
+  border: none;
+  color: var(--k-accent-text);
+  font-family: var(--k-font-body);
+  font-size: var(--k-fs-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.k-settings-link > span:first-child {
+  flex: 1;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.k-settings-link-count {
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-data);
+  font-variant-numeric: tabular-nums;
+  color: var(--k-text-faint);
+}
+
+.k-settings-link-chevron {
+  display: inline-flex;
+  color: var(--k-text-faint);
+  transition: transform var(--k-tr);
+}
+
+.k-settings-link:focus-visible {
+  outline: 2px solid var(--k-focus);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .k-settings-link:hover .k-settings-link-chevron {
+    transform: translateX(2px);
+  }
 }
 
 .k-settings-row-text {

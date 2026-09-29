@@ -96,11 +96,6 @@ export function renderBlacklistWarning(): void {
   const warning = getBlacklistWarningState();
   const compact = !!warning && isAutoReturnPending(warning);
 
-  // The full-card banner takes over the whole program list, so only hide it there — the
-  // compact auto-return chip is meant to sit alongside history, not replace it.
-  const hideHistory = !!warning && !compact;
-  els.historyList.style.display = hideHistory ? "none" : "";
-  els.historyEmpty.style.display = hideHistory ? "none" : els.historyEmpty.style.display;
   els.blacklistWarning.classList.toggle("bl-warn-compact", compact);
 
   if (!warning) {

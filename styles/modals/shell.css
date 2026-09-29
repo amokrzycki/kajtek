@@ -36,10 +36,12 @@
   box-shadow: var(--k-sh-md);
   width: 100%;
   max-width: 600px;
-  max-height: 85vh;
+  max-height: min(85vh, 100%);
+  min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: clip;
+  overflow-clip-margin: 6px;
   opacity: 0;
   transform: scale(0.94) translateY(12px);
   transition:

@@ -1,5 +1,7 @@
+import { getBlacklist } from "../../blacklist.js";
 import type { CaseSlug } from "../../consts.js";
 import { STORAGE_KEYS } from "../../consts.js";
+import { ICONS } from "../../icons.js";
 import { notifyState, state } from "../../state.js";
 import { setStoredJSON } from "../../utils.js";
 import { openBlacklistModal } from "../blacklist/modal.js";
@@ -26,6 +28,7 @@ export function openSettingsModal(): void {
     syncBlacklistToggle();
     syncAdSkipToggle();
     syncCaseSwatches();
+    syncBlacklistCount();
   }
   if (modalEl) openModal(modalEl);
 }
@@ -107,7 +110,11 @@ function createModalElements(): void {
               <input type="checkbox" id="settings-blacklist-toggle" class="catalog-checkbox" aria-label="Włącz czarną listę" />
             </label>
           </div>
-          <button type="button" id="settings-blacklist-manage" class="btn-secondary k-settings-manage">Zarządzaj zablokowanymi utworami</button>
+          <button type="button" id="settings-blacklist-manage" class="k-settings-link">
+            <span>Zablokowane utwory</span>
+            <span class="k-settings-link-count" id="settings-blacklist-count"></span>
+            <span class="k-settings-link-chevron" aria-hidden="true">${ICONS.chevron}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -152,12 +159,18 @@ function createModalElements(): void {
   syncBlacklistToggle();
   syncAdSkipToggle();
   syncCaseSwatches();
+  syncBlacklistCount();
 }
 
 function syncCaseSwatches(): void {
   modalEl?.querySelectorAll<HTMLButtonElement>(".k-settings-swatch").forEach((btn) => {
     btn.setAttribute("aria-pressed", String(btn.dataset.case === state.case));
   });
+}
+
+function syncBlacklistCount(): void {
+  const el = modalEl?.querySelector("#settings-blacklist-count");
+  if (el) el.textContent = String(getBlacklist().length);
 }
 
 function syncBlacklistToggle(): void {
