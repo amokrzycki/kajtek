@@ -119,9 +119,9 @@
 }
 
 .adskip-legend {
-  font-size: 0.55rem;
+  font-size: 0.625rem;
   font-weight: 700;
-  letter-spacing: 0.15em;
+  letter-spacing: 0.12em;
 }
 
 .adskip-slot {
@@ -161,10 +161,10 @@
 .adskip-pos {
   display: flex;
   justify-content: space-between;
-  width: 52px;
-  font-size: 0.48rem;
+  width: 64px;
+  font-size: 0.625rem;
   font-weight: 600;
-  letter-spacing: 0.1em;
+  letter-spacing: 0.04em;
   opacity: 0.85;
 }
 
@@ -238,7 +238,7 @@
   border: 1px solid var(--k-border-2);
   border-radius: var(--k-rb);
   font-family: var(--k-font-mono);
-  font-size: 0.6rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.09em;
   color: var(--k-text-muted);
   cursor: pointer;

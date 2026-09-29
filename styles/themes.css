@@ -61,8 +61,8 @@
 [data-case="blue"] {
   --k-case: linear-gradient(180deg, #74aee0 0%, #4d88c6 100%);
   --k-case-edge: #3f74ae;
-  --k-case-ink: #ffffff;
-  --k-case-ink-dim: rgba(255, 255, 255, 0.9);
+  --k-case-ink: #071827;
+  --k-case-ink-dim: rgba(7, 24, 39, 0.9);
   --k-u-box-fg: #2f6ba5;
   --k-sh-contact: 0 18px 30px -12px rgba(35, 80, 130, 0.45), 2px 4px 12px rgba(0, 0, 0, 0.13);
 

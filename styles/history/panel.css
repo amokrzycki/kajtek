@@ -83,10 +83,10 @@
 
 .fav-tab-count {
   font-family: var(--k-font-mono);
-  font-size: var(--k-fs-tag);
+  font-size: 0.6875rem;
   font-variant-numeric: tabular-nums;
-  color: var(--k-disp-dim);
-  background: var(--k-bg-inset);
+  color: var(--k-disp-text-2);
+  background: rgba(255, 255, 255, 0.12);
   padding: 1px 6px;
   border-radius: 10px;
 }
