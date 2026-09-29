@@ -67,7 +67,7 @@ function createModalElements(): void {
 
       <div class="k-settings-body">
         <div class="k-settings-group">
-          <div class="k-settings-label">Kolor akcentu</div>
+          <div class="k-settings-label">Obudowa</div>
           <div class="k-settings-swatches">${swatchesHtml()}</div>
         </div>
 

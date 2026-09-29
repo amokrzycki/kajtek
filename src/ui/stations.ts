@@ -88,7 +88,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
   const otherList = enabledStations.filter((s) => !state.favs.has(s.id));
 
   const sections = [
-    { label: "Ulubione", key: "fav", list: favList },
+    { label: "Ulubione stacje", key: "fav", list: favList },
     { label: "Stacje radiowe", key: "all", list: otherList },
   ];
 
@@ -109,7 +109,9 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
       const empty = document.createElement("div");
       empty.className = "section-empty";
       empty.textContent =
-        sec.key === "fav" ? "Brak ulubionych — kliknij ★ przy dowolnej stacji" : "Brak stacji — dodaj z katalogu";
+        sec.key === "fav"
+          ? "Brak ulubionych stacji — kliknij ★ przy stacji na liście"
+          : "Brak stacji — dodaj z katalogu";
       secDiv.appendChild(empty);
     } else {
       const grid = document.createElement("div");
@@ -135,7 +137,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
               </div>
             </div>
           </button>
-          <button type="button" class="sc-star${isFav ? " on" : ""}" aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">
+          <button type="button" class="sc-star${isFav ? " on" : ""}" aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}: ${safeName}">
             ${ICONS.star(isFav)}
           </button>
         `;

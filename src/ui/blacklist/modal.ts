@@ -57,12 +57,12 @@ function createModalElements(): void {
     <div class="k-modal" role="dialog" aria-modal="true" aria-labelledby="blacklist-modal-title">
       <div class="k-modal-header">
         <div class="k-modal-title-group">
-          <h2 id="blacklist-modal-title" class="k-modal-title">Blacklista utworów</h2>
+          <h2 id="blacklist-modal-title" class="k-modal-title">Czarna lista utworów</h2>
         </div>
         <button type="button" id="blacklist-modal-close" class="k-modal-close" aria-label="Zamknij">&times;</button>
       </div>
 
-      <div class="catalog-tabbar" role="tablist" aria-label="Zakładki blacklisty">
+      <div class="catalog-tabbar" role="tablist" aria-label="Zakładki czarnej listy">
         <button type="button" class="catalog-tab active" id="blacklist-tab-list" role="tab" aria-selected="true" aria-controls="blacklist-body" data-tab="list">ZABLOKOWANE <span class="catalog-tab-count">0</span></button>
         <button type="button" class="catalog-tab" id="blacklist-tab-add" role="tab" aria-selected="false" aria-controls="blacklist-body" data-tab="add">DODAJ</button>
       </div>
@@ -132,7 +132,8 @@ function renderListTab(container: HTMLElement): void {
   if (entries.length === 0) {
     const empty = document.createElement("div");
     empty.className = "k-catalog-empty";
-    empty.textContent = "Brak zablokowanych utworów";
+    empty.textContent =
+      "Brak zablokowanych utworów — zablokuj utwór przyciskiem ⊘ przy okładce lub w zakładce PROGRAM albo dodaj go ręcznie w zakładce DODAJ.";
     container.appendChild(empty);
     return;
   }
@@ -148,7 +149,7 @@ function renderListTab(container: HTMLElement): void {
         </div>
       </div>
       <div class="catalog-col-actions">
-        <button type="button" class="btn-delete-custom" data-key="${escapeHtml(entry.key)}" title="Usuń z blacklisty" aria-label="Usuń ${escapeHtml(entry.artist)} – ${escapeHtml(entry.title)}">${ICONS.trash}</button>
+        <button type="button" class="btn-delete-custom" data-key="${escapeHtml(entry.key)}" title="Usuń z czarnej listy" aria-label="Usuń z czarnej listy: ${escapeHtml(entry.artist)} – ${escapeHtml(entry.title)}">${ICONS.trash}</button>
       </div>
     `;
     container.appendChild(row);

@@ -149,10 +149,12 @@ export function updateAlbumArt(coverUrl: string | undefined, track: TrackInfo | 
     els.npFavStar.innerHTML = ICONS.star(isTrackFavorited(track));
     els.npFavStar.classList.toggle("on", isTrackFavorited(track));
     els.npFavStar.setAttribute("aria-pressed", String(isTrackFavorited(track)));
+    els.npFavStar.setAttribute("aria-label", `Ulubiony utwór: ${track.artist} – ${track.title}`);
     els.npBlockBtn.hidden = false;
     els.npBlockBtn.innerHTML = ICONS.ban;
     els.npBlockBtn.classList.toggle("on", isBlacklisted(track));
     els.npBlockBtn.setAttribute("aria-pressed", String(isBlacklisted(track)));
+    els.npBlockBtn.setAttribute("aria-label", `Czarna lista: ${track.artist} – ${track.title}`);
   } else {
     els.npFavStar.hidden = true;
     els.npBlockBtn.hidden = true;

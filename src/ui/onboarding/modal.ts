@@ -9,9 +9,9 @@ const FEATURES: { icon: string; title: string; desc: string }[] = [
     desc: "Wybierz stację z listy. Odtwarzanie ruszy od razu.",
   },
   {
-    icon: ICONS.play,
-    title: "2. Steruj przyciskiem PLAY",
-    desc: "Duży klawisz zatrzymuje i wznawia radio.",
+    icon: ICONS.ban,
+    title: "2. Pomijaj reklamy",
+    desc: "Kajtek może sam przełączać stację na czas reklam. Włączysz to w Ustawieniach.",
   },
 ];
 

@@ -94,8 +94,8 @@
 .k-onboarding-note {
   width: 100%;
   padding: 0.7rem 0.85rem;
-  background: var(--k-accent-dim);
-  border: 1px solid var(--k-accent-ring);
+  background: var(--k-bg-inset);
+  border: 1px solid var(--k-border);
   border-radius: var(--k-rc);
   font-size: var(--k-fs-label);
   color: var(--k-text-2);

@@ -55,7 +55,7 @@ function favRowHtml(f: FavTrack): string {
       </div>
       <div class="pl-actions">
         <button type="button" class="fav-goto" data-station-id="${escapeHtml(f.stationId)}" aria-label="Przejdź do stacji ${escapeHtml(f.stationTag)}">${ICONS.chevron}</button>
-        <button type="button" class="sc-star fav-star on" data-key="${escapeHtml(f.key)}" aria-label="Usuń z ulubionych">${ICONS.star(true)}</button>
+        <button type="button" class="sc-star fav-star on" data-key="${escapeHtml(f.key)}" aria-label="Usuń z ulubionych: ${escapeHtml(f.artist)} – ${escapeHtml(f.title)}">${ICONS.star(true)}</button>
       </div>
     </div>
   `;

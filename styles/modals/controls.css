@@ -117,6 +117,41 @@
   min-width: 140px;
 }
 
+.k-form-row:has(.k-field) {
+  align-items: flex-end;
+}
+
+.k-field {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 140px;
+}
+
+.k-custom-form .k-field .k-input {
+  flex: none;
+  min-width: 0;
+}
+
+.k-field-label {
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-label);
+  letter-spacing: var(--k-tracking-label);
+  text-transform: uppercase;
+  color: var(--k-text-muted);
+}
+
+.k-field-hint {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--k-text-2);
+}
+
+.k-field-hint[hidden] {
+  display: none;
+}
+
 /* ——— on/off toggle (catalog, settings) ——— */
 
 .catalog-checkbox {

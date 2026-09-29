@@ -81,8 +81,8 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
     </div>
     <div class="pl-actions">
       <span class="pl-dur">${durStr}</span>
-      <button type="button" class="sc-star pl-fav-star${isTrackFavorited(t) ? " on" : ""}" data-key="${escapeHtml(getTrackKey(t))}" aria-label="${isTrackFavorited(t) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">${ICONS.star(isTrackFavorited(t))}</button>
-      <button type="button" class="sc-star pl-block-btn${isBlacklisted(t) ? " on" : ""}" data-artist="${escapeHtml(t.artist)}" data-title="${escapeHtml(t.title)}" aria-label="${isBlacklisted(t) ? "Odblokuj utwór" : "Zablokuj utwór"}" title="${isBlacklisted(t) ? "Odblokuj utwór" : "Zablokuj utwór"}">${ICONS.ban}</button>
+      <button type="button" class="sc-star pl-fav-star${isTrackFavorited(t) ? " on" : ""}" data-key="${escapeHtml(getTrackKey(t))}" aria-label="${isTrackFavorited(t) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}: ${escapeHtml(t.artist)} – ${escapeHtml(t.title)}">${ICONS.star(isTrackFavorited(t))}</button>
+      <button type="button" class="sc-star pl-block-btn${isBlacklisted(t) ? " on" : ""}" data-artist="${escapeHtml(t.artist)}" data-title="${escapeHtml(t.title)}" aria-label="${isBlacklisted(t) ? "Odblokuj utwór" : "Zablokuj utwór"}: ${escapeHtml(t.artist)} – ${escapeHtml(t.title)}" title="${isBlacklisted(t) ? "Odblokuj utwór" : "Zablokuj utwór"}">${ICONS.ban}</button>
     </div>
   `;
 }

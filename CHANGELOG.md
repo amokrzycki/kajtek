@@ -6,6 +6,7 @@ Ogólne usprawnienia w obrębie całego interfejsu Kajtka, poprawki błędów i 
 
 - Poprawiono układ nagłówka i katalogu na telefonach, dostęp do czarnej listy w ustawieniach oraz czytelność zależnych przełączników.
 - Uściślono wskazówkę o stacjach przy pierwszym uruchomieniu.
+- Ujednolicono nazwy i komunikaty: „Czarna lista”, „Obudowa”, osobne „Ulubione stacje” i „Ulubione utwory”, czytelniejsze etykiety przycisków oraz formularz własnej stacji z ostrzeżeniem o adresach http://.
 
 ## 0.11.3
 

@@ -112,6 +112,11 @@ function createModalElements(): void {
   });
 
   const customForm = modalEl.querySelector<HTMLFormElement>("#catalog-custom-form");
+  const urlInput = modalEl.querySelector<HTMLInputElement>("#custom-url-input");
+  const urlHint = modalEl.querySelector<HTMLElement>("#custom-url-hint");
+  urlInput?.addEventListener("input", () => {
+    if (urlHint) urlHint.hidden = !/^\s*http:\/\//i.test(urlInput.value);
+  });
   customForm?.addEventListener("submit", (e) => {
     e.preventDefault();
     const nameEl = modalEl?.querySelector<HTMLInputElement>("#custom-name-input");
@@ -133,6 +138,7 @@ function createModalElements(): void {
       () => {
         nameEl.value = "";
         urlEl.value = "";
+        if (urlHint) urlHint.hidden = true;
         showCustomForm = false;
         customToggleBtn?.setAttribute("aria-expanded", "false");
         const formWrap = modalEl?.querySelector<HTMLElement>("#catalog-custom-form-wrap");
