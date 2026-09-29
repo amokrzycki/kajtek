@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.0
+
+Ogólne usprawnienia w obrębie całego interfejsu Kajtka, poprawki błędów i optymalizacje.
+
+- Poprawiono układ nagłówka i katalogu na telefonach, dostęp do czarnej listy w ustawieniach oraz czytelność zależnych przełączników.
+- Uściślono wskazówkę o stacjach przy pierwszym uruchomieniu.
+
 ## 0.11.3
 
 Dodano politykę prywatności i informacje prawne Kajtka.

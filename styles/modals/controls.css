@@ -164,12 +164,12 @@
     box-shadow var(--k-tr);
 }
 
-.catalog-toggle-switch:has(.catalog-checkbox:checked) {
+.catalog-toggle-switch:has(.catalog-checkbox:checked:not(:disabled)) {
   background: var(--k-accent-dim);
   border-color: var(--k-accent);
 }
 
-.catalog-toggle-switch:has(.catalog-checkbox:checked)::before {
+.catalog-toggle-switch:has(.catalog-checkbox:checked:not(:disabled))::before {
   transform: translateX(14px);
   background: var(--k-accent);
   border-color: var(--k-accent-2);

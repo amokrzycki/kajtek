@@ -2,6 +2,7 @@ import type { CaseSlug } from "../../consts.js";
 import { STORAGE_KEYS } from "../../consts.js";
 import { notifyState, state } from "../../state.js";
 import { setStoredJSON } from "../../utils.js";
+import { openBlacklistModal } from "../blacklist/modal.js";
 import { bindModalDismiss, closeModal, openModal } from "../modal.js";
 
 const CASE_SWATCHES: { slug: CaseSlug; label: string; hex: string }[] = [
@@ -106,6 +107,7 @@ function createModalElements(): void {
               <input type="checkbox" id="settings-blacklist-toggle" class="catalog-checkbox" aria-label="Włącz czarną listę" />
             </label>
           </div>
+          <button type="button" id="settings-blacklist-manage" class="btn-secondary k-settings-manage">Zarządzaj zablokowanymi utworami</button>
         </div>
       </div>
     </div>
@@ -115,6 +117,10 @@ function createModalElements(): void {
 
   bindModalDismiss(modalEl, closeSettingsModal);
   modalEl.querySelector("#settings-modal-close")?.addEventListener("click", closeSettingsModal);
+  modalEl.querySelector("#settings-blacklist-manage")?.addEventListener("click", () => {
+    closeSettingsModal();
+    openBlacklistModal();
+  });
 
   modalEl.querySelector<HTMLInputElement>("#settings-blacklist-toggle")?.addEventListener("change", (e) => {
     state.blacklistEnabled = (e.target as HTMLInputElement).checked;

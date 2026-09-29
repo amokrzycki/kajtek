@@ -199,13 +199,16 @@
 }
 
 @media (max-width: 480px) {
-  .header-brand .brand-name {
-    font-size: 2.1rem;
-  }
-}
-
-@media (max-width: 370px) {
   .header-brand {
     flex-direction: column;
+    gap: 0;
+  }
+
+  .header-brand .brand-name {
+    font-size: clamp(1.65rem, 8.5vw, 2.1rem);
+  }
+
+  .header-actions {
+    gap: var(--k-s1);
   }
 }

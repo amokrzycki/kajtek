@@ -44,6 +44,10 @@
   cursor: not-allowed;
 }
 
+.k-settings-manage {
+  margin-top: var(--k-s2);
+}
+
 .k-settings-row-text {
   display: flex;
   flex-direction: column;

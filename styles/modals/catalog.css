@@ -68,27 +68,8 @@
 }
 
 @media (max-width: 479px) {
-  .catalog-az-panel {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
   .catalog-idxrail {
-    order: -1;
-    position: sticky;
-    top: 0;
-    z-index: 1;
-    flex-direction: row;
-    flex-wrap: wrap;
-    width: 100%;
-    gap: 2px;
-    padding: 0.3rem 0.1rem;
-    background: var(--k-bg-panel);
-    border-bottom: 1px dashed var(--k-border-2);
-  }
-
-  .catalog-idxrail span {
-    padding: 3px 5px;
+    display: none;
   }
 }
 
