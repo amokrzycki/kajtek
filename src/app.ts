@@ -19,6 +19,7 @@ import { openChangelogModal } from "./ui/changelog/modal.js";
 import { removeFavTrackByKey } from "./ui/favorites.js";
 import { openOnboardingModal, shouldShowOnboarding } from "./ui/onboarding/modal.js";
 import { openSettingsModal } from "./ui/settings/modal.js";
+import { openShortcutsModal } from "./ui/shortcuts/modal.js";
 import {
   els,
   initVolumeControlUI,
@@ -80,6 +81,7 @@ function handleShortcut(e: KeyboardEvent): void {
   } else if (e.key === "ArrowRight") stepStation(1);
   else if (e.key === "ArrowLeft") stepStation(-1);
   else if (e.key.toLowerCase() === "m") toggleMute();
+  else if (e.key === "?") openShortcutsModal();
   else if (/^[1-4]$/.test(e.key)) setSleepTimer(SLEEP_KEY_MINUTES[Number(e.key) - 1] ?? 15);
   else return;
   e.preventDefault();
@@ -87,6 +89,7 @@ function handleShortcut(e: KeyboardEvent): void {
 
 function attachEvents() {
   document.addEventListener("keydown", handleShortcut);
+  document.getElementById("shortcuts-link")?.addEventListener("click", openShortcutsModal);
 
   els.helpBtn.addEventListener("click", () => openOnboardingModal(focusStationSelection));
 

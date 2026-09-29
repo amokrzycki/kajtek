@@ -35,7 +35,7 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
   - `controls.ts` - Volume, mute, favorites, and sleep timer control handling.
   - `visualizer.ts` - VU meter and audio visualization animation engine.
   - `ui.ts` - Primary DOM rendering engine and album art resolver.
-  - `ui/` - UI subcomponents: `catalog/` (station browser & custom station form), `blacklist/` (modal & warning banner), `settings/` (settings modal), `changelog/` (changelog modal), `favorites.ts`, `history.ts`, `stations.ts`, `modal.ts`, `elements.ts`.
+  - `ui/` - UI subcomponents: `catalog/` (station browser & custom station form), `blacklist/` (modal & warning banner), `settings/` (settings modal), `changelog/` (changelog modal), `shortcuts/` (keyboard shortcuts cheatsheet), `favorites.ts`, `history.ts`, `stations.ts`, `modal.ts`, `elements.ts`.
   - `icons.ts` - SVG icon component definitions.
   - `utils.ts` - String decoding, timing helpers, and DOM fade triggers.
   - `md.d.ts` - Type declaration enabling `.md` file imports (used for `CHANGELOG.md`).
