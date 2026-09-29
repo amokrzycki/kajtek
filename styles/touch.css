@@ -1,0 +1,41 @@
+/* 44px hit areas on touch — visuals unchanged, the pseudo-element extends the tappable box */
+
+@media (pointer: coarse) {
+  .sc-star,
+  .settings-toggle,
+  .dark-toggle,
+  .history-tab,
+  .btn-view-toggle,
+  .btn-preview,
+  .catalog-chip {
+    position: relative;
+  }
+
+  .sc-star::after,
+  .settings-toggle::after,
+  .dark-toggle::after,
+  .history-tab::after,
+  .btn-view-toggle::after,
+  .btn-preview::after,
+  .catalog-chip::after,
+  .footer-links a::after,
+  .footer-version::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: max(100%, 44px);
+    height: max(100%, 44px);
+    transform: translate(-50%, -50%);
+  }
+
+  .footer-links a,
+  .footer-version {
+    position: relative;
+  }
+
+  .footer-links a::after,
+  .footer-version::after {
+    width: 100%;
+  }
+}

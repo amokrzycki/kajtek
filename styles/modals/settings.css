@@ -112,14 +112,21 @@
 
 .k-settings-swatches {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.5rem;
+}
+
+@media (max-width: 480px) {
+  .k-settings-swatches {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 .k-settings-swatch {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
   padding: 0.55rem 0.7rem;
   border: 1px solid var(--k-border-2);
   border-radius: var(--k-rb);
