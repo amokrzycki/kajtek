@@ -4,6 +4,49 @@
   gap: var(--k-s4);
 }
 
+.k-panel {
+  background: var(--k-bg-panel);
+  border: 1px solid var(--k-border-2);
+  border-radius: var(--k-r);
+  box-shadow: var(--k-sh-sm);
+  padding: var(--k-s3) var(--k-s4);
+  transition:
+    background var(--k-tr),
+    border-color var(--k-tr);
+}
+
+.k-label,
+.section-title {
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-label);
+  font-weight: 500;
+  letter-spacing: var(--k-tracking-label);
+  text-transform: uppercase;
+  color: var(--k-text-muted);
+  transition: color var(--k-tr);
+}
+
+/* Field header — one pattern for .k-panel and station sections */
+.k-head {
+  font: inherit;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.85rem;
+}
+
+.k-head .k-label {
+  margin-bottom: 0;
+}
+
+.k-head .k-rule,
+.section-header .k-rule,
+.k-modal-header .k-rule {
+  flex: 1;
+  height: 1px;
+  background: repeating-linear-gradient(90deg, var(--k-border-3) 0 4px, transparent 4px 8px);
+}
+
 .controls-row.is-ios {
   grid-template-columns: auto 1fr;
 }
@@ -12,6 +55,12 @@
 .controls-row.is-ios .vol-val,
 .controls-row.is-ios .k-head {
   display: none;
+}
+
+@media (max-width: 480px) {
+  .k-panel {
+    padding: 0.9rem 1rem;
+  }
 }
 
 @media (max-width: 640px) {
@@ -62,54 +111,5 @@
   .controls-row .sleep-key {
     min-height: 44px;
     padding: 0.35rem 0.2rem;
-  }
-}
-
-.k-panel {
-  background: var(--k-bg-panel);
-  border: 1px solid var(--k-border-2);
-  border-radius: var(--k-r);
-  box-shadow: var(--k-sh-sm);
-  padding: var(--k-s3) var(--k-s4);
-  transition:
-    background var(--k-tr),
-    border-color var(--k-tr);
-}
-
-.k-label,
-.section-title {
-  font-family: var(--k-font-mono);
-  font-size: var(--k-fs-label);
-  font-weight: 500;
-  letter-spacing: var(--k-tracking-label);
-  text-transform: uppercase;
-  color: var(--k-text-muted);
-  transition: color var(--k-tr);
-}
-
-/* Field header — one pattern for .k-panel and station sections */
-.k-head {
-  font: inherit;
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  margin-bottom: 0.85rem;
-}
-
-.k-head .k-label {
-  margin-bottom: 0;
-}
-
-.k-head .k-rule,
-.section-header .k-rule,
-.k-modal-header .k-rule {
-  flex: 1;
-  height: 1px;
-  background: repeating-linear-gradient(90deg, var(--k-border-3) 0 4px, transparent 4px 8px);
-}
-
-@media (max-width: 480px) {
-  .k-panel {
-    padding: 0.9rem 1rem;
   }
 }
