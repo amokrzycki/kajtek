@@ -13,23 +13,33 @@
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  background: var(--k-bg-panel);
-  border: 1px dashed var(--k-border-2);
-  border-radius: var(--k-r);
+  background: var(--k-bg-raised);
+  border: 1px solid var(--k-border-3);
+  border-radius: var(--k-rb);
+  box-shadow: var(--k-sh-btn);
   color: var(--k-text);
   font-family: var(--k-font-mono);
   font-size: var(--k-fs-body);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   transition:
-    background var(--k-tr),
-    border-color var(--k-tr);
+    color var(--k-tr),
+    border-color var(--k-tr),
+    box-shadow var(--k-tr-fast),
+    transform var(--k-tr-fast);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .btn-catalog-trigger:hover {
-    background: var(--k-bg-inset);
     border-color: var(--k-accent);
   }
+}
+
+.btn-catalog-trigger:active {
+  box-shadow: var(--k-sh-inset);
+  transform: translateY(1px);
 }
 
 .view-toggle-group {

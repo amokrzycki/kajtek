@@ -29,6 +29,14 @@ let tabSwitchTimer: number | undefined;
 const viewDeps: CatalogViewDeps = {
   rerender: () => renderModalBody(),
   onRetry: () => handleRefreshCatalog(),
+  onClearSearch: () => {
+    searchQuery = "";
+    activeNetwork = null;
+    const input = modalEl?.querySelector<HTMLInputElement>("#catalog-search-input");
+    if (input) input.value = "";
+    renderModalBody();
+  },
+  onSearchAll: () => setActiveTab("all"),
 };
 
 export function openCatalogModal(): void {
@@ -112,6 +120,11 @@ function createModalElements(): void {
   });
 
   const customForm = modalEl.querySelector<HTMLFormElement>("#catalog-custom-form");
+  const urlInput = modalEl.querySelector<HTMLInputElement>("#custom-url-input");
+  const urlHint = modalEl.querySelector<HTMLElement>("#custom-url-hint");
+  urlInput?.addEventListener("input", () => {
+    if (urlHint) urlHint.hidden = !/^\s*http:\/\//i.test(urlInput.value);
+  });
   customForm?.addEventListener("submit", (e) => {
     e.preventDefault();
     const nameEl = modalEl?.querySelector<HTMLInputElement>("#custom-name-input");
@@ -119,7 +132,7 @@ function createModalElements(): void {
     const errEl = modalEl?.querySelector<HTMLElement>("#custom-form-error");
 
     if (!nameEl || !urlEl) return;
-    if (errEl) errEl.style.display = "none";
+    errEl?.classList.remove("is-visible");
 
     handleCustomStationSubmit(
       nameEl.value,
@@ -127,12 +140,13 @@ function createModalElements(): void {
       (msg) => {
         if (errEl) {
           errEl.textContent = msg;
-          errEl.style.display = "block";
+          errEl.classList.add("is-visible");
         }
       },
       () => {
         nameEl.value = "";
         urlEl.value = "";
+        if (urlHint) urlHint.hidden = true;
         showCustomForm = false;
         customToggleBtn?.setAttribute("aria-expanded", "false");
         const formWrap = modalEl?.querySelector<HTMLElement>("#catalog-custom-form-wrap");

@@ -88,7 +88,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
   const otherList = enabledStations.filter((s) => !state.favs.has(s.id));
 
   const sections = [
-    { label: "Ulubione", key: "fav", list: favList },
+    { label: "Ulubione stacje", key: "fav", list: favList },
     { label: "Stacje radiowe", key: "all", list: otherList },
   ];
 
@@ -98,8 +98,9 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
     }
 
     const secDiv = document.createElement("div");
+    if (sec.key === "fav" && sec.list.length === 0) secDiv.className = "section-fav-empty";
 
-    const header = document.createElement("div");
+    const header = document.createElement("h2");
     header.className = "section-header";
     header.innerHTML = `<span class="section-title">${sec.label}</span><span class="k-rule"></span><span class="section-count">${sec.list.length}</span>`;
     secDiv.appendChild(header);
@@ -108,7 +109,9 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
       const empty = document.createElement("div");
       empty.className = "section-empty";
       empty.textContent =
-        sec.key === "fav" ? "Brak ulubionych — kliknij ★ przy dowolnej stacji" : "Brak stacji — dodaj z katalogu";
+        sec.key === "fav"
+          ? "Brak ulubionych stacji — kliknij ★ przy stacji na liście"
+          : "Brak stacji — dodaj z katalogu";
       secDiv.appendChild(empty);
     } else {
       const grid = document.createElement("div");
@@ -119,7 +122,13 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
         const isFav = state.favs.has(s.id);
 
         const safeName = escapeHtml(s.name);
-        const logoHtml = renderStationThumbHtml(s.coverUrl, s.name, "sc-thumb", "sc-thumb-placeholder");
+        const logoHtml = renderStationThumbHtml(
+          s.coverUrl,
+          s.name,
+          "sc-thumb",
+          "sc-thumb-placeholder",
+          s.cat === "custom",
+        );
 
         const card = document.createElement("div");
         card.className = `station-card${isSelected ? " active" : ""}`;
@@ -134,7 +143,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
               </div>
             </div>
           </button>
-          <button type="button" class="sc-star${isFav ? " on" : ""}" aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}">
+          <button type="button" class="sc-star${isFav ? " on" : ""}" aria-label="${isFav ? "Usuń z ulubionych" : "Dodaj do ulubionych"}: ${safeName}">
             ${ICONS.star(isFav)}
           </button>
         `;
@@ -155,7 +164,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
   });
 
   // LAST, INVERT, PLAY: Animate cards smoothly from old position to new position
-  if (firstPositions.size > 0) {
+  if (firstPositions.size > 0 && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
     requestAnimationFrame(() => {
       const newCards = els.stationListContainer.querySelectorAll<HTMLElement>(".station-card[data-id]");
       newCards.forEach((card) => {

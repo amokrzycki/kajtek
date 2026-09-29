@@ -4,11 +4,12 @@ import {
   dismissBlacklistWarning,
   returnToPreviousStation,
   switchBlacklistCandidateNow,
+  undoBlacklistBlock,
 } from "./blacklistWarning.js";
-import { getAllKnownStations } from "./catalog.js";
-import { checkForNewChangelog } from "./changelog.js";
+import { getAllKnownStations, getOrderedStations } from "./catalog.js";
+import { checkForNewChangelog, latestChangelog } from "./changelog.js";
 import { STORAGE_KEYS } from "./consts.js";
-import { setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
+import { setAdSkipEnabled, setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
 import { currentTrack, selectStation, togglePlay } from "./player.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { notifyState, state, subscribeState } from "./state.js";
@@ -18,6 +19,7 @@ import { openChangelogModal } from "./ui/changelog/modal.js";
 import { removeFavTrackByKey } from "./ui/favorites.js";
 import { openOnboardingModal, shouldShowOnboarding } from "./ui/onboarding/modal.js";
 import { openSettingsModal } from "./ui/settings/modal.js";
+import { openShortcutsModal } from "./ui/shortcuts/modal.js";
 import {
   els,
   initVolumeControlUI,
@@ -42,6 +44,7 @@ function setVersion() {
   const versionEl = document.getElementById("version");
   if (versionEl) {
     versionEl.textContent = `${state.version}`;
+    versionEl.addEventListener("click", () => openChangelogModal(latestChangelog()));
   }
 }
 
@@ -55,7 +58,39 @@ function focusStationSelection(): void {
   firstStation.focus({ preventScroll: true });
 }
 
+const SLEEP_KEY_MINUTES = [15, 30, 60, 90];
+
+function stepStation(direction: 1 | -1): void {
+  const list = getOrderedStations();
+  if (list.length === 0) return;
+  const at = list.findIndex((s) => s.id === state.station?.id);
+  const next = list[at === -1 ? (direction === 1 ? 0 : list.length - 1) : (at + direction + list.length) % list.length];
+  if (next) selectRememberedStation(next);
+}
+
+function handleShortcut(e: KeyboardEvent): void {
+  if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (document.querySelector(".k-modal-overlay.is-open")) return;
+  const target = e.target as HTMLElement;
+  if (target.closest("input, textarea, select, [contenteditable], [role=tab]")) return;
+
+  if (e.key === " ") {
+    // a focused button/link/tab already handles Space natively
+    if (target.closest("button, a, summary, [role=tab]")) return;
+    togglePlay();
+  } else if (e.key === "ArrowRight") stepStation(1);
+  else if (e.key === "ArrowLeft") stepStation(-1);
+  else if (e.key.toLowerCase() === "m") toggleMute();
+  else if (e.key === "?") openShortcutsModal();
+  else if (/^[1-4]$/.test(e.key)) setSleepTimer(SLEEP_KEY_MINUTES[Number(e.key) - 1] ?? 15);
+  else return;
+  e.preventDefault();
+}
+
 function attachEvents() {
+  document.addEventListener("keydown", handleShortcut);
+  document.getElementById("shortcuts-link")?.addEventListener("click", openShortcutsModal);
+
   els.helpBtn.addEventListener("click", () => openOnboardingModal(focusStationSelection));
 
   els.darkToggle.addEventListener("click", () => {
@@ -71,6 +106,8 @@ function attachEvents() {
   });
 
   els.playBtn.addEventListener("click", () => togglePlay());
+
+  els.adSkipSwitch.addEventListener("click", () => setAdSkipEnabled(!state.adSkipEnabled));
 
   els.historyToggleBtn.addEventListener("click", () => {
     if (state.station && getProvider(state.station) === genericProvider) {
@@ -146,6 +183,7 @@ function attachEvents() {
     const target = e.target as HTMLElement;
     if (target.closest(".bl-warn-switch")) switchBlacklistCandidateNow();
     else if (target.closest(".bl-warn-play-anyway")) dismissBlacklistWarning();
+    else if (target.closest(".bl-warn-unblock")) undoBlacklistBlock();
     else if (target.closest(".bl-warn-revert")) returnToPreviousStation();
     else if (target.closest(".bl-warn-cancel-return")) cancelAdSkipAutoReturn();
   });

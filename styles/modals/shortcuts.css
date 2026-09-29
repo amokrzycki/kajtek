@@ -1,0 +1,41 @@
+/* ——— shortcuts cheatsheet modal (body shell in settings.css) ——— */
+
+.k-shortcut-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--k-s1);
+}
+
+.k-shortcut-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.6rem 0.85rem;
+  background: var(--k-bg-inset);
+  border-radius: var(--k-rc);
+  font-size: 0.85rem;
+  color: var(--k-text);
+}
+
+.k-shortcut-keys {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0.3rem;
+}
+
+.k-kbd {
+  min-width: 1.9rem;
+  padding: 0.2rem 0.5rem;
+  text-align: center;
+  font-family: var(--k-font-mono);
+  font-size: 0.75rem;
+  color: var(--k-text);
+  background: var(--k-bg-raised);
+  border: 1px solid var(--k-border-3);
+  border-radius: var(--k-rb);
+  box-shadow: var(--k-sh-btn);
+}

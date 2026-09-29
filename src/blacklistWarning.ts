@@ -1,4 +1,4 @@
-import { isBlacklisted } from "./blacklist.js";
+import { isBlacklisted, normalizeTrackKey, removeFromBlacklist } from "./blacklist.js";
 import { getOrderedStations, getStoredRmfCatalog } from "./catalog.js";
 import { DEFAULT_BREAK_LABEL, MIN_SKIP_GRACE_SEC, SWITCH_RATE_LIMIT, TIMERS } from "./consts.js";
 import { fetchPlaylist, selectStation } from "./player.js";
@@ -221,6 +221,15 @@ export function dismissBlacklistWarning(): void {
   if (!blacklistWarning) return;
   rememberDismissedTrack(blacklistWarning.trackKey);
   blacklistWarning = null;
+  notifyState();
+}
+
+export function undoBlacklistBlock(): void {
+  if (blacklistWarning?.kind !== "blacklist") return;
+  const { track, phase } = blacklistWarning;
+  removeFromBlacklist(normalizeTrackKey(track.artist, track.title));
+  if (phase === "switched") returnToPreviousStation();
+  else dismissBlacklistWarning();
   notifyState();
 }
 

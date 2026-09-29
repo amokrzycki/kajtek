@@ -74,6 +74,10 @@
   }
 }
 
+.album-art:focus-within .album-art-overlay {
+  opacity: 1;
+}
+
 @media (hover: none), (pointer: coarse) {
   .album-art-overlay {
     opacity: 1;

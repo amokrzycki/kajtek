@@ -51,7 +51,9 @@ export function updateSleepUI(): void {
     els.sleepCount.classList.remove("on");
   }
   els.sleepKeys.forEach((btn) => {
-    btn.classList.toggle("active", state.sleepMin === Number(btn.getAttribute("data-min")));
+    const active = state.sleepMin === Number(btn.getAttribute("data-min"));
+    btn.classList.toggle("active", active);
+    btn.setAttribute("aria-pressed", String(active));
   });
 }
 
@@ -63,6 +65,10 @@ export function setPlaybackStatus(message: string, dotState?: "buffering" | "fai
 
 export function updateNowPlayingTrack(track: TrackInfo | null): void {
   if (!state.station) return;
+
+  document.title = track?.title
+    ? `${track.artist ? `${track.artist} – ` : ""}${track.title} · ${state.station.name} · KAJTEK`
+    : `${state.station.name} · KAJTEK`;
 
   if (!track && state.station.apiBaseUrl) {
     els.npTrackWrap.classList.remove("visible");
@@ -146,9 +152,13 @@ export function updateAlbumArt(coverUrl: string | undefined, track: TrackInfo | 
     els.npFavStar.hidden = false;
     els.npFavStar.innerHTML = ICONS.star(isTrackFavorited(track));
     els.npFavStar.classList.toggle("on", isTrackFavorited(track));
+    els.npFavStar.setAttribute("aria-pressed", String(isTrackFavorited(track)));
+    els.npFavStar.setAttribute("aria-label", `Ulubiony utwór: ${track.artist} – ${track.title}`);
     els.npBlockBtn.hidden = false;
     els.npBlockBtn.innerHTML = ICONS.ban;
     els.npBlockBtn.classList.toggle("on", isBlacklisted(track));
+    els.npBlockBtn.setAttribute("aria-pressed", String(isBlacklisted(track)));
+    els.npBlockBtn.setAttribute("aria-label", `Czarna lista: ${track.artist} – ${track.title}`);
   } else {
     els.npFavStar.hidden = true;
     els.npBlockBtn.hidden = true;
@@ -195,6 +205,7 @@ export function updateUI(
     if (label) label.textContent = state.station.name;
     updateAlbumArt(resolveAlbumCoverUrl(currentTrack, state.station), currentTrack);
   } else {
+    document.title = "KAJTEK";
     setPlaybackStatus("Gotowy");
     els.npShortRow.classList.add("hidden");
     els.npShort.textContent = "—";
@@ -221,6 +232,7 @@ export function updateUI(
   }
 
   updateSleepUI();
+  els.adSkipSwitch.setAttribute("aria-checked", String(state.adSkipEnabled));
 
   const isGeneric = Boolean(state.station && getProvider(state.station) === genericProvider);
   if (isGeneric && state.showHistory) {
@@ -232,6 +244,7 @@ export function updateUI(
   els.historyToggleBtn.setAttribute("aria-expanded", String(state.showHistory));
   const willOpenHistory = state.showHistory;
   els.historyPanel.classList.toggle("open", willOpenHistory);
+  els.historyPanel.inert = !willOpenHistory;
   updateHistoryUI();
   renderBlacklistWarning();
   renderFavoritesUI();
@@ -274,6 +287,7 @@ function shouldRenderStationList(): boolean {
 function applyTheme(): void {
   document.documentElement.classList.toggle("dark", state.dark);
   els.darkToggle.classList.toggle("on", state.dark);
+  els.darkToggle.setAttribute("aria-pressed", String(state.dark));
   localStorage.setItem(STORAGE_KEYS.THEME, state.dark ? "dark" : "light");
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", state.dark ? "#1a1816" : "#eeebe3");
 }

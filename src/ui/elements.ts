@@ -20,6 +20,7 @@ export const els = {
   npTrackWrap: document.getElementById("np-track") as HTMLDivElement,
   npArtist: document.getElementById("np-artist") as HTMLDivElement,
   npTitle: document.getElementById("np-title") as HTMLSpanElement,
+  adSkipSwitch: document.getElementById("adskip-switch") as HTMLButtonElement,
   playBtn: document.getElementById("play-btn") as HTMLButtonElement,
   historyToggleBtn: document.getElementById("history-toggle-btn") as HTMLButtonElement,
   historyPanel: document.getElementById("history-panel") as HTMLDivElement,
@@ -67,7 +68,7 @@ export function initVolumeControlUI(): void {
   }
   if (!isIOS()) return;
   state.vol = 100;
-  els.volumePanel?.classList.add("hidden");
+  els.volumePanel?.closest(".controls-row")?.classList.add("is-ios");
 }
 
 export function initVU(): void {

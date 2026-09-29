@@ -9,9 +9,9 @@ const FEATURES: { icon: string; title: string; desc: string }[] = [
     desc: "Wybierz stację z listy. Odtwarzanie ruszy od razu.",
   },
   {
-    icon: ICONS.play,
-    title: "2. Steruj przyciskiem PLAY",
-    desc: "Duży klawisz zatrzymuje i wznawia radio.",
+    icon: ICONS.adSkip,
+    title: "2. Pomijaj reklamy",
+    desc: "Kajtek sam przełącza stację na czas reklam. Wyłączysz to przełącznikiem na obudowie lub w Ustawieniach.",
   },
 ];
 
@@ -50,7 +50,7 @@ export function openOnboardingModal(onChooseStation: () => void): void {
         <div class="k-onboarding-list">${FEATURES.map(featureHtml).join("")}</div>
 
         <div class="k-onboarding-note">
-          Na start włączyliśmy 3 stacje. Kolejne znajdziesz w katalogu pod odtwarzaczem.
+          Stacje możesz włączać i wyłączać w katalogu pod odtwarzaczem.
         </div>
 
         <button type="button" id="onboarding-choose-stations-btn" class="btn-primary k-onboarding-cta">

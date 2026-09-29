@@ -62,7 +62,9 @@ export function renderStationThumbHtml(
   name: string,
   thumbClass: string,
   placeholderClass: string,
+  tinted = false,
 ): string {
+  if (tinted) placeholderClass += " is-custom";
   const initial = escapeHtml(name.charAt(0));
   if (!coverUrl) return `<div class="${placeholderClass}">${initial}</div>`;
   return `<img src="${escapeHtml(coverUrl)}" alt="" class="${thumbClass}" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><div class="${placeholderClass}" style="display:none;">${initial}</div>`;

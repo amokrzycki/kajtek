@@ -1,4 +1,18 @@
 const previousFocus = new WeakMap<HTMLElement, HTMLElement>();
+const dismissers = new WeakMap<HTMLElement, () => void>();
+
+function topmostOpenModal(): HTMLElement | undefined {
+  return Array.from(document.querySelectorAll<HTMLElement>(".k-modal-overlay.is-open")).at(-1);
+}
+
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape" || e.defaultPrevented) return;
+  const topmost = topmostOpenModal();
+  const dismiss = topmost && dismissers.get(topmost);
+  if (!dismiss) return;
+  e.preventDefault();
+  dismiss();
+});
 
 function getFocusableElements(modalEl: HTMLElement): HTMLElement[] {
   return Array.from(
@@ -14,7 +28,10 @@ export function openModal(modalEl: HTMLElement): void {
   document.body.style.overflow = "hidden";
   requestAnimationFrame(() => {
     modalEl.classList.add("is-open");
-    (modalEl.querySelector<HTMLElement>("[autofocus]") ?? getFocusableElements(modalEl)[0])?.focus();
+    const coarse = window.matchMedia("(pointer: coarse)").matches;
+    const autofocusEl = coarse ? null : modalEl.querySelector<HTMLElement>("[autofocus]");
+    const fallback = getFocusableElements(modalEl).find((el) => !coarse || !el.hasAttribute("autofocus"));
+    (autofocusEl ?? fallback)?.focus();
   });
 }
 
@@ -31,17 +48,12 @@ export function closeModal(modalEl: HTMLElement, restoreFocusEl?: HTMLElement | 
 }
 
 export function bindModalDismiss(modalEl: HTMLElement, close: () => void): void {
+  dismissers.set(modalEl, close);
   modalEl.addEventListener("click", (e) => {
     if (e.target === modalEl) close();
   });
   modalEl.addEventListener("keydown", (e) => {
-    const topmostModal = Array.from(document.querySelectorAll<HTMLElement>(".k-modal-overlay.is-open")).at(-1);
-    if (topmostModal !== modalEl) return;
-    if (e.key === "Escape") {
-      close();
-      return;
-    }
-    if (e.key !== "Tab") return;
+    if (topmostOpenModal() !== modalEl || e.key !== "Tab") return;
 
     const focusable = getFocusableElements(modalEl);
     const first = focusable[0];

@@ -44,6 +44,52 @@
   cursor: not-allowed;
 }
 
+.k-settings-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+  margin-top: var(--k-s2);
+  padding: 0.5rem 0.85rem;
+  background: none;
+  border: none;
+  color: var(--k-accent-text);
+  font-family: var(--k-font-body);
+  font-size: var(--k-fs-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.k-settings-link > span:first-child {
+  flex: 1;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.k-settings-link-count {
+  font-family: var(--k-font-mono);
+  font-size: var(--k-fs-data);
+  font-variant-numeric: tabular-nums;
+  color: var(--k-text-faint);
+}
+
+.k-settings-link-chevron {
+  display: inline-flex;
+  color: var(--k-text-faint);
+  transition: transform var(--k-tr);
+}
+
+.k-settings-link:focus-visible {
+  outline: 2px solid var(--k-focus);
+  outline-offset: -2px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .k-settings-link:hover .k-settings-link-chevron {
+    transform: translateX(2px);
+  }
+}
+
 .k-settings-row-text {
   display: flex;
   flex-direction: column;
@@ -90,11 +136,24 @@
 }
 
 .k-settings-swatch-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
   flex-shrink: 0;
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15);
+  background: var(--k-case);
+  border: 1px solid var(--k-case-edge);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.4),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.35),
+    1px 2px 3px rgba(0, 0, 0, 0.2);
+}
+
+.k-settings-swatch[data-case="black"] .k-settings-swatch-dot {
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.4),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.35),
+    0 0 0 1px var(--k-bg-raised),
+    0 0 0 2px rgba(150, 140, 125, 0.7);
 }
 
 .k-settings-swatch-label {

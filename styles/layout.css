@@ -167,7 +167,7 @@
   text-align: center;
   padding: 1.5rem 1rem 2.5rem;
   font-family: var(--k-font-mono);
-  font-size: 0.58rem;
+  font-size: 0.625rem;
   color: var(--k-text-faint);
   letter-spacing: 0.08em;
   border-top: 1px solid var(--k-border);
@@ -199,13 +199,41 @@
 }
 
 @media (max-width: 480px) {
+  .header-brand {
+    flex-direction: column;
+    gap: 0;
+  }
+
   .header-brand .brand-name {
-    font-size: 2.1rem;
+    font-size: clamp(1.65rem, 8.5vw, 2.1rem);
+  }
+
+  .header-actions {
+    gap: var(--k-s1);
   }
 }
 
-@media (max-width: 370px) {
-  .header-brand {
-    flex-direction: column;
+@media (max-width: 640px) {
+  .kajtek-main {
+    padding-inline: max(1rem, calc(env(safe-area-inset-left) + 0.75rem))
+      max(1rem, calc(env(safe-area-inset-right) + 0.75rem));
+  }
+}
+
+.footer-version {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .footer-version:hover {
+    color: var(--k-text);
   }
 }

@@ -1,6 +1,7 @@
 import { deleteCustomStation, isStationEnabled, setStationEnabled } from "../../catalog.js";
 import { ICONS } from "../../icons.js";
-import { notifyState } from "../../state.js";
+import { selectStation, togglePlay } from "../../player.js";
+import { notifyState, state, subscribeState } from "../../state.js";
 import type { Station } from "../../types.js";
 import { escapeHtml, renderStationThumbHtml } from "../../utils.js";
 
@@ -8,6 +9,21 @@ export const PROVIDER_LABELS: Record<string, string> = {
   rmf: "RMF",
   eska: "ESKA",
 };
+
+function isPreviewing(id: string): boolean {
+  return state.playing && state.station?.id === id;
+}
+
+function syncPreviewButton(btn: HTMLButtonElement): void {
+  const on = isPreviewing(btn.dataset.id ?? "");
+  if (btn.firstChild && btn.classList.contains("on") === on) return;
+  btn.classList.toggle("on", on);
+  btn.setAttribute("aria-pressed", String(on));
+  btn.title = on ? "Zatrzymaj podgląd" : "Posłuchaj";
+  btn.innerHTML = on ? ICONS.previewPause : ICONS.previewPlay;
+}
+
+subscribeState(() => document.querySelectorAll<HTMLButtonElement>(".btn-preview").forEach(syncPreviewButton));
 
 export interface StationRowOpts {
   isCustom: boolean;
@@ -21,7 +37,13 @@ export function createStationRow(station: Station, opts: StationRowOpts, rerende
   row.className = `k-catalog-row${enabled ? " enabled" : ""}`;
 
   const safeName = escapeHtml(station.name);
-  const logoHtml = renderStationThumbHtml(station.coverUrl, station.name, "catalog-thumb", "catalog-thumb-placeholder");
+  const logoHtml = renderStationThumbHtml(
+    station.coverUrl,
+    station.name,
+    "catalog-thumb",
+    "catalog-thumb-placeholder",
+    opts.isCustom,
+  );
   const label = PROVIDER_LABELS[station.provider];
   const providerLabel =
     opts.showProviderTag && !opts.isCustom && label && !new RegExp(`\\b${label}\\b`, "i").test(station.name)
@@ -43,9 +65,14 @@ export function createStationRow(station: Station, opts: StationRowOpts, rerende
     </div>
 
     <div class="catalog-col-actions">
+      <button type="button" class="btn-preview" data-id="${escapeHtml(station.id)}" aria-pressed="false" aria-label="Posłuchaj: ${safeName}"></button>
       ${
         opts.isCustom
-          ? `<button type="button" class="btn-delete-custom" title="Usuń własną stację" aria-label="Usuń ${safeName}">${ICONS.trash}</button>`
+          ? `<button type="button" class="btn-delete-custom" title="Usuń własną stację" aria-label="Usuń ${safeName}">${ICONS.trash}</button>
+      <span class="catalog-delete-confirm" role="group" aria-label="Usunąć ${safeName}?" hidden>
+        <button type="button" class="btn-delete-yes">Usuń</button>
+        <button type="button" class="btn-delete-no">Anuluj</button>
+      </span>`
           : ""
       }
       <label class="catalog-toggle-switch" title="${enabled ? "Wyłącz stację" : "Włącz stację"}">
@@ -53,6 +80,13 @@ export function createStationRow(station: Station, opts: StationRowOpts, rerende
       </label>
     </div>
   `;
+
+  const previewBtn = row.querySelector<HTMLButtonElement>(".btn-preview");
+  previewBtn?.addEventListener("click", () => {
+    if (state.station?.id === station.id) togglePlay();
+    else selectStation(station);
+  });
+  if (previewBtn) syncPreviewButton(previewBtn);
 
   const checkbox = row.querySelector<HTMLInputElement>(".catalog-checkbox");
   const toggleSwitch = row.querySelector<HTMLLabelElement>(".catalog-toggle-switch");
@@ -67,17 +101,30 @@ export function createStationRow(station: Station, opts: StationRowOpts, rerende
   });
 
   const deleteBtn = row.querySelector<HTMLButtonElement>(".btn-delete-custom");
-  deleteBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    if (confirm(`Czy na pewno chcesz usunąć stację "${station.name}"?`)) {
-      deleteCustomStation(station.id);
-      notifyState();
-      rerender();
-    }
+  const confirmEl = row.querySelector<HTMLElement>(".catalog-delete-confirm");
+  const setConfirming = (on: boolean) => {
+    if (!deleteBtn || !confirmEl || !toggleSwitch) return;
+    deleteBtn.hidden = on;
+    if (previewBtn) previewBtn.hidden = on;
+    toggleSwitch.hidden = on;
+    confirmEl.hidden = !on;
+    (on ? confirmEl.querySelector<HTMLButtonElement>(".btn-delete-no") : deleteBtn)?.focus();
+  };
+  deleteBtn?.addEventListener("click", () => setConfirming(true));
+  row.querySelector(".btn-delete-no")?.addEventListener("click", () => setConfirming(false));
+  row.querySelector(".btn-delete-yes")?.addEventListener("click", () => {
+    deleteCustomStation(station.id);
+    notifyState();
+    rerender();
   });
 
   row.addEventListener("click", (e) => {
-    if ((e.target as HTMLElement).closest(".catalog-toggle-switch, .btn-delete-custom")) return;
+    if (
+      (e.target as HTMLElement).closest(
+        ".catalog-toggle-switch, .btn-preview, .btn-delete-custom, .catalog-delete-confirm",
+      )
+    )
+      return;
     checkbox?.click();
   });
 

@@ -12,14 +12,10 @@
   text-align: left;
   font: inherit;
   color: inherit;
-  /* padding/gap animate layout (non-GPU), only fires on the rare
-     list/grid view-toggle click — a FLIP rewrite isn't worth it for that frequency */
   transition:
     background var(--k-tr),
     border-color var(--k-tr),
     box-shadow var(--k-tr),
-    padding 280ms var(--k-ease-mech),
-    gap 280ms var(--k-ease-mech),
     transform 150ms var(--k-ease-mech);
   -webkit-tap-highlight-color: transparent;
 }
@@ -100,12 +96,6 @@
   height: 34px;
   border-radius: var(--k-rb);
   flex-shrink: 0;
-  /* same non-GPU tradeoff as .station-card above — transform: scale()
-     would desync from the flex reflow around it on the same list/grid toggle */
-  transition:
-    width 280ms var(--k-ease-mech),
-    height 280ms var(--k-ease-mech),
-    margin 280ms var(--k-ease-mech);
 }
 
 .sc-thumb {
@@ -201,4 +191,11 @@
   transition:
     fill var(--k-tr),
     stroke var(--k-tr);
+}
+
+/* custom streams have no logo — tint the initial with the case accent */
+.sc-thumb-placeholder.is-custom {
+  background: var(--k-accent-dim);
+  color: var(--k-accent-text);
+  box-shadow: inset 0 0 0 1px var(--k-accent-ring);
 }

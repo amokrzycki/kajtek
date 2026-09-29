@@ -31,11 +31,18 @@ export const CATALOG_MODAL_HTML = `
             <div class="k-custom-form-inner">
               <form id="catalog-custom-form" class="k-custom-form">
                 <div class="k-form-row">
-                  <input type="text" id="custom-name-input" class="k-input" placeholder="Nazwa stacji (np. Radio Rzeszów)" required />
-                  <input type="url" id="custom-url-input" class="k-input" placeholder="URL streamu (http:// lub https://)" required />
+                  <label class="k-field">
+                    <span class="k-field-label">Nazwa stacji</span>
+                    <input type="text" id="custom-name-input" class="k-input" placeholder="np. Radio Rzeszów" required />
+                  </label>
+                  <label class="k-field">
+                    <span class="k-field-label">Adres streamu</span>
+                    <input type="url" id="custom-url-input" class="k-input" placeholder="https://…" aria-describedby="custom-url-hint" required />
+                  </label>
                   <button type="submit" class="btn-primary">Dodaj</button>
                 </div>
-                <div id="custom-form-error" class="k-form-error" style="display: none;"></div>
+                <div id="custom-url-hint" class="k-field-hint" hidden>Adres http:// często nie zadziała — przeglądarka blokuje niezabezpieczone streamy na stronie https. Jeśli stacja ma adres https://, użyj go.</div>
+                <div id="custom-form-error" class="k-form-error"></div>
               </form>
             </div>
           </div>

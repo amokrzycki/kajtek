@@ -17,6 +17,8 @@ export interface CatalogViewCtx {
 export interface CatalogViewDeps {
   rerender: () => void;
   onRetry: () => void;
+  onClearSearch: () => void;
+  onSearchAll: () => void;
 }
 
 function searchHaystack(station: Station, cache: RmfCatalogCache | null): string {
@@ -65,11 +67,39 @@ function buildSecHeadEl(title: string, count?: number): HTMLElement {
   return head;
 }
 
-function buildEmptyStateEl(message: string): HTMLElement {
+function buildEmptyStateEl(message: string, actions: [label: string, onClick: () => void][] = []): HTMLElement {
   const empty = document.createElement("div");
   empty.className = "k-catalog-empty";
-  empty.textContent = message;
+  const text = document.createElement("span");
+  text.className = "k-catalog-empty-text";
+  text.textContent = message;
+  empty.appendChild(text);
+  if (actions.length > 0) {
+    const bar = document.createElement("div");
+    bar.className = "k-catalog-empty-actions";
+    actions.forEach(([label, onClick]) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "btn-secondary";
+      btn.textContent = label;
+      btn.addEventListener("click", onClick);
+      bar.appendChild(btn);
+    });
+    empty.appendChild(bar);
+  }
   return empty;
+}
+
+function buildNoMatchEl(q: string, deps: CatalogViewDeps): HTMLElement {
+  return buildEmptyStateEl(
+    q ? "Brak stacji pasujących do wyszukiwania" : "Brak stacji",
+    q
+      ? [
+          ["Wyczyść", deps.onClearSearch],
+          ["Szukaj we wszystkich", deps.onSearchAll],
+        ]
+      : [],
+  );
 }
 
 function buildNoteEl(text: string): HTMLElement {
@@ -121,7 +151,11 @@ export function applyAllTabFilters(container: HTMLElement, q: string, network: s
   const empty = azList.querySelector<HTMLElement>("[data-empty]");
   if (empty) {
     empty.hidden = total > 0;
-    empty.textContent = q || network ? "Brak stacji pasujących do filtrów" : "Brak stacji";
+    const filtered = !!(q || network);
+    const text = empty.querySelector<HTMLElement>(".k-catalog-empty-text");
+    if (text) text.textContent = filtered ? "Brak stacji pasujących do filtrów" : "Brak stacji";
+    const actions = empty.querySelector<HTMLElement>(".k-catalog-empty-actions");
+    if (actions) actions.hidden = !filtered;
   }
 
   const countEl = container.querySelector<HTMLElement>(".catalog-result-count");
@@ -190,7 +224,7 @@ export function renderAllTab(container: HTMLElement, ctx: CatalogViewCtx, deps: 
     });
   });
 
-  const empty = buildEmptyStateEl("Brak stacji");
+  const empty = buildEmptyStateEl("Brak stacji", [["Wyczyść", deps.onClearSearch]]);
   empty.dataset.empty = "";
   empty.hidden = true;
   azList.appendChild(empty);
@@ -225,7 +259,7 @@ export function renderLocalTab(container: HTMLElement, ctx: CatalogViewCtx, deps
   const stations = allStations.filter((s) => s.cat === "local").filter((s) => matchesQuery(s, q, cache));
 
   if (stations.length === 0) {
-    container.appendChild(buildEmptyStateEl(q ? "Brak stacji pasujących do wyszukiwania" : "Brak stacji"));
+    container.appendChild(buildNoMatchEl(q, deps));
     return;
   }
 
@@ -245,7 +279,7 @@ export function renderCustomTab(container: HTMLElement, ctx: CatalogViewCtx, dep
   const stations = allStations.filter((s) => customIds.has(s.id)).filter((s) => matchesQuery(s, q, cache));
 
   if (stations.length === 0) {
-    container.appendChild(buildEmptyStateEl(q ? "Brak stacji pasujących do wyszukiwania" : "Brak stacji"));
+    container.appendChild(buildNoMatchEl(q, deps));
     return;
   }
 

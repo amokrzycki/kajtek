@@ -7,6 +7,7 @@
 }
 
 .section-header {
+  font: inherit;
   display: flex;
   align-items: center;
   gap: 0.65rem;
@@ -17,7 +18,7 @@
 
 .section-count {
   font-family: var(--k-font-mono);
-  font-size: 0.58rem;
+  font-size: 0.625rem;
   font-variant-numeric: tabular-nums;
   color: var(--k-text-faint);
   background: var(--k-bg-inset);
@@ -50,5 +51,11 @@
 @media (max-width: 580px) {
   .station-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .section-fav-empty {
+    display: none;
   }
 }

@@ -1,16 +1,20 @@
+import { getBlacklist } from "../../blacklist.js";
 import type { CaseSlug } from "../../consts.js";
 import { STORAGE_KEYS } from "../../consts.js";
+import { setAdSkipEnabled } from "../../controls.js";
+import { ICONS } from "../../icons.js";
 import { notifyState, state } from "../../state.js";
 import { setStoredJSON } from "../../utils.js";
+import { openBlacklistModal } from "../blacklist/modal.js";
 import { bindModalDismiss, closeModal, openModal } from "../modal.js";
 
-const CASE_SWATCHES: { slug: CaseSlug; label: string; hex: string }[] = [
-  { slug: "red", label: "Czerwony", hex: "#c4221a" },
-  { slug: "green", label: "Zielony", hex: "#7f9e1c" },
-  { slug: "yellow", label: "Żółty", hex: "#e6a608" },
-  { slug: "blue", label: "Niebieski", hex: "#4d88c6" },
-  { slug: "pink", label: "Różowy", hex: "#e88fa2" },
-  { slug: "black", label: "Czarny", hex: "#1d1b19" },
+const CASE_SWATCHES: { slug: CaseSlug; label: string }[] = [
+  { slug: "red", label: "Czerwony" },
+  { slug: "green", label: "Zielony" },
+  { slug: "yellow", label: "Żółty" },
+  { slug: "blue", label: "Niebieski" },
+  { slug: "pink", label: "Różowy" },
+  { slug: "black", label: "Czarny" },
 ];
 
 let modalEl: HTMLElement | null = null;
@@ -25,6 +29,7 @@ export function openSettingsModal(): void {
     syncBlacklistToggle();
     syncAdSkipToggle();
     syncCaseSwatches();
+    syncBlacklistCount();
   }
   if (modalEl) openModal(modalEl);
 }
@@ -39,7 +44,7 @@ function swatchesHtml(): string {
   return CASE_SWATCHES.map(
     (s) => `
       <button type="button" class="k-settings-swatch" data-case="${s.slug}" aria-pressed="false">
-        <span class="k-settings-swatch-dot" style="background:${s.hex};"></span>
+        <span class="k-settings-swatch-dot"></span>
         <span class="k-settings-swatch-label">${s.label}</span>
       </button>
     `,
@@ -63,7 +68,7 @@ function createModalElements(): void {
 
       <div class="k-settings-body">
         <div class="k-settings-group">
-          <div class="k-settings-label">Kolor akcentu</div>
+          <div class="k-settings-label">Obudowa</div>
           <div class="k-settings-swatches">${swatchesHtml()}</div>
         </div>
 
@@ -106,6 +111,11 @@ function createModalElements(): void {
               <input type="checkbox" id="settings-blacklist-toggle" class="catalog-checkbox" aria-label="Włącz czarną listę" />
             </label>
           </div>
+          <button type="button" id="settings-blacklist-manage" class="k-settings-link">
+            <span>Zablokowane utwory</span>
+            <span class="k-settings-link-count" id="settings-blacklist-count"></span>
+            <span class="k-settings-link-chevron" aria-hidden="true">${ICONS.chevron}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -115,6 +125,10 @@ function createModalElements(): void {
 
   bindModalDismiss(modalEl, closeSettingsModal);
   modalEl.querySelector("#settings-modal-close")?.addEventListener("click", closeSettingsModal);
+  modalEl.querySelector("#settings-blacklist-manage")?.addEventListener("click", () => {
+    closeSettingsModal();
+    openBlacklistModal();
+  });
 
   modalEl.querySelector<HTMLInputElement>("#settings-blacklist-toggle")?.addEventListener("change", (e) => {
     state.blacklistEnabled = (e.target as HTMLInputElement).checked;
@@ -123,10 +137,8 @@ function createModalElements(): void {
   });
 
   modalEl.querySelector<HTMLInputElement>("#settings-adskip-toggle")?.addEventListener("change", (e) => {
-    state.adSkipEnabled = (e.target as HTMLInputElement).checked;
-    setStoredJSON(STORAGE_KEYS.AD_SKIP_ENABLED, state.adSkipEnabled);
+    setAdSkipEnabled((e.target as HTMLInputElement).checked);
     syncAdSkipToggle();
-    notifyState();
   });
 
   modalEl.querySelector<HTMLInputElement>("#settings-adskip-autoreturn-toggle")?.addEventListener("change", (e) => {
@@ -146,12 +158,18 @@ function createModalElements(): void {
   syncBlacklistToggle();
   syncAdSkipToggle();
   syncCaseSwatches();
+  syncBlacklistCount();
 }
 
 function syncCaseSwatches(): void {
   modalEl?.querySelectorAll<HTMLButtonElement>(".k-settings-swatch").forEach((btn) => {
     btn.setAttribute("aria-pressed", String(btn.dataset.case === state.case));
   });
+}
+
+function syncBlacklistCount(): void {
+  const el = modalEl?.querySelector("#settings-blacklist-count");
+  if (el) el.textContent = String(getBlacklist().length);
 }
 
 function syncBlacklistToggle(): void {

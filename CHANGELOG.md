@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.12.0
+
+Ogólne usprawnienia w obrębie całego interfejsu Kajtka, poprawki błędów i optymalizacje.
+
+- Poprawiono układ nagłówka i katalogu na telefonach, dostęp do czarnej listy w ustawieniach oraz czytelność zależnych przełączników.
+- Pomijanie reklam ma teraz fizyczny przełącznik „REKLAMY: GRAJ / POMIŃ” na obudowie i jest domyślnie włączone (wcześniej wyłączone; jeśli je wyłączysz, ustawienie zostaje zapamiętane).
+- Skróty klawiszowe: spacja – odtwarzaj/pauza, ←/→ – poprzednia/następna stacja, M – wyciszenie, 1–4 – wyłącznik czasowy (15/30/60/90 min).
+- Ściągawka skrótów klawiszowych: klawisz ? lub link „Skróty klawiszowe” w stopce.
+- W katalogu można posłuchać stacji przyciskiem ▶, bez dodawania jej do listy.
+- Wyłącznik czasowy wycisza dźwięk płynnie w ostatnich 8 sekundach, a miniatury własnych stacji mają literę w kolorze obudowy.
+- Okno „Zablokowany utwór” ma przycisk „Cofnij blokadę”, a usuwanie własnej stacji wymaga teraz potwierdzenia w wierszu zamiast okna przeglądarki.
+- Pusty wynik wyszukiwania w katalogu podpowiada „Wyczyść” i „Szukaj we wszystkich”; wersja w stopce otwiera „Co nowego”.
+- Tytuł karty przeglądarki pokazuje aktualny utwór i stację.
+- Lepsza dostępność: role zakładek, nagłówki, opisy przycisków z nazwą utworu lub stacji, Escape zamyka tylko górne okno, ograniczone animacje przy „prefers-reduced-motion”.
+- Pierwsze uruchomienie: krok „Pomijaj reklamy” zastąpił krok o przycisku PLAY, a wskazówka o stacjach jest dokładniejsza.
+- Ujednolicono nazwy i komunikaty: „Czarna lista”, „Obudowa”, osobne „Ulubione stacje” i „Ulubione utwory”, czytelniejsze etykiety przycisków oraz formularz własnej stacji z ostrzeżeniem o adresach http://.
+
 ## 0.11.3
 
 Dodano politykę prywatności i informacje prawne Kajtka.
