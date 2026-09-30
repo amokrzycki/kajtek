@@ -1,4 +1,10 @@
+#volume-panel {
+  display: flex;
+  flex-direction: column;
+}
+
 .volume-row {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 0.75rem;

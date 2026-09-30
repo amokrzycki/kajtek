@@ -4,19 +4,24 @@ import { bindModalDismiss, closeModal, openModal } from "../modal.js";
 
 const FEATURES: { icon: string; title: string; desc: string }[] = [
   {
-    icon: ICONS.plus,
-    title: "1. Włącz stacje w Katalogu",
-    desc: "Na liście pojawią się tylko stacje włączone w Katalogu stacji. Przełącznikiem włączysz te, których słuchasz.",
+    icon: ICONS.viewList,
+    title: "1. Kliknij stację",
+    desc: "Wybierz ją z listy pod odtwarzaczem. Gra od razu.",
   },
   {
-    icon: ICONS.viewList,
-    title: "2. Kliknij stację",
-    desc: "Wybierz ją z listy pod odtwarzaczem. Gra od razu.",
+    icon: ICONS.plus,
+    title: "2. Dodaj więcej stacji",
+    desc: "Otwórz Katalog stacji. Przełącznikiem dodasz wybrane stacje do listy pod odtwarzaczem.",
   },
   {
     icon: ICONS.adSkip,
     title: "Bonus: pomijanie reklam",
     desc: "Kajtek sam przełącza stację na czas reklam. Wyłączysz to przełącznikiem na obudowie lub w Ustawieniach.",
+  },
+  {
+    icon: ICONS.radio,
+    title: "Kolor obudowy",
+    desc: "W Ustawieniach, w sekcji Obudowa, wybierzesz jeden z sześciu kolorów Kajtka.",
   },
 ];
 
@@ -50,7 +55,7 @@ export function openOnboardingModal(onChooseStation: () => void): void {
       <div class="k-onboarding-body">
         <span class="k-onboarding-icon">${ICONS.tape}</span>
         <h2 id="onboarding-modal-title" class="k-onboarding-title">WITAJ W KAJTKU</h2>
-        <p class="k-onboarding-subtitle">Włącz stację, kliknij i radio gra</p>
+        <p class="k-onboarding-subtitle">Kliknij stację i radio gra</p>
 
         <div class="k-onboarding-list">${FEATURES.map(featureHtml).join("")}</div>
 

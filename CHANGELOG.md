@@ -7,8 +7,10 @@ Czytelniejsze komunikaty i łatwiejsza obsługa.
 - Błąd odtwarzania ma czerwony komunikat i przycisk „Ponów”.
 - Dodanie własnej stacji czyści wyszukiwanie, otwiera zakładkę WŁASNE i pokazuje potwierdzenie.
 - Panel utworów nazywa się PLAYLISTA. Ujednolicono nazwy własnych stacji.
+- Pierwszy start prowadzi od wyboru stacji do rozszerzenia listy w katalogu i wskazuje sześć kolorów obudowy w ustawieniach.
 - Przycisk „Wstaw aktualny utwór” uzupełnia formularz czarnej listy.
 - Wyłącznik czasowy wyjaśnia, jak go anulować.
+- Wyśrodkowano suwak głośności pod nagłówkiem, aby lepiej wypełniał panel obok wyłącznika czasowego.
 - Skrócono opisy zmian i uproszczono politykę prywatności.
 - Poprawiono opisy dla czytników ekranu, kontrast i fokus klawiatury. Wskaźnik VU uwzględnia ograniczenie ruchu.
 - Powiększono pola dotykowe, zmniejszono panel sterowania na telefonie i poprawiono obudowę na wąskich ekranach. Strony prawne zachowują wybrany motyw i kolor obudowy.
