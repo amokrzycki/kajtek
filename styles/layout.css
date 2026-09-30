@@ -208,7 +208,7 @@
   }
 
   .header-brand .brand-name {
-    font-size: clamp(1.65rem, 8.5vw, 2.1rem);
+    font-size: clamp(var(--k-fs-heading), 8.5vw, var(--k-fs-display));
   }
 
   .header-actions {

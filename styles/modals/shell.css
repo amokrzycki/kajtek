@@ -65,7 +65,7 @@
 
 .k-modal-title {
   font-family: var(--k-font-display);
-  font-size: 1.1rem;
+  font-size: var(--k-fs-num);
   margin: 0;
   color: var(--k-text);
 }
@@ -80,7 +80,7 @@
 .k-modal-close {
   background: none;
   border: none;
-  font-size: 1.5rem;
+  font-size: var(--k-fs-heading);
   color: var(--k-text-muted);
   cursor: pointer;
   padding: 0 0.5rem;
@@ -229,7 +229,7 @@
   grid-template-rows: 0fr;
   background: var(--k-accent-dim);
   color: var(--k-accent-text);
-  font-size: 0.75rem;
+  font-size: var(--k-fs-data);
   transition: grid-template-rows var(--k-tr-panel);
 }
 
@@ -282,7 +282,7 @@
   padding: 0.55rem 0.3rem;
   white-space: nowrap;
   font-family: var(--k-font-mono);
-  font-size: 0.66rem;
+  font-size: var(--k-fs-label);
   font-weight: 600;
   letter-spacing: var(--k-tracking-label);
   color: var(--k-text-muted);

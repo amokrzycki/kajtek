@@ -58,10 +58,10 @@ typography:
     letterSpacing: "0.15em"
   body:
     fontFamily: "IBM Plex Mono, monospace"
-    fontSize: "0.78rem"
+    fontSize: "0.875rem"
   label:
     fontFamily: "IBM Plex Mono, monospace"
-    fontSize: "0.65rem"
+    fontSize: "0.75rem"
     letterSpacing: "0.18em"
     fontWeight: 500
 rounded:
@@ -178,11 +178,18 @@ Literals that live in component CSS or `variables.css` rather than a `--k-*` tok
 ### Hierarchy
 - **Brand** (700, 2.5rem, tracking 0.15em): the "KAJTEK" wordmark in the header.
 - **Display / Station Name** (700, 1.95rem, line-height 1.2): the now-playing station name inside the display glass; `overflow-wrap: anywhere` so long Polish station names never overflow the window.
+- **Compact Heading** (`--k-fs-heading`, 1.5rem): mobile station name, STEREO lettering, and modal close glyph.
+- **Numeric / Modal Heading** (`--k-fs-num`, 1.2rem): timer numbers and modal titles.
 - **Lead** (400–600, 1.05rem): track title inside the display.
 - **Card Title** (600, 1.02rem): station name on a station card.
-- **Body** (400, 0.78rem): default UI copy.
-- **Label** (500, 0.65rem, tracking 0.18em, uppercase): section headers, panel labels (`k-label`) — always mono, always wide-tracked, always uppercase.
-- **Tag** (0.54rem): smallest data, e.g. catalog tab counts.
+- **Body** (`--k-fs-body`, 400, 0.875rem / 14px): default UI copy, forms, and playlist titles.
+- **Label** (`--k-fs-label`, 500–700, 0.75rem / 12px, tracking 0.18em, uppercase): section headers, panel labels (`k-label`) — always mono, always wide-tracked, always uppercase.
+- **Data** (`--k-fs-data`, 0.75rem / 12px): metadata, timestamps, durations, and secondary controls.
+- **Tag** (`--k-fs-tag`, 0.75rem / 12px): counts and status badges.
+- **Hardware** (`--k-fs-hardware`, 0.5rem): decorative tape ruler, UNITRA/model silkscreen, and disclosure arrow only; never actionable labels or listener information.
+- **Artwork** (`--k-fs-art`, 3.4rem): decorative empty-cover glyph.
+
+Informational text uses a 12px minimum at the default root size, including mobile. Label, data, and tag roles share this floor; weight, tracking, color, and placement distinguish them. Sizes use the role tokens above; the mobile header wordmark alone interpolates between the heading and display tokens with `clamp()`.
 
 ### Named Rules
 **The Descender Rule.** Station-name line-height is fixed at 1.2 specifically to leave room for Polish descenders (ą, ę, j, y) inside the tight display glass — never tighten this for a denser look.

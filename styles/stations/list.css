@@ -18,7 +18,7 @@
 
 .section-count {
   font-family: var(--k-font-mono);
-  font-size: 0.625rem;
+  font-size: var(--k-fs-tag);
   font-variant-numeric: tabular-nums;
   color: var(--k-text-faint);
   background: var(--k-bg-inset);
@@ -30,7 +30,7 @@
 }
 
 .section-empty {
-  font-size: 0.8rem;
+  font-size: var(--k-fs-body);
   color: var(--k-text-faint);
   font-style: italic;
   padding: 0.4rem 0;

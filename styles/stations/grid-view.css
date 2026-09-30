@@ -36,7 +36,7 @@
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  font-size: 0.78rem;
+  font-size: var(--k-fs-body);
   line-height: 1.15;
   white-space: normal;
   word-break: break-word;
@@ -49,7 +49,7 @@
 }
 
 .is-grid-view .sc-short {
-  font-size: 0.62rem;
+  font-size: var(--k-fs-data);
   line-height: 1.15;
   max-width: 100%;
   white-space: normal;
@@ -95,10 +95,10 @@
   }
 
   .is-grid-view .sc-name {
-    font-size: 0.85rem;
+    font-size: var(--k-fs-body);
   }
 
   .is-grid-view .sc-short {
-    font-size: 0.68rem;
+    font-size: var(--k-fs-data);
   }
 }

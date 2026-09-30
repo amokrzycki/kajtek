@@ -4,6 +4,8 @@
 
 Czytelniejsze komunikaty i łatwiejsza obsługa.
 
+- Powiększono drobne opisy, znaczniki i czasy utworów; ujednolicono rozmiary tekstu także na telefonie.
+
 - Długie nazwy stacji nie rozpychają odtwarzacza ani katalogu; pełną nazwę pokazuje dymek.
 - Widok listy ma jedną kolumnę, a widok kafelków pozostaje siatką. Pusta sekcja ulubionych jest ukryta.
 - Kliknięcie wiersza katalogu nie zmienia listy stacji — służy do tego przełącznik. Indeks A–Z przygasa przy braku wyników.

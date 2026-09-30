@@ -8,7 +8,7 @@
 
 .catalog-sec-title {
   font-family: var(--k-font-mono);
-  font-size: 0.62rem;
+  font-size: var(--k-fs-label);
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--k-text-muted);
@@ -22,7 +22,7 @@
 
 .catalog-sec-count {
   font-family: var(--k-font-mono);
-  font-size: 0.625rem;
+  font-size: var(--k-fs-tag);
   color: var(--k-text-faint);
 }
 
@@ -47,7 +47,7 @@
   flex-direction: column;
   gap: 1px;
   font-family: var(--k-font-mono);
-  font-size: 0.625rem;
+  font-size: var(--k-fs-data);
   color: var(--k-text-faint);
   flex-shrink: 0;
   padding: 0.2rem 0.25rem 0.2rem 0;
@@ -90,7 +90,7 @@
     scrollbar-width: none;
     background: var(--k-bg-panel);
     border-bottom: 1px solid var(--k-border);
-    font-size: 0.75rem;
+    font-size: var(--k-fs-data);
   }
 
   .catalog-idxrail span:not(.has) {
@@ -117,7 +117,7 @@
 
 .catalog-provider-tag {
   font-family: var(--k-font-mono);
-  font-size: 0.625rem;
+  font-size: var(--k-fs-tag);
   font-weight: 600;
   letter-spacing: 0.05em;
   color: var(--k-text-2);
@@ -135,7 +135,7 @@
   background: var(--k-accent-dim);
   color: var(--k-accent-text);
   font-family: var(--k-font-mono);
-  font-size: 0.625rem;
+  font-size: var(--k-fs-tag);
   font-weight: 600;
   letter-spacing: 0.06em;
   padding: 0.15rem 0.45rem;
@@ -161,7 +161,7 @@
   align-items: center;
   gap: 0.4em;
   font-family: var(--k-font-mono);
-  font-size: 0.62rem;
+  font-size: var(--k-fs-label);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -203,7 +203,7 @@
 
 .catalog-result-count {
   font-family: var(--k-font-mono);
-  font-size: 0.62rem;
+  font-size: var(--k-fs-data);
   letter-spacing: 0.06em;
   color: var(--k-text-faint);
   padding: 0 0.1rem 0.35rem;
@@ -219,7 +219,7 @@
 
 .catalog-empty-note {
   font-family: var(--k-font-mono);
-  font-size: 0.62rem;
+  font-size: var(--k-fs-data);
   color: var(--k-text-faint);
   padding: 0.4rem 0.1rem 0;
 }
@@ -227,7 +227,7 @@
 .catalog-toggle-hint {
   margin: 0;
   padding: 0.5rem 1rem 0;
-  font-size: 0.75rem;
+  font-size: var(--k-fs-data);
   color: var(--k-text-muted);
 }
 

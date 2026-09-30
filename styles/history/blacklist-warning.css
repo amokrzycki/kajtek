@@ -117,7 +117,7 @@
 }
 
 .bl-warn-title {
-  font-size: 0.72rem;
+  font-size: var(--k-fs-body);
   font-weight: 600;
   color: var(--k-disp-text);
 }

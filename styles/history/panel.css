@@ -27,6 +27,7 @@
 
 .history-head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.55rem;
   border-bottom: 1px solid var(--k-disp-hair);
@@ -47,6 +48,7 @@
 
 .history-tabs {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.35rem;
 }
@@ -101,8 +103,9 @@
 }
 
 .history-clock {
+  margin-left: auto;
   font-family: var(--k-font-mono);
-  font-size: 0.625rem;
+  font-size: var(--k-fs-data);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.08em;
   color: var(--k-disp-text-3);

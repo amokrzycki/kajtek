@@ -61,7 +61,7 @@
 
 .np-branding .unitra-sub {
   font-family: var(--k-font-mono);
-  font-size: 0.55rem;
+  font-size: var(--k-fs-hardware);
   font-weight: 700;
   letter-spacing: 0.15em;
   color: var(--k-case-ink-dim);
@@ -73,7 +73,7 @@
 .np-branding .unitra-sub .u-box {
   background: var(--k-case-ink);
   color: var(--k-u-box-fg);
-  font-size: 0.46rem;
+  font-size: var(--k-fs-hardware);
   font-weight: 900;
   padding: 1px 4px;
   border-radius: 2px;
@@ -82,7 +82,7 @@
 
 .np-branding .stereo-title {
   font-family: var(--k-font-display);
-  font-size: 1.4rem;
+  font-size: var(--k-fs-heading);
   font-weight: 800;
   letter-spacing: 0.32em;
   color: transparent;
@@ -95,7 +95,7 @@
 
 .np-branding .cassette-sub {
   font-family: var(--k-font-mono);
-  font-size: 0.48rem;
+  font-size: var(--k-fs-hardware);
   font-weight: 600;
   letter-spacing: 0.18em;
   color: var(--k-case-ink-dim);
@@ -119,7 +119,7 @@
 }
 
 .adskip-legend {
-  font-size: 0.625rem;
+  font-size: var(--k-fs-label);
   font-weight: 700;
   letter-spacing: 0.12em;
 }
@@ -165,8 +165,8 @@
 .adskip-pos {
   display: flex;
   justify-content: space-between;
-  width: 64px;
-  font-size: 0.625rem;
+  gap: 0.6rem;
+  font-size: var(--k-fs-label);
   font-weight: 600;
   letter-spacing: 0.04em;
 }
@@ -263,7 +263,7 @@
 }
 
 .history-btn .history-arrow {
-  font-size: 0.46rem;
+  font-size: var(--k-fs-hardware);
   transition: transform var(--k-tr-panel);
 }
 
@@ -288,7 +288,7 @@
   }
 
   .np-branding .stereo-title {
-    font-size: 0.95rem;
+    font-size: var(--k-fs-card);
     letter-spacing: 0.12em;
   }
 }

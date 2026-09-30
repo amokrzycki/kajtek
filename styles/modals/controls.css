@@ -27,7 +27,7 @@
   border-radius: var(--k-rb);
   color: var(--k-text);
   font-family: var(--k-font-body);
-  font-size: 0.82rem;
+  font-size: var(--k-fs-body);
   outline: none;
 }
 
@@ -51,7 +51,7 @@
   border: 1px solid var(--k-border);
   border-radius: var(--k-rb);
   color: var(--k-text);
-  font-size: 0.75rem;
+  font-size: var(--k-fs-data);
   font-family: var(--k-font-mono);
   cursor: pointer;
   transition: border-color var(--k-tr);
@@ -149,7 +149,7 @@
 
 .k-field-hint {
   margin-top: 0.5rem;
-  font-size: 0.75rem;
+  font-size: var(--k-fs-data);
   color: var(--k-text-2);
 }
 

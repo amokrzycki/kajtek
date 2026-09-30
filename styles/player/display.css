@@ -36,7 +36,7 @@
 .np-tape-scale {
   writing-mode: vertical-rl;
   font-family: var(--k-font-mono);
-  font-size: 0.44rem;
+  font-size: var(--k-fs-hardware);
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--k-disp-dim);
@@ -65,7 +65,7 @@
 
 .kajtek-stripe span {
   font-family: var(--k-font-display);
-  font-size: 0.72rem;
+  font-size: var(--k-fs-label);
   font-weight: 700;
   line-height: 1;
   color: #151311;
@@ -93,7 +93,7 @@
 .np-short-val {
   font-family: var(--k-font-display);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: var(--k-fs-body);
   color: var(--k-disp-accent);
   letter-spacing: 0.02em;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
@@ -152,7 +152,7 @@
 }
 
 .np-station.empty {
-  font-size: 1rem;
+  font-size: var(--k-fs-card);
   font-weight: 400;
   font-family: var(--k-font-body);
   font-style: italic;
@@ -211,7 +211,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: 0.7rem;
+  font-size: var(--k-fs-data);
   font-weight: 600;
   color: var(--k-disp-accent);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
@@ -293,7 +293,7 @@
   }
 
   .np-station {
-    font-size: 1.5rem;
+    font-size: var(--k-fs-heading);
   }
 
   .np-choose-station {

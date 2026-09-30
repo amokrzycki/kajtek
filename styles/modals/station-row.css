@@ -44,7 +44,7 @@
   justify-content: center;
   font-family: var(--k-font-display);
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: var(--k-fs-body);
   color: var(--k-text-muted);
 }
 
@@ -54,7 +54,7 @@
 
 .catalog-name {
   font-weight: 600;
-  font-size: 0.88rem;
+  font-size: var(--k-fs-body);
   color: var(--k-text);
   white-space: nowrap;
   overflow: hidden;
@@ -71,7 +71,7 @@
 }
 
 .catalog-sub {
-  font-size: 0.7rem;
+  font-size: var(--k-fs-data);
   color: var(--k-text-faint);
   white-space: nowrap;
   overflow: hidden;
@@ -89,7 +89,7 @@
   padding: 2rem 1rem;
   text-align: center;
   color: var(--k-text-faint);
-  font-size: 0.85rem;
+  font-size: var(--k-fs-body);
 }
 
 .k-catalog-empty-text {
