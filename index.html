@@ -112,6 +112,7 @@
               </div>
               <div id="np-station" class="np-station empty">wybierz stację</div>
               <div id="np-status" class="np-status" role="status">Gotowy</div>
+              <button type="button" id="np-retry" class="np-choose-station" hidden>Ponów</button>
               <div id="np-track" class="np-track" aria-live="polite" aria-atomic="true">
                 <div id="np-artist" class="np-artist">—</div>
                 <span id="np-title" class="np-title">—</span>
@@ -154,7 +155,7 @@
               class="history-btn"
               aria-expanded="false"
               aria-controls="history-panel">
-              <span>PROGRAM</span>
+              <span>PLAYLISTA</span>
               <span class="history-arrow" aria-hidden="true">▼</span>
             </button>
           </div>
@@ -164,7 +165,7 @@
             <div class="history-clip">
               <div class="history-inner">
                 <div class="history-head">
-                  <div class="history-tabs" role="tablist" aria-label="Widok programu">
+                  <div class="history-tabs" role="tablist" aria-label="Playlista i ulubione utwory">
                     <button
                       type="button"
                       id="history-tab-program"
@@ -173,7 +174,7 @@
                       aria-selected="true"
                       aria-controls="program-view"
                       data-history-tab="program">
-                      PROGRAM
+                      PLAYLISTA
                     </button>
                     <button
                       type="button"
@@ -199,12 +200,12 @@
                       <div id="blacklist-warning-content" class="bl-warn-content"></div>
                     </div>
                   </div>
-                  <div id="history-empty" class="history-empty">Program pojawi się po wybraniu stacji…</div>
+                  <div id="history-empty" class="history-empty">Playlista pojawi się po wybraniu stacji…</div>
                   <div id="history-list"></div>
                 </div>
                 <div id="favorites-view" class="history-view" role="tabpanel" aria-labelledby="history-tab-favorites">
                   <div id="favorites-empty" class="history-empty">
-                    Brak ulubionych utworów — kliknij ★ przy utworze w zakładce PROGRAM
+                    Brak ulubionych utworów — kliknij ★ przy utworze w zakładce PLAYLISTA
                   </div>
                   <div id="favorites-list"></div>
                 </div>
@@ -275,6 +276,7 @@
                 <span class="sleep-val">90</span><span class="sleep-unit">min</span>
               </button>
             </div>
+            <p class="k-field-hint">Aby anulować wyłącznik, naciśnij ponownie wybrany czas.</p>
             <div id="sleep-count" class="sleep-count">
               <div class="sleep-count-clip"><div id="sleep-count-line" class="sleep-count-line"></div></div>
             </div>

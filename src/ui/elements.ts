@@ -16,6 +16,7 @@ export const els = {
   npShort: document.getElementById("np-short") as HTMLSpanElement,
   npLiveDot: document.getElementById("np-live-dot") as HTMLSpanElement,
   npStation: document.getElementById("np-station") as HTMLDivElement,
+  npRetry: document.getElementById("np-retry") as HTMLButtonElement,
   npStatus: document.getElementById("np-status") as HTMLDivElement,
   npTrackWrap: document.getElementById("np-track") as HTMLDivElement,
   npArtist: document.getElementById("np-artist") as HTMLDivElement,

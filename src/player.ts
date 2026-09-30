@@ -104,7 +104,7 @@ async function playStreamUrl(url: string | undefined): Promise<void> {
     if (error instanceof DOMException && error.name === "AbortError") return;
     state.playing = false;
     notifyState();
-    setPlaybackStatus("Nie udało się uruchomić — naciśnij PLAY", "failed");
+    setPlaybackStatus("Nie udało się włączyć stacji. Ponów lub wybierz inną.", "failed");
   });
 }
 
@@ -122,10 +122,10 @@ function handleAudioFailover() {
     radioAudio.pause();
     updateNowPlayingTrack({
       artist: state.station.name,
-      title: "Błąd odtwarzania streamu",
+      title: "Błąd odtwarzania stacji",
     });
     notifyState();
-    setPlaybackStatus("Brak połączenia — naciśnij PLAY, aby ponowić", "failed");
+    setPlaybackStatus("Nie udało się połączyć ze stacją. Ponów lub wybierz inną.", "failed");
     return;
   }
 

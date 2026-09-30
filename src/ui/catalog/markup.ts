@@ -25,7 +25,7 @@ export const CATALOG_MODAL_HTML = `
           </summary>
           <div class="k-modal-actions-row">
             <button type="button" id="catalog-refresh-btn" class="btn-secondary">Odśwież listę</button>
-            <button type="button" id="catalog-custom-toggle-btn" class="btn-secondary" aria-expanded="false" aria-controls="catalog-custom-form-wrap">+ Własna stacja</button>
+            <button type="button" id="catalog-custom-toggle-btn" class="btn-secondary" aria-expanded="false" aria-controls="catalog-custom-form-wrap">Dodaj własną stację</button>
             <button type="button" id="open-blacklist-btn" class="btn-secondary">Czarna lista utworów</button>
           </div>
           <div id="catalog-custom-form-wrap" class="k-custom-form-wrap">
@@ -37,7 +37,7 @@ export const CATALOG_MODAL_HTML = `
                     <input type="text" id="custom-name-input" class="k-input" placeholder="np. Radio Rzeszów" required />
                   </label>
                   <label class="k-field">
-                    <span class="k-field-label">Adres streamu</span>
+                    <span class="k-field-label">Adres strumienia</span>
                     <input type="url" id="custom-url-input" class="k-input" placeholder="https://…" aria-describedby="custom-url-hint" required />
                   </label>
                   <button type="submit" class="btn-primary">Dodaj</button>
@@ -49,6 +49,8 @@ export const CATALOG_MODAL_HTML = `
           </div>
         </details>
       </div>
+
+      <p id="catalog-custom-status" class="catalog-toggle-hint" role="status"></p>
 
       <div class="catalog-tabbar" role="tablist" aria-label="Kategorie stacji">
         <button type="button" id="catalog-tab-all" class="catalog-tab active" role="tab" aria-selected="true" aria-controls="catalog-list-container" data-tab="all">WSZYSTKIE A–Z</button>

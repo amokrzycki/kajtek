@@ -227,6 +227,14 @@
   color: var(--k-text-muted);
 }
 
+#catalog-custom-status {
+  overflow-wrap: anywhere;
+}
+
+#catalog-custom-status:empty {
+  padding: 0;
+}
+
 #catalog-modal-overlay {
   align-items: flex-start;
   padding-top: max(1rem, 6vh);

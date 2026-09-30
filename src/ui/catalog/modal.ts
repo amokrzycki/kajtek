@@ -140,6 +140,8 @@ function createModalElements(): void {
 
     if (!nameEl || !urlEl) return;
     errEl?.classList.remove("is-visible");
+    const statusEl = modalEl?.querySelector<HTMLElement>("#catalog-custom-status");
+    if (statusEl) statusEl.textContent = "";
 
     handleCustomStationSubmit(
       nameEl.value,
@@ -152,6 +154,10 @@ function createModalElements(): void {
         }
       },
       () => {
+        if (statusEl) statusEl.textContent = `Dodano stację „${nameEl.value.trim()}”. Znajdziesz ją w zakładce WŁASNE.`;
+        searchQuery = "";
+        if (searchInput) searchInput.value = "";
+        activeNetwork = null;
         nameEl.value = "";
         urlEl.value = "";
         if (urlHint) urlHint.hidden = true;
@@ -159,7 +165,9 @@ function createModalElements(): void {
         customToggleBtn?.setAttribute("aria-expanded", "false");
         const formWrap = modalEl?.querySelector<HTMLElement>("#catalog-custom-form-wrap");
         formWrap?.classList.remove("is-open");
-        renderModalBody();
+        if (activeTab === "custom") renderModalBody();
+        else setActiveTab("custom");
+        modalEl?.querySelector<HTMLButtonElement>("#catalog-tab-custom")?.focus();
       },
     );
   });

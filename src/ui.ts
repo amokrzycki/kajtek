@@ -54,11 +54,14 @@ export function updateSleepUI(): void {
     const active = state.sleepMin === Number(btn.getAttribute("data-min"));
     btn.classList.toggle("active", active);
     btn.setAttribute("aria-pressed", String(active));
+    btn.setAttribute("aria-label", active ? "Anuluj wyłącznik czasowy" : `Wyłącz za ${btn.dataset.min} minut`);
   });
 }
 
 export function setPlaybackStatus(message: string, dotState?: "buffering" | "failed"): void {
   triggerFade(els.npStatus, message);
+  els.npStatus.classList.toggle("failed", dotState === "failed");
+  els.npRetry.hidden = dotState !== "failed";
   els.npLiveDot.classList.toggle("buffering", dotState === "buffering");
   els.npLiveDot.classList.toggle("failed", dotState === "failed");
 }

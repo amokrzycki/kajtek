@@ -138,7 +138,7 @@ function renderListTab(container: HTMLElement): void {
     const empty = document.createElement("div");
     empty.className = "k-catalog-empty";
     empty.textContent =
-      "Brak zablokowanych utworów — zablokuj utwór przyciskiem ⊘ przy okładce lub w zakładce PROGRAM albo dodaj go ręcznie w zakładce DODAJ.";
+      "Brak zablokowanych utworów — zablokuj utwór przyciskiem ⊘ przy okładce lub w zakładce PLAYLISTA albo dodaj go ręcznie w zakładce DODAJ.";
     container.appendChild(empty);
     return;
   }
@@ -179,7 +179,7 @@ function renderAddTab(container: HTMLElement): void {
     </form>
     ${
       track
-        ? `<button type="button" id="blacklist-quick-add" class="btn-secondary" style="margin-top: 0.6rem;">Zablokuj aktualnie odtwarzany utwór (${escapeHtml(track.artist)} – ${escapeHtml(track.title)})</button>`
+        ? `<button type="button" id="blacklist-quick-add" class="btn-secondary" style="margin-top: 0.6rem;">Wstaw aktualny utwór (${escapeHtml(track.artist)} – ${escapeHtml(track.title)})</button>`
         : ""
     }
   `;

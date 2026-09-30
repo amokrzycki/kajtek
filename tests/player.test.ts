@@ -375,7 +375,7 @@ describe("stream failover", () => {
     expect(mocks.audio.pause).toHaveBeenCalledOnce();
     expect(mocks.updateNowPlayingTrack).toHaveBeenCalledWith({
       artist: target.name,
-      title: "Błąd odtwarzania streamu",
+      title: "Błąd odtwarzania stacji",
     });
   });
 
@@ -485,7 +485,10 @@ describe("playback state and cleanup", () => {
     await Promise.resolve();
 
     expect(state.playing).toBe(true);
-    expect(mocks.setPlaybackStatus).not.toHaveBeenCalledWith("Nie udało się uruchomić — naciśnij PLAY", "failed");
+    expect(mocks.setPlaybackStatus).not.toHaveBeenCalledWith(
+      "Nie udało się włączyć stacji. Ponów lub wybierz inną.",
+      "failed",
+    );
   });
 
   it("stops and reports a non-AbortError play failure", async () => {
@@ -494,7 +497,10 @@ describe("playback state and cleanup", () => {
     await Promise.resolve();
 
     expect(state.playing).toBe(false);
-    expect(mocks.setPlaybackStatus).toHaveBeenCalledWith("Nie udało się uruchomić — naciśnij PLAY", "failed");
+    expect(mocks.setPlaybackStatus).toHaveBeenCalledWith(
+      "Nie udało się włączyć stacji. Ponów lub wybierz inną.",
+      "failed",
+    );
   });
 
   it("ignores a stale play failure after switching sources", async () => {
@@ -511,7 +517,10 @@ describe("playback state and cleanup", () => {
     await Promise.resolve();
 
     expect(state.playing).toBe(true);
-    expect(mocks.setPlaybackStatus).not.toHaveBeenCalledWith("Nie udało się uruchomić — naciśnij PLAY", "failed");
+    expect(mocks.setPlaybackStatus).not.toHaveBeenCalledWith(
+      "Nie udało się włączyć stacji. Ponów lub wybierz inną.",
+      "failed",
+    );
   });
 
   it("does not resume a pending HLS request after pausing", async () => {

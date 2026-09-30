@@ -57,7 +57,6 @@ export function createStationRow(station: Station, opts: StationRowOpts, rerende
       <div class="catalog-details">
         <div class="catalog-name">
           ${safeName}
-          ${opts.isCustom ? '<span class="badge-custom">Własna</span>' : ""}
           ${providerLabel ? `<span class="catalog-provider-tag">${escapeHtml(providerLabel)}</span>` : ""}
         </div>
         <div class="catalog-sub">${localPillHtml}${escapeHtml(station.short)}</div>

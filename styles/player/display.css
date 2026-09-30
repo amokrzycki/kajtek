@@ -178,6 +178,20 @@
   letter-spacing: 0.04em;
 }
 
+#np-retry {
+  min-height: 44px;
+  box-shadow: var(--k-sh-btn);
+}
+
+#np-retry:active {
+  box-shadow: var(--k-sh-inset);
+  transform: translateY(1px);
+}
+
+.np-status.failed {
+  color: var(--k-vu-led-red);
+}
+
 .np-track {
   margin-top: 0.4rem;
   min-width: 0;

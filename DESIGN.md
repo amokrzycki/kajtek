@@ -273,3 +273,9 @@ Flat, no background — brand wordmark left, two icon-only round key-buttons rig
 - **Don't** lighten a glass tint past the smoked-red top stop, or override `--k-disp-*` from `.dark` or any non-shell selector.
 - **Don't** use sharp/square corners or fully flat surfaces — the three-radius system (`--k-r` / `--k-rc` / `--k-rb`) and physical shadow vocabulary are load-bearing for the "real object" illusion.
 - **Don't** animate panel open/close or expandable forms with `max-height` hacks or `display: none` toggling — use `grid-template-rows: 0fr → 1fr` per the existing pattern.
+
+## UI terminology
+
+- **Własna stacja** describes a station added by the listener. **WŁASNE** labels the catalog tab containing these stations. Use **adres strumienia** for its playback URL.
+- **PLAYLISTA** labels the panel of past, current, and upcoming tracks or broadcasts supplied by the station.
+- **Ponów** retries failed playback; **Wstaw aktualny utwór** fills the blacklist form without submitting it.

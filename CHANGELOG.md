@@ -2,25 +2,29 @@
 
 ## 0.12.1
 
-Optymalizacje i poprawki interfejsu Kajtka.
+Czytelniejsze komunikaty i łatwiejsza obsługa.
 
-- Poprawiono etykiety czytników ekranu, komunikaty, kontrast i fokus klawiatury. Dodano skrót do odtwarzacza, opisy pól czarnej listy i potwierdzenie usuwania; wskaźnik VU respektuje ograniczenie ruchu.
+- Błąd odtwarzania ma czerwony komunikat i przycisk „Ponów”.
+- Dodanie własnej stacji czyści wyszukiwanie, otwiera zakładkę WŁASNE i pokazuje potwierdzenie.
+- Panel utworów nazywa się PLAYLISTA. Ujednolicono nazwy własnych stacji.
+- Przycisk „Wstaw aktualny utwór” uzupełnia formularz czarnej listy.
+- Wyłącznik czasowy wyjaśnia, jak go anulować.
+- Skrócono opisy zmian i uproszczono politykę prywatności.
+- Poprawiono opisy dla czytników ekranu, kontrast i fokus klawiatury. Wskaźnik VU uwzględnia ograniczenie ruchu.
 
 ## 0.12.0
 
-Usprawniono obsługę Kajtka, szczególnie na telefonach.
+Wygodniejsza obsługa, zwłaszcza na telefonie.
 
-- Pomijanie reklam ma fizyczny przełącznik „REKLAMY: GRAJ / POMIŃ” na obudowie i jest domyślnie włączone.
-- Skróty klawiszowe: spacja – odtwarzaj/pauza, ←/→ – poprzednia/następna stacja, M – wyciszenie, 1–4 – wyłącznik czasowy. Lista skrótów jest w stopce (tylko na komputerze).
-- Klawisz ? i przycisk ? w nagłówku otwierają ten sam ekran „Jak słuchać”.
-- W katalogu możesz odsłuchać stację przyciskiem ▶ bez dodawania jej do swojej listy. Opis przełącznika wyjaśnia, że dodaje stację do listy lub ją z niej ukrywa.
-- Puste wyniki wyszukiwania podpowiadają, jak wyczyścić filtr lub przeszukać wszystkie stacje. Na telefonie filtry sieci są schowane pod przyciskiem „Filtry”.
-- Wyłącznik czasowy stopniowo ścisza radio przez ostatnie 8 sekund. Miniatury własnych stacji używają koloru obudowy.
-- Okno „Zablokowany utwór” ma przycisk „Cofnij blokadę”, a usunięcie własnej stacji wymaga potwierdzenia w wierszu.
-- Katalog, nagłówek i przyciski są wygodniejsze na telefonie. Ustawienia mają czytelniejsze przełączniki i większe pola dotykowe.
-- Formularz własnej stacji ma opisane pola i ostrzeżenie, gdy wpiszesz adres http://. Ekran powitalny wyjaśnia, że stacje trzeba najpierw włączyć w Katalogu; przycisk „zrobię to później” jest łatwiejszy do znalezienia.
-- Uporządkowano nazwy i opisy w ustawieniach, czarnej liście, obudowie oraz sekcjach ulubionych. Poprawiono też obsługę klawiatury, opisy dla czytników ekranu i ograniczono animacje zgodnie z ustawieniem systemowym.
-- Kliknięcie numeru wersji w stopce otwiera listę zmian. Tytuł karty przeglądarki pokazuje aktualny utwór i stację.
+- Pomijanie reklam jest domyślnie włączone. Zmienisz je przełącznikiem „REKLAMY: GRAJ / POMIŃ” na obudowie.
+- Skróty: spacja — odtwarzanie i pauza, ←/→ — zmiana stacji, M — wyciszenie, 1–4 — wyłącznik czasowy. Pełna lista jest w stopce na komputerze.
+- Przycisk ? i klawisz ? otwierają pomoc „Jak słuchać”.
+- W katalogu możesz odsłuchać stację bez dodawania jej do swojej listy. Łatwiej też wyczyścić wyszukiwanie i zmienić filtry.
+- Wyłącznik czasowy ścisza radio przez ostatnie 8 sekund. Miniatury własnych stacji mają kolor obudowy.
+- Blokadę utworu można cofnąć. Usunięcie własnej stacji wymaga potwierdzenia.
+- Poprawiono katalog, formularze i ustawienia na telefonie oraz obsługę klawiatury i czytników ekranu.
+- Formularz własnej stacji ostrzega przed adresem http://. Pomoc wyjaśnia, jak włączyć stacje w katalogu.
+- Numer wersji w stopce otwiera listę zmian. Tytuł karty pokazuje utwór i stację.
 - Dodano licencję MIT.
 
 ## 0.11.3

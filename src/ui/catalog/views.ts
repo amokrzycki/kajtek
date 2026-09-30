@@ -289,5 +289,5 @@ export function renderCustomTab(container: HTMLElement, ctx: CatalogViewCtx, dep
       createStationRow(station, { isCustom: true, showProviderTag: false, showLocalPill: false }, deps.rerender),
     );
   });
-  container.appendChild(buildNoteEl("Stacje dodane ręcznie przez „+ Własna stacja”."));
+  container.appendChild(buildNoteEl("Stacje dodane przez „Dodaj własną stację”."));
 }

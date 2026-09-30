@@ -106,6 +106,10 @@ function attachEvents() {
   });
 
   els.playBtn.addEventListener("click", () => togglePlay());
+  els.npRetry.addEventListener("click", () => {
+    togglePlay();
+    els.playBtn.focus();
+  });
 
   els.adSkipSwitch.addEventListener("click", () => setAdSkipEnabled(!state.adSkipEnabled));
 
