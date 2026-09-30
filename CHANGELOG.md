@@ -2,17 +2,20 @@
 
 ## 0.12.0
 
-Ogólne usprawnienia w obrębie całego interfejsu Kajtka, poprawki błędów i optymalizacje.
+Usprawniono obsługę Kajtka, szczególnie na telefonach.
 
 - Pomijanie reklam ma fizyczny przełącznik „REKLAMY: GRAJ / POMIŃ” na obudowie i jest domyślnie włączone.
 - Skróty klawiszowe: spacja – odtwarzaj/pauza, ←/→ – poprzednia/następna stacja, M – wyciszenie, 1–4 – wyłącznik czasowy. Lista skrótów jest w stopce (tylko na komputerze).
 - Klawisz ? i przycisk ? w nagłówku otwierają ten sam ekran „Jak słuchać”.
-- W katalogu możesz posłuchać stacji przyciskiem ▶, bez dodawania jej do listy, a przełącznik przy stacji ma jasny opis.
-- Wyłącznik czasowy wycisza dźwięk płynnie w ostatnich 8 sekundach.
+- W katalogu możesz odsłuchać stację przyciskiem ▶ bez dodawania jej do swojej listy. Opis przełącznika wyjaśnia, że dodaje stację do listy lub ją z niej ukrywa.
+- Puste wyniki wyszukiwania podpowiadają, jak wyczyścić filtr lub przeszukać wszystkie stacje. Na telefonie filtry sieci są schowane pod przyciskiem „Filtry”.
+- Wyłącznik czasowy stopniowo ścisza radio przez ostatnie 8 sekund. Miniatury własnych stacji używają koloru obudowy.
 - Okno „Zablokowany utwór” ma przycisk „Cofnij blokadę”, a usunięcie własnej stacji wymaga potwierdzenia w wierszu.
-- Wygodniejsze filtry i nagłówek katalogu na telefonie.
-- Ekran powitalny na początku tłumaczy, że stacja pojawi się na liście dopiero po włączeniu w Katalogu, a „zrobię to później” jest widocznym przyciskiem.
-- Tytuł karty przeglądarki pokazuje aktualny utwór i stację.
+- Katalog, nagłówek i przyciski są wygodniejsze na telefonie. Ustawienia mają czytelniejsze przełączniki i większe pola dotykowe.
+- Formularz własnej stacji ma opisane pola i ostrzeżenie, gdy wpiszesz adres http://. Ekran powitalny wyjaśnia, że stacje trzeba najpierw włączyć w Katalogu; przycisk „zrobię to później” jest łatwiejszy do znalezienia.
+- Uporządkowano nazwy i opisy w ustawieniach, czarnej liście, obudowie oraz sekcjach ulubionych. Poprawiono też obsługę klawiatury, opisy dla czytników ekranu i ograniczono animacje zgodnie z ustawieniem systemowym.
+- Kliknięcie numeru wersji w stopce otwiera listę zmian. Tytuł karty przeglądarki pokazuje aktualny utwór i stację.
+- Dodano licencję MIT.
 
 ## 0.11.3
 
