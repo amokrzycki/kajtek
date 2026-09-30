@@ -169,15 +169,16 @@
 }
 
 .catalog-toggle-switch {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  width: 32px;
-  height: 18px;
+  width: 44px;
+  height: 24px;
   margin: 0;
   padding: 0 2px;
   background: var(--k-bg-inset);
-  border: 1px solid var(--k-border-2);
-  border-radius: 10px;
+  border: 1px solid var(--k-text-muted);
+  border-radius: 999px;
   box-shadow: var(--k-sh-inset);
   flex-shrink: 0;
   cursor: pointer;
@@ -189,18 +190,18 @@
 
 @media (hover: hover) and (pointer: fine) {
   .catalog-toggle-switch:hover {
-    border-color: var(--k-border-3);
+    border-color: var(--k-text);
   }
 }
 
 .catalog-toggle-switch::before {
   content: "";
   display: block;
-  width: 12px;
-  height: 12px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
-  background: var(--k-bg-raised);
-  border: 1px solid var(--k-text-disabled);
+  background: var(--k-text-2);
+  border: 1px solid var(--k-text-muted);
   box-shadow: var(--k-sh-btn);
   transition:
     transform 230ms var(--k-ease-mech),
@@ -210,16 +211,37 @@
     box-shadow var(--k-tr);
 }
 
+.catalog-toggle-switch::after {
+  content: "";
+  position: absolute;
+  right: 7px;
+  width: 7px;
+  height: 7px;
+  border: 2px solid var(--k-text-2);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
 .catalog-toggle-switch:has(.catalog-checkbox:checked) {
   background: var(--k-accent-dim);
-  border-color: var(--k-accent);
+  border-color: var(--k-accent-text);
 }
 
 .catalog-toggle-switch:has(.catalog-checkbox:checked)::before {
-  transform: translateX(14px);
-  background: var(--k-accent);
-  border-color: var(--k-accent-2);
-  box-shadow: 0 0 3px var(--k-accent-ring);
+  transform: translateX(20px);
+  background: var(--k-accent-text);
+  border-color: var(--k-accent-text);
+  box-shadow: var(--k-sh-btn);
+}
+
+.catalog-toggle-switch:has(.catalog-checkbox:checked)::after {
+  left: 10px;
+  right: auto;
+  width: 2px;
+  height: 9px;
+  border: none;
+  background: var(--k-accent-text);
+  border-radius: 0;
 }
 
 .catalog-toggle-switch:not(:has(.catalog-checkbox:disabled)):active::before {

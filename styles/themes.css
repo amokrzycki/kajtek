@@ -150,6 +150,9 @@
 }
 .dark [data-case="black"],
 [data-case="black"].dark {
+  --k-case: linear-gradient(180deg, #4b4741 0%, #302d29 100%);
+  --k-case-edge: #777066;
+  --k-sh-contact: 0 20px 34px -12px rgba(0, 0, 0, 0.8), 2px 5px 16px rgba(0, 0, 0, 0.55);
   --k-accent-text: #d9b356;
   --k-led-active: #d9b356;
   --k-glow: 0 0 16px rgba(193, 154, 53, 0.38);

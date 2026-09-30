@@ -40,6 +40,9 @@ colors:
   shell-pink: "#e88fa2"
   shell-black-lit: "#3a3733"
   shell-black: "#1d1b19"
+  shell-black-dark-lit: "#4b4741"
+  shell-black-dark: "#302d29"
+  shell-black-dark-edge: "#777066"
   vu-green: "#16a34a"
   vu-amber: "#d97706"
   vu-red: "#dc2626"
@@ -224,7 +227,7 @@ Three radii carry the app, applied by role rather than by component: `--k-r` (11
 The detector found literal radii outside the three-step scale. They are the only sanctioned exceptions; anything else should use `--k-r` / `--k-rc` / `--k-rb`.
 - **Pill** (`999px`, `99px`): warning tag, history tabs, catalog "local" pill — shape that must read fully round regardless of content width. Prefer `999px`; `99px` is equivalent legacy in the catalog modal.
 - **Count badge** (`10px`): the favorites tab count and station-section counts — a small badge that reads as near-pill at its fixed height.
-- **Toggle track** (`10px`): the catalog modal's toggle switch, as a pill-shaped inset track.
+- **Toggle track** (`999px`): the catalog modal's toggle switch, as a pill-shaped inset track.
 - **Chip** (`5px`): playlist rows (including current and ad-break states) and the volume slider's track and thumb.
 - **Hardware micro-radii** (`1px`–`4px`): VU columns and volume LEDs (1px), UNITRA box lettering (2px), side-button nubs (4px), brand plate, playlist tags and custom-station badges (3px). These depict small machined edges; never use them on interactive controls.
 
@@ -249,8 +252,11 @@ A row of vertical LED-ladder columns (`.vu-strip` / `.vu-col`) with a fixed gree
 
 ### Toggle Switch
 - **Style:** pill-shaped inset track (`--k-sh-inset`), round knob with the raised-button shadow (`--k-sh-btn`).
-- **Checked state:** knob slides 14px right, fills accent-dim with accent border, knob itself becomes solid accent.
+- **State:** 44×24px track with a contrasting outline and knob; an etched O marks off and I marks on, independently of color.
+- **Checked state:** knob slides 20px right, fills accent-dim with accent-text border, knob itself becomes solid accent-text.
 - **Focus:** accent-ring glow around the whole switch, never just an outline.
+
+In dark mode, the Black shell uses a lighter charcoal gradient (`#4b4741` → `#302d29`), a warm-gray edge (`#777066`), and a deeper directional contact shadow to lift it off the page.
 
 ### Inputs
 - **Style:** inset-stone background, hairline border, no visible focus ring — border color shifts to accent on focus instead.
