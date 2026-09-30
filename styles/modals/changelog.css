@@ -2,7 +2,7 @@
 
 .k-changelog-intro {
   margin: 0 0 0.6rem;
-  font-size: 0.85rem;
+  font-size: var(--k-fs-body);
   color: var(--k-text-muted);
 }
 
@@ -12,6 +12,6 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  font-size: 0.85rem;
+  font-size: var(--k-fs-body);
   color: var(--k-text);
 }

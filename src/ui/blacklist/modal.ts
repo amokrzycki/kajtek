@@ -92,9 +92,14 @@ function createModalElements(): void {
     const deleteBtn = target.closest<HTMLButtonElement>(".btn-delete-custom");
     if (deleteBtn) {
       const key = deleteBtn.dataset.key;
-      if (key) {
-        removeFromBlacklist(key);
+      const entry = getBlacklist().find((item) => item.key === key);
+      if (entry && window.confirm(`Usunąć z czarnej listy: ${entry.artist} – ${entry.title}?`)) {
+        removeFromBlacklist(entry.key);
         renderModalBody();
+        (
+          modalEl?.querySelector<HTMLButtonElement>(".btn-delete-custom") ??
+          modalEl?.querySelector<HTMLButtonElement>("#blacklist-tab-add")
+        )?.focus();
       }
       return;
     }
@@ -133,7 +138,7 @@ function renderListTab(container: HTMLElement): void {
     const empty = document.createElement("div");
     empty.className = "k-catalog-empty";
     empty.textContent =
-      "Brak zablokowanych utworów — zablokuj utwór przyciskiem ⊘ przy okładce lub w zakładce PROGRAM albo dodaj go ręcznie w zakładce DODAJ.";
+      "Brak zablokowanych utworów — zablokuj utwór przyciskiem ⊘ przy okładce lub w zakładce PLAYLISTA albo dodaj go ręcznie w zakładce DODAJ.";
     container.appendChild(empty);
     return;
   }
@@ -162,13 +167,19 @@ function renderAddTab(container: HTMLElement): void {
   wrap.className = "k-custom-form";
   wrap.innerHTML = `
     <form id="blacklist-add-form" class="k-form-row">
-      <input type="text" id="blacklist-artist-input" class="k-input" placeholder="Artysta" required />
-      <input type="text" id="blacklist-title-input" class="k-input" placeholder="Tytuł" required />
+      <label class="k-field">
+        <span class="k-field-label">Artysta</span>
+        <input type="text" id="blacklist-artist-input" class="k-input" placeholder="np. Maanam" required />
+      </label>
+      <label class="k-field">
+        <span class="k-field-label">Tytuł</span>
+        <input type="text" id="blacklist-title-input" class="k-input" placeholder="np. Krakowski spleen" required />
+      </label>
       <button type="submit" class="btn-primary">Zablokuj</button>
     </form>
     ${
       track
-        ? `<button type="button" id="blacklist-quick-add" class="btn-secondary" style="margin-top: 0.6rem;">Zablokuj aktualnie odtwarzany utwór (${escapeHtml(track.artist)} – ${escapeHtml(track.title)})</button>`
+        ? `<button type="button" id="blacklist-quick-add" class="btn-secondary" style="margin-top: 0.6rem;">Wstaw aktualny utwór (${escapeHtml(track.artist)} – ${escapeHtml(track.title)})</button>`
         : ""
     }
   `;

@@ -12,7 +12,7 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 4. **Ad Skip** - Automatically detect ad/commercial breaks and switch to another station until the break ends (toggle in Settings).
 5. **Track Blacklist** - Block artists/tracks you don't want to hear; the player automatically switches away when a blacklisted track starts, with an on-screen warning and revert option.
 6. **Album Art & Station Cover Fallback** - Live track artwork display with automatic fallback to station logo cover during commercials, news breaks, or missing track metadata.
-7. **Dark / Light Theme & Accent Color** - Retro-styled theme toggle and accent color picker, persisted in `localStorage`.
+7. **Dark / Light Theme & Accent Color** - Follows the OS theme until a manual choice is saved in `localStorage`; Settings can restore system mode. Six case shell colors.
 8. **Favorite Stations & Tracks** - Bookmark favorite stations and tracks, browsable in a dedicated history/favorites panel.
 9. **Sleep Timer** - Automatically turn off audio after 15, 30, 60, or 90 minutes.
 10. **VU Meter & Cassette Reels** - Smooth cassette tape reel animations and an interactive VU meter during playback (uses Web Audio FFT spectrum analysis with dynamic beat emulation fallback).
@@ -44,7 +44,7 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 - `server-utils.mjs` - Shared static-route resolution and privacy-safe upstream proxy headers.
 - `index.html` - Core HTML5 layout and structure.
 - `styles/` - Retro design system and CSS stylesheet modules, including the legal-document layout.
-- `public/` - Static assets and JavaScript-free `/privacy` and `/legal` pages copied verbatim into the build.
+- `public/` - Static assets and `/privacy` and `/legal` pages copied verbatim into the build; `appearance.js` restores their saved theme and case shell before rendering.
 - `tests/` - Vitest coverage and captured provider fixtures.
 - `scripts/inject-hashes.mjs` - Injects hashed build asset filenames into `dist/index.html`.
 - `dist/` - Production build directory (generated assets).

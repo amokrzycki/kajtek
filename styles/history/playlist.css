@@ -52,7 +52,7 @@
 
 .pl-time {
   font-family: var(--k-font-mono);
-  font-size: 0.65rem;
+  font-size: var(--k-fs-data);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.03em;
   color: var(--k-disp-text-2);
@@ -74,7 +74,7 @@
 
 .pl-dur {
   font-family: var(--k-font-mono);
-  font-size: 0.62rem;
+  font-size: var(--k-fs-data);
   font-variant-numeric: tabular-nums;
   color: var(--k-disp-text-3);
   white-space: nowrap;
@@ -155,7 +155,7 @@
 }
 
 .history-panel.slide-in .pl-tag {
-  animation: pl-tag-pop 260ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation: pl-tag-pop 260ms var(--k-ease-mech) both;
 }
 
 .pl-tag.tag-current {
@@ -179,7 +179,7 @@
 }
 
 .pl-artist {
-  font-size: 0.68rem;
+  font-size: var(--k-fs-data);
   color: var(--k-disp-accent);
   white-space: nowrap;
   flex-shrink: 1;
@@ -195,12 +195,12 @@
 
 .pl-sep {
   color: rgba(255, 255, 255, 0.4);
-  font-size: 0.62rem;
+  font-size: var(--k-fs-data);
   flex-shrink: 0;
 }
 
 .pl-title {
-  font-size: 0.7rem;
+  font-size: var(--k-fs-body);
   font-weight: 600;
   color: var(--k-disp-text);
   overflow: hidden;
@@ -310,13 +310,14 @@
 
 @media (max-width: 640px) {
   .pl-item {
-    grid-template-columns: min-content 10px minmax(0, 1fr) auto;
+    grid-template-columns: min-content 10px minmax(0, 1fr);
     column-gap: 0.4rem;
     padding: 0.35rem 0.25rem;
   }
 
-  .pl-time {
-    font-size: 0.6rem;
+  .pl-track {
+    flex-direction: column;
+    gap: 0.15rem;
   }
 
   .pl-time-sec {
@@ -334,18 +335,19 @@
   }
 
   .pl-artist {
-    font-size: 0.63rem;
+    font-size: var(--k-fs-data);
     max-width: 100%;
     line-height: 1.2;
   }
 
   .pl-title {
-    font-size: 0.72rem;
     max-width: 100%;
     line-height: 1.25;
   }
 
   .pl-actions {
+    grid-column: 3;
+    justify-content: flex-end;
     gap: 0;
   }
 
@@ -364,11 +366,7 @@
   }
 
   .pl-break-label {
-    font-size: 0.68rem;
+    font-size: var(--k-fs-data);
     gap: 0.35rem;
-  }
-
-  .pl-dur {
-    font-size: 0.6rem;
   }
 }

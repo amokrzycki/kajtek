@@ -6,12 +6,22 @@
     <meta name="theme-color" content="#eeebe3">
     <title>KAJTEK</title>
     <meta name="description" content="KAJTEK - internet radio">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,600;0,700;1,600&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:ital,wght@0,500;0,600;0,700;1,600&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&display=swap">
     <link rel="stylesheet" href="style.css">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="icon" href="/favicon-32x32.png" sizes="32x32" type="image/png">
     <link rel="icon" href="/favicon.ico" sizes="any">
   </head>
   <body>
+    <a class="skip-link" href="#main-content">Przejdź do odtwarzacza</a>
     <div class="kajtek-app">
       <header class="kajtek-header">
         <div class="header-brand">
@@ -70,7 +80,7 @@
         </div>
       </header>
 
-      <main class="kajtek-main">
+      <main id="main-content" class="kajtek-main" tabindex="-1">
         <section class="np-panel" aria-label="Odtwarzacz radiowy">
           <div class="side-buttons" aria-hidden="true">
             <span class="side-nub"></span>
@@ -104,14 +114,15 @@
                   hidden></button>
               </div>
             </div>
-            <div class="np-info" aria-live="polite">
+            <div class="np-info">
               <div id="np-short-row" class="np-short-row hidden">
                 <span id="np-short" class="np-short-val">—</span>
                 <span id="np-live-dot" class="np-live-dot"></span>
               </div>
               <div id="np-station" class="np-station empty">wybierz stację</div>
-              <div id="np-status" class="np-status">Gotowy</div>
-              <div id="np-track" class="np-track">
+              <div id="np-status" class="np-status" role="status">Gotowy</div>
+              <button type="button" id="np-retry" class="np-choose-station" hidden>Ponów</button>
+              <div id="np-track" class="np-track" aria-live="polite" aria-atomic="true">
                 <div id="np-artist" class="np-artist">—</div>
                 <span id="np-title" class="np-title">—</span>
               </div>
@@ -127,6 +138,7 @@
               class="play-btn"
               disabled
               aria-label="Odtwarzaj"
+              aria-pressed="false"
               aria-keyshortcuts="Space"></button>
             <button
               type="button"
@@ -152,16 +164,17 @@
               class="history-btn"
               aria-expanded="false"
               aria-controls="history-panel">
-              <span>PROGRAM</span>
+              <span>PLAYLISTA</span>
               <span class="history-arrow" aria-hidden="true">▼</span>
             </button>
           </div>
 
+          <div id="skip-status" class="sr-only" role="status"></div>
           <div id="history-panel" class="history-panel" inert>
             <div class="history-clip">
               <div class="history-inner">
                 <div class="history-head">
-                  <div class="history-tabs" role="tablist" aria-label="Widok programu">
+                  <div class="history-tabs" role="tablist" aria-label="Playlista i ulubione utwory">
                     <button
                       type="button"
                       id="history-tab-program"
@@ -170,7 +183,7 @@
                       aria-selected="true"
                       aria-controls="program-view"
                       data-history-tab="program">
-                      PROGRAM
+                      PLAYLISTA
                     </button>
                     <button
                       type="button"
@@ -196,12 +209,12 @@
                       <div id="blacklist-warning-content" class="bl-warn-content"></div>
                     </div>
                   </div>
-                  <div id="history-empty" class="history-empty">Program pojawi się po wybraniu stacji…</div>
+                  <div id="history-empty" class="history-empty">Playlista pojawi się po wybraniu stacji…</div>
                   <div id="history-list"></div>
                 </div>
                 <div id="favorites-view" class="history-view" role="tabpanel" aria-labelledby="history-tab-favorites">
                   <div id="favorites-empty" class="history-empty">
-                    Brak ulubionych utworów — kliknij ★ przy utworze w zakładce PROGRAM
+                    Brak ulubionych utworów — kliknij ★ przy utworze w zakładce PLAYLISTA
                   </div>
                   <div id="favorites-list"></div>
                 </div>
@@ -214,7 +227,13 @@
           <section id="volume-panel" class="k-panel" aria-label="Panel głośności">
             <h2 class="k-head"><span class="k-label">Głośność</span><span class="k-rule"></span></h2>
             <div class="volume-row">
-              <button type="button" id="mute-btn" class="mute-btn" aria-label="Wycisz" aria-keyshortcuts="M"></button>
+              <button
+                type="button"
+                id="mute-btn"
+                class="mute-btn"
+                aria-label="Wycisz"
+                aria-pressed="false"
+                aria-keyshortcuts="M"></button>
               <div class="vol-wrap">
                 <div id="vol-ladder" class="vol-ladder" aria-hidden="true"></div>
                 <input
@@ -266,6 +285,7 @@
                 <span class="sleep-val">90</span><span class="sleep-unit">min</span>
               </button>
             </div>
+            <p class="k-field-hint">Aby anulować wyłącznik, naciśnij ponownie wybrany czas.</p>
             <div id="sleep-count" class="sleep-count">
               <div class="sleep-count-clip"><div id="sleep-count-line" class="sleep-count-line"></div></div>
             </div>

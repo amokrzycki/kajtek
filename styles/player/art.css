@@ -98,7 +98,7 @@
   position: relative;
   z-index: 2;
   font-family: var(--k-font-display);
-  font-size: 1.9rem;
+  font-size: var(--k-fs-display);
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1;
@@ -110,8 +110,8 @@
 }
 
 .album-art.empty .album-art-initial {
-  font-size: 3.4rem;
-  color: rgba(255, 255, 255, 0.14);
+  font-size: var(--k-fs-art);
+  color: var(--k-disp-dim);
 }
 
 /* station logo replaces the initial — nothing else layers over it */

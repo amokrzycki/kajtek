@@ -15,7 +15,7 @@ export const CATALOG_MODAL_HTML = `
       <div class="k-modal-toolbar">
         <div class="search-input-wrap">
           <span class="search-icon">${ICONS.search}</span>
-          <input type="search" id="catalog-search-input" class="k-input catalog-search" placeholder="Szukaj stacji…" autocomplete="off" autofocus />
+          <input type="search" id="catalog-search-input" class="k-input catalog-search" aria-label="Szukaj stacji" placeholder="Szukaj stacji…" autocomplete="off" autofocus />
         </div>
         <button type="button" id="catalog-filters-btn" class="btn-secondary catalog-filters-btn" aria-expanded="false" aria-controls="catalog-network-chips" hidden>Filtry<span class="catalog-filters-dot" aria-hidden="true"></span></button>
         <details class="k-modal-manage">
@@ -25,7 +25,7 @@ export const CATALOG_MODAL_HTML = `
           </summary>
           <div class="k-modal-actions-row">
             <button type="button" id="catalog-refresh-btn" class="btn-secondary">Odśwież listę</button>
-            <button type="button" id="catalog-custom-toggle-btn" class="btn-secondary" aria-expanded="false" aria-controls="catalog-custom-form-wrap">+ Własna stacja</button>
+            <button type="button" id="catalog-custom-toggle-btn" class="btn-secondary" aria-expanded="false" aria-controls="catalog-custom-form-wrap">Dodaj własną stację</button>
             <button type="button" id="open-blacklist-btn" class="btn-secondary">Czarna lista utworów</button>
           </div>
           <div id="catalog-custom-form-wrap" class="k-custom-form-wrap">
@@ -37,18 +37,20 @@ export const CATALOG_MODAL_HTML = `
                     <input type="text" id="custom-name-input" class="k-input" placeholder="np. Radio Rzeszów" required />
                   </label>
                   <label class="k-field">
-                    <span class="k-field-label">Adres streamu</span>
+                    <span class="k-field-label">Adres strumienia</span>
                     <input type="url" id="custom-url-input" class="k-input" placeholder="https://…" aria-describedby="custom-url-hint" required />
                   </label>
                   <button type="submit" class="btn-primary">Dodaj</button>
                 </div>
                 <div id="custom-url-hint" class="k-field-hint" hidden>Adres http:// często nie zadziała — przeglądarka blokuje niezabezpieczone streamy na stronie https. Jeśli stacja ma adres https://, użyj go.</div>
-                <div id="custom-form-error" class="k-form-error"><div class="k-error-clip"><div class="k-error-msg"></div></div></div>
+                <div id="custom-form-error" class="k-form-error" role="status"><div class="k-error-clip"><div class="k-error-msg"></div></div></div>
               </form>
             </div>
           </div>
         </details>
       </div>
+
+      <p id="catalog-custom-status" class="catalog-toggle-hint" role="status"></p>
 
       <div class="catalog-tabbar" role="tablist" aria-label="Kategorie stacji">
         <button type="button" id="catalog-tab-all" class="catalog-tab active" role="tab" aria-selected="true" aria-controls="catalog-list-container" data-tab="all">WSZYSTKIE A–Z</button>
@@ -60,7 +62,7 @@ export const CATALOG_MODAL_HTML = `
 
       <p class="catalog-toggle-hint">Przełącznik przy stacji dodaje ją do Twojej listy albo ją z niej ukrywa. Ukrytych stacji nie znajdziesz pod odtwarzaczem.</p>
 
-      <div id="catalog-error-banner" class="k-modal-error"><div class="k-error-clip"><div class="k-error-msg"></div></div></div>
+      <div id="catalog-error-banner" class="k-modal-error" role="status"><div class="k-error-clip"><div class="k-error-msg"></div></div></div>
 
       <div id="catalog-list-container" class="k-modal-list" role="tabpanel" aria-labelledby="catalog-tab-all"></div>
     </div>

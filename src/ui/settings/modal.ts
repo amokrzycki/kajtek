@@ -3,7 +3,7 @@ import type { CaseSlug } from "../../consts.js";
 import { STORAGE_KEYS } from "../../consts.js";
 import { setAdSkipEnabled } from "../../controls.js";
 import { ICONS } from "../../icons.js";
-import { notifyState, state } from "../../state.js";
+import { notifyState, setTheme, state } from "../../state.js";
 import { setStoredJSON } from "../../utils.js";
 import { openBlacklistModal } from "../blacklist/modal.js";
 import { bindModalDismiss, closeModal, openModal } from "../modal.js";
@@ -30,6 +30,7 @@ export function openSettingsModal(): void {
     syncAdSkipToggle();
     syncCaseSwatches();
     syncBlacklistCount();
+    syncSystemThemeToggle();
   }
   if (modalEl) openModal(modalEl);
 }
@@ -67,6 +68,18 @@ function createModalElements(): void {
       </div>
 
       <div class="k-settings-body">
+        <div class="k-settings-group">
+          <div class="k-settings-label">Motyw</div>
+          <div class="k-settings-row">
+            <div class="k-settings-row-text">
+              <span>Zgodny z systemem</span>
+              <span class="k-settings-row-sub">Automatycznie zmieniaj jasny i ciemny motyw</span>
+            </div>
+            <label class="catalog-toggle-switch">
+              <input type="checkbox" id="settings-system-theme-toggle" class="catalog-checkbox" aria-label="Motyw zgodny z systemem" />
+            </label>
+          </div>
+        </div>
         <div class="k-settings-group">
           <div class="k-settings-label">Obudowa</div>
           <div class="k-settings-swatches">${swatchesHtml()}</div>
@@ -124,6 +137,9 @@ function createModalElements(): void {
   document.body.appendChild(modalEl);
 
   bindModalDismiss(modalEl, closeSettingsModal);
+  modalEl.querySelector<HTMLInputElement>("#settings-system-theme-toggle")?.addEventListener("change", (e) => {
+    setTheme((e.target as HTMLInputElement).checked ? null : state.dark);
+  });
   modalEl.querySelector("#settings-modal-close")?.addEventListener("click", closeSettingsModal);
   modalEl.querySelector("#settings-blacklist-manage")?.addEventListener("click", () => {
     closeSettingsModal();
@@ -159,6 +175,13 @@ function createModalElements(): void {
   syncAdSkipToggle();
   syncCaseSwatches();
   syncBlacklistCount();
+  syncSystemThemeToggle();
+}
+
+function syncSystemThemeToggle(): void {
+  const toggle = modalEl?.querySelector<HTMLInputElement>("#settings-system-theme-toggle");
+  const theme = localStorage.getItem(STORAGE_KEYS.THEME);
+  if (toggle) toggle.checked = theme !== "dark" && theme !== "light";
 }
 
 function syncCaseSwatches(): void {

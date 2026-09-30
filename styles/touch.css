@@ -10,7 +10,7 @@
   .dark-toggle,
   .history-tab,
   .btn-view-toggle,
-  .btn-preview,
+  .bl-warn-link,
   .catalog-chip {
     position: relative;
   }
@@ -20,7 +20,7 @@
   .dark-toggle::after,
   .history-tab::after,
   .btn-view-toggle::after,
-  .btn-preview::after,
+  .bl-warn-link::after,
   .catalog-chip::after,
   .footer-links a::after,
   .footer-version::after {
@@ -38,8 +38,8 @@
     position: relative;
   }
 
-  .footer-links a::after,
-  .footer-version::after {
-    width: 100%;
+  .bl-warn-link {
+    min-height: 44px;
+    min-width: 44px;
   }
 }

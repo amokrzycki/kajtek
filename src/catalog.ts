@@ -139,7 +139,7 @@ export function addCustomStation(name: string, streamUrl: string): CustomStation
       throw new Error();
     }
   } catch (_) {
-    throw new Error("Podaj poprawny URL streamu (http:// lub https://)");
+    throw new Error("Podaj poprawny adres strumienia zaczynający się od https:// lub http://");
   }
 
   const list = getCustomStations();
@@ -225,7 +225,7 @@ export function getAllKnownStations(): Station[] {
     (c): Station => ({
       id: c.id,
       name: c.name,
-      short: "Własny stream",
+      short: "Własna stacja",
       cat: "custom",
       provider: "generic",
       stream: c.stream,

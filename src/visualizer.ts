@@ -14,6 +14,11 @@ let sourceNode: MediaElementAudioSourceNode | null = null;
 let animId: number | null = null;
 let isConnected = false;
 let corsFailed = false;
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+reducedMotion.addEventListener("change", () => {
+  if (reducedMotion.matches) stopVisualizer();
+  else if (state.playing) startVisualizer();
+});
 
 function initAudioContext() {
   if (audioCtx) {
@@ -44,6 +49,10 @@ function initAudioContext() {
 }
 
 export function startVisualizer() {
+  if (reducedMotion.matches) {
+    stopVisualizer();
+    return;
+  }
   initAudioContext();
   if (audioCtx && audioCtx.state === "suspended") {
     audioCtx.resume().catch(() => {

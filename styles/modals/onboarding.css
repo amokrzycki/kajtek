@@ -41,7 +41,7 @@
 
 .k-onboarding-title {
   font-family: var(--k-font-display);
-  font-size: 1.25rem;
+  font-size: var(--k-fs-num);
   letter-spacing: 0.02em;
   margin: 0;
   color: var(--k-text);

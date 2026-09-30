@@ -1,4 +1,10 @@
+#volume-panel {
+  display: flex;
+  flex-direction: column;
+}
+
 .volume-row {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -6,8 +12,8 @@
 
 .mute-btn {
   flex-shrink: 0;
-  width: 42px;
-  height: 42px;
+  width: 44px;
+  height: 44px;
   border-radius: var(--k-rb);
   background: var(--k-bg-raised);
   border: 1px solid var(--k-border-3);
@@ -104,7 +110,7 @@
   -webkit-appearance: none;
   appearance: none;
   width: 100%;
-  height: 9px;
+  height: 44px;
   border-radius: 5px;
   cursor: pointer;
   background: transparent;

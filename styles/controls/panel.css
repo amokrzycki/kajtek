@@ -53,7 +53,7 @@
 
 .controls-row.is-ios .vol-wrap,
 .controls-row.is-ios .vol-val,
-.controls-row.is-ios .k-head {
+.controls-row.is-ios #volume-panel .k-head {
   display: none;
 }
 
@@ -82,7 +82,7 @@
     border: none;
     box-shadow: none;
     border-radius: 0;
-    padding: 0.7rem 1rem;
+    padding: 0.25rem 0.75rem;
   }
 
   .controls-row .k-panel + .k-panel {
@@ -99,24 +99,17 @@
   }
 
   .controls-row .k-head {
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
   }
 
-  .controls-row #volume-panel .k-head {
+  .controls-row #volume-panel .k-head,
+  .controls-row .k-field-hint {
     position: absolute;
     width: 1px;
     height: 1px;
     overflow: hidden;
     clip-path: inset(50%);
     margin: 0;
-  }
-
-  .controls-row .k-panel {
-    padding: 0.35rem 0.75rem;
-  }
-
-  .controls-row .k-panel:nth-child(2) .k-head {
-    display: none;
   }
 
   .controls-row .sleep-keys {
@@ -134,5 +127,16 @@
 
   .controls-row .sleep-count-line {
     padding-top: 0.4rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .controls-row.is-ios {
+    grid-template-columns: 1fr;
+  }
+
+  .controls-row.is-ios .k-panel + .k-panel {
+    border-top: 1px dashed var(--k-border-3);
+    padding-left: 0.75rem;
   }
 }

@@ -54,11 +54,14 @@ export function updateSleepUI(): void {
     const active = state.sleepMin === Number(btn.getAttribute("data-min"));
     btn.classList.toggle("active", active);
     btn.setAttribute("aria-pressed", String(active));
+    btn.setAttribute("aria-label", active ? "Anuluj wyłącznik czasowy" : `Wyłącz za ${btn.dataset.min} minut`);
   });
 }
 
 export function setPlaybackStatus(message: string, dotState?: "buffering" | "failed"): void {
   triggerFade(els.npStatus, message);
+  els.npStatus.classList.toggle("failed", dotState === "failed");
+  els.npRetry.hidden = dotState !== "failed";
   els.npLiveDot.classList.toggle("buffering", dotState === "buffering");
   els.npLiveDot.classList.toggle("failed", dotState === "failed");
 }
@@ -165,6 +168,11 @@ export function updateAlbumArt(coverUrl: string | undefined, track: TrackInfo | 
   }
 }
 
+export function updateMuteAccessibility(): void {
+  els.muteBtn.setAttribute("aria-label", state.muted ? "Włącz dźwięk" : "Wycisz");
+  els.muteBtn.setAttribute("aria-pressed", String(state.muted));
+}
+
 export function updateUI(
   currentTrack: TrackInfo | null,
   onSelect: (s: Station) => void,
@@ -186,6 +194,8 @@ export function updateUI(
   els.playBtn.disabled = !state.station;
   els.playBtn.classList.toggle("playing", state.playing);
   els.playBtn.innerHTML = state.playing ? ICONS.pause : ICONS.play;
+  els.playBtn.setAttribute("aria-label", state.playing ? "Wstrzymaj" : "Odtwarzaj");
+  els.playBtn.setAttribute("aria-pressed", String(state.playing));
 
   if (state.station) {
     els.npShortRow.classList.remove("hidden");
@@ -195,6 +205,7 @@ export function updateUI(
       els.npStation.classList.remove("empty");
     }
     triggerFade(els.npStation, state.station.name);
+    els.npStation.title = state.station.name;
     els.npLiveDot.classList.toggle("on", state.playing);
     updateNowPlayingTrack(currentTrack);
     const v = ART_V[state.station.id] ?? "0";
@@ -210,6 +221,7 @@ export function updateUI(
     els.npShortRow.classList.add("hidden");
     els.npShort.textContent = "—";
     els.npStation.textContent = "wybierz stację";
+    els.npStation.removeAttribute("title");
     els.npStation.classList.add("empty");
     els.npTrackWrap.classList.remove("visible");
     els.npLiveDot.classList.remove("on");
@@ -221,6 +233,8 @@ export function updateUI(
     els.npFavStar.hidden = true;
     els.npBlockBtn.hidden = true;
   }
+
+  updateMuteAccessibility();
 
   if (!isVolAnimating()) {
     els.muteBtn.classList.toggle("muted", state.muted);
@@ -288,7 +302,6 @@ function applyTheme(): void {
   document.documentElement.classList.toggle("dark", state.dark);
   els.darkToggle.classList.toggle("on", state.dark);
   els.darkToggle.setAttribute("aria-pressed", String(state.dark));
-  localStorage.setItem(STORAGE_KEYS.THEME, state.dark ? "dark" : "light");
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", state.dark ? "#1a1816" : "#eeebe3");
 }
 
