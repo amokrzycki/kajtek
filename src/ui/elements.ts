@@ -27,6 +27,7 @@ export const els = {
   historyClock: document.getElementById("history-clock") as HTMLSpanElement,
   historyEmpty: document.getElementById("history-empty") as HTMLDivElement,
   historyList: document.getElementById("history-list") as HTMLDivElement,
+  skipStatus: document.getElementById("skip-status") as HTMLDivElement,
   blacklistWarning: document.getElementById("blacklist-warning") as HTMLDivElement,
   blacklistWarningContent: document.getElementById("blacklist-warning-content") as HTMLDivElement,
   historyTabProgram: document.querySelector('.history-tab[data-history-tab="program"]') as HTMLButtonElement,

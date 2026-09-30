@@ -21,6 +21,7 @@
   --k-text-disabled: #8d8880;
 
   --k-focus: #272320;
+  --k-focus-inner: #ffffff;
 
   --k-accent: #c4251b;
   --k-accent-2: #d83428;
@@ -133,6 +134,7 @@
   --k-text-disabled: #6f6a64;
 
   --k-focus: #f0eae1;
+  --k-focus-inner: #272320;
 
   --k-accent: #c4251b;
   --k-accent-2: #d83428;
@@ -211,6 +213,7 @@ body {
 .k-catalog-row:focus-visible {
   outline: 2px solid var(--k-focus);
   outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--k-focus-inner) !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -230,4 +233,31 @@ body {
     animation: none !important;
     opacity: 1 !important;
   }
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 1000;
+  padding: 0.6rem 0.9rem;
+  background: var(--k-bg-raised);
+  color: var(--k-text);
+  border-radius: var(--k-rb);
+  transform: translateY(calc(-100% - 16px));
+}
+
+.skip-link:focus {
+  transform: translateY(0);
 }

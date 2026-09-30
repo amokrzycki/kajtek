@@ -92,9 +92,14 @@ function createModalElements(): void {
     const deleteBtn = target.closest<HTMLButtonElement>(".btn-delete-custom");
     if (deleteBtn) {
       const key = deleteBtn.dataset.key;
-      if (key) {
-        removeFromBlacklist(key);
+      const entry = getBlacklist().find((item) => item.key === key);
+      if (entry && window.confirm(`Usunąć z czarnej listy: ${entry.artist} – ${entry.title}?`)) {
+        removeFromBlacklist(entry.key);
         renderModalBody();
+        (
+          modalEl?.querySelector<HTMLButtonElement>(".btn-delete-custom") ??
+          modalEl?.querySelector<HTMLButtonElement>("#blacklist-tab-add")
+        )?.focus();
       }
       return;
     }
@@ -162,8 +167,14 @@ function renderAddTab(container: HTMLElement): void {
   wrap.className = "k-custom-form";
   wrap.innerHTML = `
     <form id="blacklist-add-form" class="k-form-row">
-      <input type="text" id="blacklist-artist-input" class="k-input" placeholder="Artysta" required />
-      <input type="text" id="blacklist-title-input" class="k-input" placeholder="Tytuł" required />
+      <label class="k-field">
+        <span class="k-field-label">Artysta</span>
+        <input type="text" id="blacklist-artist-input" class="k-input" placeholder="np. Maanam" required />
+      </label>
+      <label class="k-field">
+        <span class="k-field-label">Tytuł</span>
+        <input type="text" id="blacklist-title-input" class="k-input" placeholder="np. Krakowski spleen" required />
+      </label>
       <button type="submit" class="btn-primary">Zablokuj</button>
     </form>
     ${

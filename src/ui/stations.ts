@@ -118,7 +118,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
       grid.className = "station-grid";
 
       sec.list.forEach((s) => {
-        const isSelected = state.station && state.station.id === s.id;
+        const isSelected = state.station?.id === s.id;
         const isFav = state.favs.has(s.id);
 
         const safeName = escapeHtml(s.name);

@@ -113,12 +113,20 @@ export function renderBlacklistWarning(): void {
         els.blacklistWarningContent.innerHTML = "";
       }, 240);
     }
+    els.skipStatus.textContent = "";
     lastContentKey = null;
     return;
   }
 
   const contentKey = `${warning.phase}:${warning.trackKey}`;
   const isNewContent = contentKey !== lastContentKey;
+  if (isNewContent) {
+    const action = warning.kind === "adSkip" ? "Reklama" : "Zablokowany utwór";
+    els.skipStatus.textContent =
+      warning.phase === "warning"
+        ? `${action} na ${warning.originStation.name}. Za chwilę przełączymy na ${warning.candidate.name}.`
+        : `${action} na ${warning.originStation.name}. Przełączono na ${warning.candidate.name}.`;
+  }
   const wasOpen = els.blacklistWarning.classList.contains("open");
   lastContentKey = contentKey;
 

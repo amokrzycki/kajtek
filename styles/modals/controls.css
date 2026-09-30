@@ -31,6 +31,11 @@
   outline: none;
 }
 
+.k-input::placeholder {
+  color: var(--k-text-2);
+  opacity: 1;
+}
+
 .k-input:focus {
   border-color: var(--k-accent);
 }
@@ -139,7 +144,7 @@
   font-size: var(--k-fs-label);
   letter-spacing: var(--k-tracking-label);
   text-transform: uppercase;
-  color: var(--k-text-muted);
+  color: var(--k-text-2);
 }
 
 .k-field-hint {
@@ -229,7 +234,7 @@
 .catalog-toggle-switch:has(.catalog-checkbox:focus-visible) {
   box-shadow:
     var(--k-sh-inset),
-    0 0 0 2px var(--k-bg),
+    0 0 0 2px var(--k-focus-inner),
     0 0 0 4px var(--k-focus);
 }
 

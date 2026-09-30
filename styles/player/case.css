@@ -113,7 +113,7 @@
   border: none;
   border-radius: var(--k-rb);
   font-family: var(--k-font-mono);
-  color: var(--k-case-ink-dim);
+  color: var(--k-case-ink);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
 }
@@ -169,18 +169,12 @@
   font-size: 0.625rem;
   font-weight: 600;
   letter-spacing: 0.04em;
-  opacity: 0.85;
 }
 
 .adskip-switch[aria-checked="true"] .adskip-pos-on,
 .adskip-switch[aria-checked="false"] .adskip-pos-off {
   color: var(--k-case-ink);
   font-weight: 800;
-}
-
-.adskip-switch[aria-checked="true"] .adskip-pos-off,
-.adskip-switch[aria-checked="false"] .adskip-pos-on {
-  opacity: 0.6;
 }
 
 .play-btn {
@@ -270,7 +264,6 @@
 
 .history-btn .history-arrow {
   font-size: 0.46rem;
-  opacity: 0.7;
   transition: transform var(--k-tr-panel);
 }
 

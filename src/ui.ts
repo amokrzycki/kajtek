@@ -165,6 +165,11 @@ export function updateAlbumArt(coverUrl: string | undefined, track: TrackInfo | 
   }
 }
 
+export function updateMuteAccessibility(): void {
+  els.muteBtn.setAttribute("aria-label", state.muted ? "Włącz dźwięk" : "Wycisz");
+  els.muteBtn.setAttribute("aria-pressed", String(state.muted));
+}
+
 export function updateUI(
   currentTrack: TrackInfo | null,
   onSelect: (s: Station) => void,
@@ -186,6 +191,8 @@ export function updateUI(
   els.playBtn.disabled = !state.station;
   els.playBtn.classList.toggle("playing", state.playing);
   els.playBtn.innerHTML = state.playing ? ICONS.pause : ICONS.play;
+  els.playBtn.setAttribute("aria-label", state.playing ? "Wstrzymaj" : "Odtwarzaj");
+  els.playBtn.setAttribute("aria-pressed", String(state.playing));
 
   if (state.station) {
     els.npShortRow.classList.remove("hidden");
@@ -221,6 +228,8 @@ export function updateUI(
     els.npFavStar.hidden = true;
     els.npBlockBtn.hidden = true;
   }
+
+  updateMuteAccessibility();
 
   if (!isVolAnimating()) {
     els.muteBtn.classList.toggle("muted", state.muted);

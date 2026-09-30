@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.12.1
+
+Optymalizacje i poprawki interfejsu Kajtka.
+
+- Poprawiono etykiety czytników ekranu, komunikaty, kontrast i fokus klawiatury. Dodano skrót do odtwarzacza, opisy pól czarnej listy i potwierdzenie usuwania; wskaźnik VU respektuje ograniczenie ruchu.
+
 ## 0.12.0
 
 Usprawniono obsługę Kajtka, szczególnie na telefonach.

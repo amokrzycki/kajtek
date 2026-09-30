@@ -15,7 +15,7 @@ export const CATALOG_MODAL_HTML = `
       <div class="k-modal-toolbar">
         <div class="search-input-wrap">
           <span class="search-icon">${ICONS.search}</span>
-          <input type="search" id="catalog-search-input" class="k-input catalog-search" placeholder="Szukaj stacji…" autocomplete="off" autofocus />
+          <input type="search" id="catalog-search-input" class="k-input catalog-search" aria-label="Szukaj stacji" placeholder="Szukaj stacji…" autocomplete="off" autofocus />
         </div>
         <button type="button" id="catalog-filters-btn" class="btn-secondary catalog-filters-btn" aria-expanded="false" aria-controls="catalog-network-chips" hidden>Filtry<span class="catalog-filters-dot" aria-hidden="true"></span></button>
         <details class="k-modal-manage">
@@ -43,7 +43,7 @@ export const CATALOG_MODAL_HTML = `
                   <button type="submit" class="btn-primary">Dodaj</button>
                 </div>
                 <div id="custom-url-hint" class="k-field-hint" hidden>Adres http:// często nie zadziała — przeglądarka blokuje niezabezpieczone streamy na stronie https. Jeśli stacja ma adres https://, użyj go.</div>
-                <div id="custom-form-error" class="k-form-error"><div class="k-error-clip"><div class="k-error-msg"></div></div></div>
+                <div id="custom-form-error" class="k-form-error" role="status"><div class="k-error-clip"><div class="k-error-msg"></div></div></div>
               </form>
             </div>
           </div>
@@ -60,7 +60,7 @@ export const CATALOG_MODAL_HTML = `
 
       <p class="catalog-toggle-hint">Przełącznik przy stacji dodaje ją do Twojej listy albo ją z niej ukrywa. Ukrytych stacji nie znajdziesz pod odtwarzaczem.</p>
 
-      <div id="catalog-error-banner" class="k-modal-error"><div class="k-error-clip"><div class="k-error-msg"></div></div></div>
+      <div id="catalog-error-banner" class="k-modal-error" role="status"><div class="k-error-clip"><div class="k-error-msg"></div></div></div>
 
       <div id="catalog-list-container" class="k-modal-list" role="tabpanel" aria-labelledby="catalog-tab-all"></div>
     </div>

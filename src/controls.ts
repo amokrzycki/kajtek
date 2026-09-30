@@ -2,7 +2,7 @@ import { setStationFavorite } from "./catalog.js";
 import { STORAGE_KEYS } from "./consts.js";
 import { ICONS } from "./icons.js";
 import { intervals, notifyState, radioAudio, state } from "./state.js";
-import { els, renderVolLadder, updateSleepUI } from "./ui.js";
+import { els, renderVolLadder, updateMuteAccessibility, updateSleepUI } from "./ui.js";
 import { isIOS, setStoredJSON } from "./utils.js";
 
 const SLEEP_FADE_MS = 8000;
@@ -49,6 +49,7 @@ export function updateVolume(val: number): void {
   state.vol = val;
   if (state.muted && val > 0) state.muted = false;
   applyAudioVolume();
+  updateMuteAccessibility();
   setStoredJSON(STORAGE_KEYS.VOLUME, val);
   // update volume UI directly to avoid firing global notifyState & re-rendering station list on every slider frame
   if (els.volSlider) {
@@ -69,6 +70,7 @@ export function toggleMute(): void {
   cancelVolAnim();
   const targetMuted = !state.muted;
   state.muted = targetMuted;
+  updateMuteAccessibility();
 
   const startVal = Number(els.volSlider.value);
   const endVal = targetMuted ? 0 : state.vol;
