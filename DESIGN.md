@@ -167,7 +167,7 @@ Literals that live in component CSS or `variables.css` rather than a `--k-*` tok
 - **Off Gray** (`#b9b3aa`) — inactive.
 
 ### Named Rules
-**The One Well Rule.** The display window (`--k-disp-*` tokens) is always dark glass, and light/dark theme never changes it. The case shell may tint it: each of the six shells overrides `--k-disp-bg` and `--k-art-empty` with a smoked glass in its own hue, and nothing else about the well moves. Precisely: (1) the glass stays dark in every theme and shell — the brightest tint stop is `#3a1410`, and no tint may exceed roughly that lightness; (2) `.dark` and `:root` never redefine `--k-disp-bg`, `--k-disp-well`, or `--k-disp-text*`; only `[data-case]` selectors may, and only for the background gradient and empty-artwork gradient; (3) text, accent, live and next colors inside the well (`--k-disp-text`, `--k-disp-accent`, `--k-disp-live`) are identical across shells. Every other surface theme-swaps; the well only shell-tints.
+**The One Well Rule.** The display window (`--k-disp-*` tokens) is always dark glass, and light/dark theme never changes it. The case shell may tint it: each of the six shells overrides `--k-disp-bg` and `--k-art-empty` with a smoked glass in its own hue, and nothing else about the well moves. Precisely: (1) the glass stays dark in every theme and shell — the brightest tint stop is `#3a1410`, and no tint may exceed roughly that lightness; (2) `.dark` and `:root` never redefine `--k-disp-bg`, `--k-disp-well`, or `--k-disp-text*`; only `[data-case]` selectors may, and only for the background gradient and empty-artwork gradient; (3) text, accent, live and next colors inside the well (`--k-disp-text`, `--k-disp-accent`, `--k-disp-live`) are identical across shells. The history panel shares the fixed dark well color (see Components); other surfaces theme-swap, and only the display gradient shell-tints.
 
 **The Shell, Not Skin Rule.** Case-color variants (`[data-case="..."]`) re-theme the accent, case gradient, display glass tint, and glow together as one unit — never recolor `--k-accent` independently of `--k-case`. They're alternate physical shells, not independent brand palettes.
 
@@ -177,6 +177,8 @@ Literals that live in component CSS or `variables.css` rather than a `--k-*` tok
 **Body Font:** IBM Plex Mono (with monospace fallback)
 
 **Character:** A geometric, slightly technical display face (Chakra Petch, weights 500–700, wide letter-spacing) reads as engraved front-panel lettering — brand name, station names, the "STEREO" outline wordmark. IBM Plex Mono carries everything else — labels, metadata, buttons, timestamps — reading as an LCD/terminal readout. The pairing is deliberately "silkscreen panel + digital display," never a soft editorial serif/sans pair.
+
+Fonts load from Google Fonts through HTML stylesheet links with preload and preconnect hints, using `display=swap`. Keep the same links on the player and both legal pages; do not load remote fonts through CSS `@import`.
 
 ### Hierarchy
 - **Brand** (700, 2.5rem, tracking 0.15em): the "KAJTEK" wordmark in the header.
@@ -188,7 +190,7 @@ Literals that live in component CSS or `variables.css` rather than a `--k-*` tok
 - **Body** (`--k-fs-body`, 400, 0.875rem / 14px): default UI copy, forms, and playlist titles.
 - **Label** (`--k-fs-label`, 500–700, 0.75rem / 12px, tracking 0.18em, uppercase): section headers, panel labels (`k-label`) — always mono, always wide-tracked, always uppercase.
 - **Data** (`--k-fs-data`, 0.75rem / 12px): metadata, timestamps, durations, and secondary controls.
-- **Tag** (`--k-fs-tag`, 0.75rem / 12px): counts and status badges.
+- **Tag** (`--k-fs-tag`, 0.75rem / 12px): counts and status badges, including playlist status tags, custom-station badges, and warning tags. Keep this size on mobile; do not shrink badges below the informational-text floor.
 - **Hardware** (`--k-fs-hardware`, 0.5rem): decorative tape ruler, UNITRA/model silkscreen, and disclosure arrow only; never actionable labels or listener information.
 - **Artwork** (`--k-fs-art`, 3.4rem): decorative empty-cover glyph.
 
@@ -254,12 +256,18 @@ A row of vertical LED-ladder columns (`.vu-strip` / `.vu-col`) with a fixed gree
 - **Style:** pill-shaped inset track (`--k-sh-inset`), round knob with the raised-button shadow (`--k-sh-btn`).
 - **State:** 44×24px track with a contrasting outline and knob; an etched O marks off and I marks on, independently of color.
 - **Checked state:** knob slides 20px right, fills accent-dim with accent-text border, knob itself becomes solid accent-text.
-- **Focus:** accent-ring glow around the whole switch, never just an outline.
+- **Focus:** keyboard focus on the checkbox outlines the whole switch using the shared two-color focus ring.
 
 In dark mode, the Black shell uses a lighter charcoal gradient (`#4b4741` → `#302d29`), a warm-gray edge (`#777066`), and a deeper directional contact shadow to lift it off the page.
 
+### Keyboard Focus
+All links, buttons, inputs, selects, summaries, textareas, elements with `tabindex`, and catalog rows use `:focus-visible`: a 2px solid `--k-focus` outline offset by 2px, backed by a 2px `--k-focus-inner` shadow. Light mode uses dark ink (`#272320`) outside white (`#ffffff`); dark mode uses warm white (`#f0eae1`) outside dark ink (`#272320`). These colors are independent of the case accent so focus stays visible on colored shells and dark glass. The checkbox's ring is applied to its visible switch via `:has(.catalog-checkbox:focus-visible)`.
+
+### History / Playlist Panel
+The collapsible panel below the deck contains PLAYLISTA and favorites. `.history-inner` uses the same always-dark `--k-disp-well` (`#100d0b`) as the display's recessed well, with a 1px `--k-border-2` edge, `--k-rc` radius, and `inset 0 2px 8px rgba(0, 0, 0, 0.5)` shadow. This panel stays dark in both themes and across shells; its solid well color does not inherit the display's tinted gradient. Labels, tabs, clock, empty state, and rows use `--k-disp-*` foreground tokens. Active tabs have a `--k-disp-hair` pill background and `--k-disp-text` text. Desktop margins are `0.2rem 18px 18px`, padding `0.75rem 1rem 0.9rem`; at 640px and below use `0.2rem 12px 12px` and `0.65rem 0.65rem 0.8rem`. Expansion uses `grid-template-rows: 0fr → 1fr`.
+
 ### Inputs
-- **Style:** inset-stone background, hairline border, no visible focus ring — border color shifts to accent on focus instead.
+- **Style:** inset-stone background and hairline border; border shifts to accent on focus. Keyboard focus also shows the shared two-color focus ring.
 - **Icon-prefixed search fields** reserve left padding for an inline SVG icon.
 
 ### Modal
@@ -276,7 +284,7 @@ Flat, no background — brand wordmark left, two icon-only round key-buttons rig
 ### Do:
 - **Do** treat every new control as a real PS-101 hardware part first — ask "what would this be on the physical deck" before inventing a generic web-UI pattern.
 - **Do** express active/pressed/playing state as a shadow inversion (raised → inset) plus a 1px shift, per the Push-In Rule.
-- **Do** keep the display glass dark in both themes and let only the case shell tint it (One Well Rule) — it is the one surface that ignores light/dark, and it changes with case shell only through the six `themes.css` glass overrides.
+- **Do** keep the display glass dark in both themes and let only the case shell tint it (One Well Rule) — the display and history well stay dark across themes; only the display gradient changes with case shell through the six `themes.css` glass overrides.
 - **Do** pair case-shell color changes as a single unit (case gradient + accent + glow) per the Shell, Not Skin Rule — never recolor the accent alone.
 - **Do** use IBM Plex Mono for anything data-like or labeled, and reserve Chakra Petch for brand/station-name display text.
 

@@ -4,6 +4,8 @@
 
 Czytelniejsze komunikaty i łatwiejsza obsługa.
 
+- Przyspieszono rozpoczęcie ładowania czcionek odtwarzacza i stron prawnych.
+
 - Czarna obudowa wyraźniej odcina się od tła w ciemnym motywie. Przełączniki mają czytelny stan wyłączony i oznaczenia I/O.
 
 - Powiększono drobne opisy, znaczniki i czasy utworów; ujednolicono rozmiary tekstu także na telefonie.
