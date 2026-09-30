@@ -220,6 +220,13 @@
   padding: 0.4rem 0.1rem 0;
 }
 
+.catalog-toggle-hint {
+  margin: 0;
+  padding: 0.5rem 1rem 0;
+  font-size: 0.75rem;
+  color: var(--k-text-muted);
+}
+
 #catalog-modal-overlay {
   align-items: flex-start;
   padding-top: max(1rem, 6vh);

@@ -58,6 +58,8 @@ export const CATALOG_MODAL_HTML = `
 
       <div id="catalog-network-chips" class="catalog-chips" role="group" aria-label="Filtr sieci nadawców"></div>
 
+      <p class="catalog-toggle-hint">Przełącznik przy stacji dodaje ją do Twojej listy albo ją z niej ukrywa. Ukrytych stacji nie znajdziesz pod odtwarzaczem.</p>
+
       <div id="catalog-error-banner" class="k-modal-error"><div class="k-error-clip"><div class="k-error-msg"></div></div></div>
 
       <div id="catalog-list-container" class="k-modal-list" role="tabpanel" aria-labelledby="catalog-tab-all"></div>

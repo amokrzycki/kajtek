@@ -4,9 +4,9 @@ import { bindModalDismiss, closeModal, openModal } from "../modal.js";
 
 const FEATURES: { icon: string; title: string; desc: string }[] = [
   {
-    icon: ICONS.radio,
-    title: "1. Wybierz stację",
-    desc: "Wybierz stację z listy. Odtwarzanie ruszy od razu.",
+    icon: ICONS.viewList,
+    title: "1. Kliknij stację",
+    desc: "Wybierz ją z listy pod odtwarzaczem. Gra od razu.",
   },
   {
     icon: ICONS.adSkip,
@@ -50,7 +50,7 @@ export function openOnboardingModal(onChooseStation: () => void): void {
         <div class="k-onboarding-list">${FEATURES.map(featureHtml).join("")}</div>
 
         <div class="k-onboarding-note">
-          Stacje możesz włączać i wyłączać w katalogu pod odtwarzaczem.
+          Na liście są stacje włączone w Katalogu stacji. Tam dodasz nowe albo ukryjesz te, których nie słuchasz.
         </div>
 
         <button type="button" id="onboarding-choose-stations-btn" class="btn-primary k-onboarding-cta">

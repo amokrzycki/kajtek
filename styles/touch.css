@@ -1,6 +1,10 @@
 /* 44px hit areas on touch — visuals unchanged, the pseudo-element extends the tappable box */
 
 @media (pointer: coarse) {
+  .footer-shortcuts {
+    display: none;
+  }
+
   .sc-star,
   .settings-toggle,
   .dark-toggle,

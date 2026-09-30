@@ -81,7 +81,7 @@ function handleShortcut(e: KeyboardEvent): void {
   } else if (e.key === "ArrowRight") stepStation(1);
   else if (e.key === "ArrowLeft") stepStation(-1);
   else if (e.key.toLowerCase() === "m") toggleMute();
-  else if (e.key === "?") openShortcutsModal();
+  else if (e.key === "?") openOnboardingModal(focusStationSelection);
   else if (/^[1-4]$/.test(e.key)) setSleepTimer(SLEEP_KEY_MINUTES[Number(e.key) - 1] ?? 15);
   else return;
   e.preventDefault();
