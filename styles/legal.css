@@ -47,6 +47,7 @@
 }
 
 .legal-document {
+  overflow-wrap: anywhere;
   padding: clamp(1.25rem, 4vw, 2.25rem);
   background: var(--k-bg-panel);
   border-radius: var(--k-r);
@@ -130,6 +131,10 @@
 }
 
 .legal-footer a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.5rem 0.25rem;
   color: inherit;
   text-underline-offset: 0.2em;
 }

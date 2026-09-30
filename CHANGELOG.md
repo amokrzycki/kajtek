@@ -11,6 +11,7 @@ Czytelniejsze komunikaty i łatwiejsza obsługa.
 - Wyłącznik czasowy wyjaśnia, jak go anulować.
 - Skrócono opisy zmian i uproszczono politykę prywatności.
 - Poprawiono opisy dla czytników ekranu, kontrast i fokus klawiatury. Wskaźnik VU uwzględnia ograniczenie ruchu.
+- Powiększono pola dotykowe, zmniejszono panel sterowania na telefonie i poprawiono obudowę na wąskich ekranach. Strony prawne zachowują wybrany motyw i kolor obudowy.
 
 ## 0.12.0
 

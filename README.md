@@ -44,7 +44,7 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 - `server-utils.mjs` - Shared static-route resolution and privacy-safe upstream proxy headers.
 - `index.html` - Core HTML5 layout and structure.
 - `styles/` - Retro design system and CSS stylesheet modules, including the legal-document layout.
-- `public/` - Static assets and JavaScript-free `/privacy` and `/legal` pages copied verbatim into the build.
+- `public/` - Static assets and `/privacy` and `/legal` pages copied verbatim into the build; `appearance.js` restores their saved theme and case shell before rendering.
 - `tests/` - Vitest coverage and captured provider fixtures.
 - `scripts/inject-hashes.mjs` - Injects hashed build asset filenames into `dist/index.html`.
 - `dist/` - Production build directory (generated assets).
