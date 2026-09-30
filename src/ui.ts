@@ -45,7 +45,7 @@ export function updateSleepUI(): void {
   if (state.sleepMin !== null && state.sleepSec !== null) {
     const m = Math.floor(state.sleepSec / 60);
     const s = String(state.sleepSec % 60).padStart(2, "0");
-    els.sleepCount.innerHTML = `wyłącza się za <strong>${m}:${s}</strong>`;
+    els.sleepCountLine.innerHTML = `wyłącza się za <strong>${m}:${s}</strong>`;
     els.sleepCount.classList.add("on");
   } else {
     els.sleepCount.classList.remove("on");

@@ -132,7 +132,7 @@
     padding: 0.35rem 0.2rem;
   }
 
-  .controls-row .sleep-count.on {
-    margin-top: 0.4rem;
+  .controls-row .sleep-count-line {
+    padding-top: 0.4rem;
   }
 }

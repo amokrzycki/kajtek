@@ -43,7 +43,7 @@ export const CATALOG_MODAL_HTML = `
                   <button type="submit" class="btn-primary">Dodaj</button>
                 </div>
                 <div id="custom-url-hint" class="k-field-hint" hidden>Adres http:// często nie zadziała — przeglądarka blokuje niezabezpieczone streamy na stronie https. Jeśli stacja ma adres https://, użyj go.</div>
-                <div id="custom-form-error" class="k-form-error"></div>
+                <div id="custom-form-error" class="k-form-error"><div class="k-error-clip"><div class="k-error-msg"></div></div></div>
               </form>
             </div>
           </div>
@@ -58,7 +58,7 @@ export const CATALOG_MODAL_HTML = `
 
       <div id="catalog-network-chips" class="catalog-chips" role="group" aria-label="Filtr sieci nadawców"></div>
 
-      <div id="catalog-error-banner" class="k-modal-error"></div>
+      <div id="catalog-error-banner" class="k-modal-error"><div class="k-error-clip"><div class="k-error-msg"></div></div></div>
 
       <div id="catalog-list-container" class="k-modal-list" role="tabpanel" aria-labelledby="catalog-tab-all"></div>
     </div>

@@ -146,7 +146,8 @@ function createModalElements(): void {
       urlEl.value,
       (msg) => {
         if (errEl) {
-          errEl.textContent = msg;
+          const msgEl = errEl.querySelector(".k-error-msg");
+          if (msgEl) msgEl.textContent = msg;
           errEl.classList.add("is-visible");
         }
       },
@@ -259,7 +260,8 @@ function renderModalBody(): void {
   if (errorBanner) {
     const errorMessage = getErrorMessage();
     if (errorMessage) {
-      errorBanner.textContent = errorMessage;
+      const msgEl = errorBanner.querySelector(".k-error-msg");
+      if (msgEl) msgEl.textContent = errorMessage;
       errorBanner.classList.add("is-visible");
     } else {
       errorBanner.classList.remove("is-visible");

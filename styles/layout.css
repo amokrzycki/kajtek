@@ -95,12 +95,6 @@
     color var(--k-tr);
 }
 
-.dark-toggle:active .dark-toggle-knob,
-.settings-toggle:active .settings-toggle-knob {
-  transform: translateY(1px);
-  box-shadow: var(--k-sh-inset);
-}
-
 .dark-toggle .dark-toggle-icon,
 .settings-toggle .settings-toggle-icon {
   position: relative;

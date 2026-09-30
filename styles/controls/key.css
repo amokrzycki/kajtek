@@ -22,7 +22,12 @@
   }
 }
 
-.btn-key:active {
+.btn-key:active,
+.mute-btn:active,
+.btn-catalog-trigger:active,
+.btn-preview:active,
+.dark-toggle:active .dark-toggle-knob,
+.settings-toggle:active .settings-toggle-knob {
   box-shadow: var(--k-sh-inset);
   transform: translateY(1px);
 }

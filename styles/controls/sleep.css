@@ -29,29 +29,35 @@
 }
 
 .sleep-count {
-  margin-top: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-rows: 0fr;
   font-family: var(--k-font-mono);
   font-size: var(--k-fs-data);
   font-variant-numeric: tabular-nums;
   color: var(--k-accent-text);
   letter-spacing: 0.05em;
-  max-height: 0;
   opacity: 0;
-  overflow: hidden;
   transition:
     color var(--k-tr),
     opacity var(--k-tr),
-    max-height var(--k-tr-panel),
-    margin-top var(--k-tr-panel);
+    grid-template-rows var(--k-tr-panel);
 }
 
 .sleep-count.on {
-  margin-top: 0.7rem;
-  max-height: 40px;
+  grid-template-rows: 1fr;
   opacity: 1;
+}
+
+.sleep-count-clip {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.sleep-count-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 0.7rem;
 }
 
 .sleep-count strong {

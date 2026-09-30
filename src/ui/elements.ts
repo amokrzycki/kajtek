@@ -43,6 +43,7 @@ export const els = {
   volVal: document.getElementById("vol-val") as HTMLSpanElement,
   sleepKeys: document.querySelectorAll<HTMLButtonElement>(".sleep-key"),
   sleepCount: document.getElementById("sleep-count") as HTMLDivElement,
+  sleepCountLine: document.getElementById("sleep-count-line") as HTMLDivElement,
   stationListContainer: document.getElementById("station-list-container") as HTMLElement,
 };
 
