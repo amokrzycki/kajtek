@@ -91,16 +91,6 @@
   margin-top: 2px;
 }
 
-.k-onboarding-note {
-  width: 100%;
-  padding: 0.7rem 0.85rem;
-  background: var(--k-bg-inset);
-  border: 1px solid var(--k-border);
-  border-radius: var(--k-rc);
-  font-size: var(--k-fs-label);
-  color: var(--k-text-2);
-}
-
 .k-onboarding-cta {
   width: 100%;
   display: flex;
@@ -116,17 +106,8 @@
 }
 
 .k-onboarding-skip {
-  background: none;
-  border: none;
-  color: var(--k-text-faint);
-  font-family: var(--k-font-mono);
-  font-size: var(--k-fs-label);
-  cursor: pointer;
-  padding: 0.25rem;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .k-onboarding-skip:hover {
-    color: var(--k-text);
-  }
+  width: 100%;
+  min-height: 44px;
+  color: var(--k-text-2);
+  font-size: var(--k-fs-body);
 }

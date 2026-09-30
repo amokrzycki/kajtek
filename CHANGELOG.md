@@ -11,6 +11,7 @@ Ogólne usprawnienia w obrębie całego interfejsu Kajtka, poprawki błędów i 
 - Wyłącznik czasowy wycisza dźwięk płynnie w ostatnich 8 sekundach.
 - Okno „Zablokowany utwór” ma przycisk „Cofnij blokadę”, a usunięcie własnej stacji wymaga potwierdzenia w wierszu.
 - Wygodniejsze filtry i nagłówek katalogu na telefonie.
+- Ekran powitalny na początku tłumaczy, że stacja pojawi się na liście dopiero po włączeniu w Katalogu, a „zrobię to później” jest widocznym przyciskiem.
 - Tytuł karty przeglądarki pokazuje aktualny utwór i stację.
 
 ## 0.11.3
