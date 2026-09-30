@@ -145,6 +145,10 @@
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
   line-height: 1.2;
   overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 .np-station.empty {
@@ -204,6 +208,9 @@
 }
 
 .np-artist {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 0.7rem;
   font-weight: 600;
   color: var(--k-disp-accent);

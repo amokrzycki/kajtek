@@ -11,7 +11,6 @@
   border-radius: var(--k-r);
   gap: 0.5rem;
   transition: border-color var(--k-tr);
-  cursor: pointer;
 }
 
 .k-catalog-row.enabled {
@@ -63,6 +62,12 @@
   display: flex;
   align-items: center;
   gap: 0.35rem;
+}
+
+.catalog-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .catalog-sub {

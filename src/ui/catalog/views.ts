@@ -145,8 +145,15 @@ export function applyAllTabFilters(container: HTMLElement, q: string, network: s
   closeSection();
 
   container.querySelectorAll<HTMLElement>(".catalog-idxrail span[data-letter]").forEach((span) => {
-    span.classList.toggle("has", (visiblePerLetter.get(span.dataset.letter ?? "") ?? 0) > 0);
+    const available = (visiblePerLetter.get(span.dataset.letter ?? "") ?? 0) > 0;
+    span.classList.toggle("has", available);
+    const link = span.querySelector("a");
+    if (link) {
+      link.tabIndex = available ? 0 : -1;
+      link.setAttribute("aria-disabled", String(!available));
+    }
   });
+  container.querySelector(".catalog-idxrail")?.classList.toggle("is-empty", total === 0);
 
   const empty = azList.querySelector<HTMLElement>("[data-empty]");
   if (empty) {

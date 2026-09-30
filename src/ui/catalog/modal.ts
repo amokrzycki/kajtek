@@ -184,6 +184,7 @@ function createModalElements(): void {
     const link = (e.target as HTMLElement).closest<HTMLAnchorElement>(".catalog-idxrail a");
     if (!link) return;
     e.preventDefault();
+    if (link.getAttribute("aria-disabled") === "true") return;
     const targetId = link.getAttribute("href")?.slice(1);
     if (!targetId) return;
     modalEl?.querySelector(`#${CSS.escape(targetId)}`)?.scrollIntoView({ behavior: "smooth", block: "start" });

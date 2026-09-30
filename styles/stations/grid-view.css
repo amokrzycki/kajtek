@@ -33,6 +33,9 @@
 }
 
 .is-grid-view .sc-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   font-size: 0.78rem;
   line-height: 1.15;
   white-space: normal;

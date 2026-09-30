@@ -38,24 +38,6 @@
 
 .station-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--k-s2);
-}
-
-@media (max-width: 680px) {
-  .station-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 580px) {
-  .station-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 640px) {
-  .section-fav-empty {
-    display: none;
-  }
 }

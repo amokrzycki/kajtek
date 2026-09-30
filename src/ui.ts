@@ -205,6 +205,7 @@ export function updateUI(
       els.npStation.classList.remove("empty");
     }
     triggerFade(els.npStation, state.station.name);
+    els.npStation.title = state.station.name;
     els.npLiveDot.classList.toggle("on", state.playing);
     updateNowPlayingTrack(currentTrack);
     const v = ART_V[state.station.id] ?? "0";
@@ -220,6 +221,7 @@ export function updateUI(
     els.npShortRow.classList.add("hidden");
     els.npShort.textContent = "—";
     els.npStation.textContent = "wybierz stację";
+    els.npStation.removeAttribute("title");
     els.npStation.classList.add("empty");
     els.npTrackWrap.classList.remove("visible");
     els.npLiveDot.classList.remove("on");

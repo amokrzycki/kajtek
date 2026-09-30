@@ -56,7 +56,7 @@ export function createStationRow(station: Station, opts: StationRowOpts, rerende
       ${logoHtml}
       <div class="catalog-details">
         <div class="catalog-name">
-          ${safeName}
+          <span class="catalog-name-text" title="${safeName}">${safeName}</span>
           ${providerLabel ? `<span class="catalog-provider-tag">${escapeHtml(providerLabel)}</span>` : ""}
         </div>
         <div class="catalog-sub">${localPillHtml}${escapeHtml(station.short)}</div>
@@ -115,16 +115,6 @@ export function createStationRow(station: Station, opts: StationRowOpts, rerende
     deleteCustomStation(station.id);
     notifyState();
     rerender();
-  });
-
-  row.addEventListener("click", (e) => {
-    if (
-      (e.target as HTMLElement).closest(
-        ".catalog-toggle-switch, .btn-preview, .btn-delete-custom, .catalog-delete-confirm",
-      )
-    )
-      return;
-    checkbox?.click();
   });
 
   return row;

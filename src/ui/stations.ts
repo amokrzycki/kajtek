@@ -93,12 +93,12 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
   ];
 
   sections.forEach((sec) => {
+    if (sec.key === "fav" && sec.list.length === 0) return;
     if (sec.key === "all" && favList.length > 0 && sec.list.length === 0) {
       return; // Skip empty section if all enabled stations are favorites
     }
 
     const secDiv = document.createElement("div");
-    if (sec.key === "fav" && sec.list.length === 0) secDiv.className = "section-fav-empty";
 
     const header = document.createElement("h2");
     header.className = "section-header";
@@ -108,10 +108,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
     if (sec.list.length === 0) {
       const empty = document.createElement("div");
       empty.className = "section-empty";
-      empty.textContent =
-        sec.key === "fav"
-          ? "Brak ulubionych stacji — kliknij ★ przy stacji na liście"
-          : "Brak stacji — dodaj z katalogu";
+      empty.textContent = "Brak stacji — dodaj z katalogu";
       secDiv.appendChild(empty);
     } else {
       const grid = document.createElement("div");
@@ -137,7 +134,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
           <button type="button" class="station-select" aria-pressed="${isSelected}">
             ${logoHtml}
             <div class="sc-main">
-              <div class="sc-name">${isSelected ? '<span class="sc-led-dot" aria-hidden="true"></span>' : ""}${safeName}</div>
+              <div class="sc-name" title="${safeName}">${isSelected ? '<span class="sc-led-dot" aria-hidden="true"></span>' : ""}${safeName}</div>
               <div class="sc-meta">
                 <span class="sc-short">${escapeHtml(s.short)}</span>
               </div>

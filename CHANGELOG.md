@@ -4,6 +4,9 @@
 
 Czytelniejsze komunikaty i łatwiejsza obsługa.
 
+- Długie nazwy stacji nie rozpychają odtwarzacza ani katalogu; pełną nazwę pokazuje dymek.
+- Widok listy ma jedną kolumnę, a widok kafelków pozostaje siatką. Pusta sekcja ulubionych jest ukryta.
+- Kliknięcie wiersza katalogu nie zmienia listy stacji — służy do tego przełącznik. Indeks A–Z przygasa przy braku wyników.
 - Błąd odtwarzania ma czerwony komunikat i przycisk „Ponów”.
 - Dodanie własnej stacji czyści wyszukiwanie, otwiera zakładkę WŁASNE i pokazuje potwierdzenie.
 - Panel utworów nazywa się PLAYLISTA. Ujednolicono nazwy własnych stacji.
