@@ -21,13 +21,14 @@ describe("privacy and legal routes", () => {
   });
 
   it.each([
-    [privacy, "Polityka prywatności - KAJTEK"],
-    [legal, "Informacje prawne - KAJTEK"],
-  ])("ships metadata and shared styles without requiring JavaScript", (html, title) => {
-    expect(html).toContain(`<title>${title}</title>`);
+    [privacy, "Polityka prywatności"],
+    [legal, "Informacje prawne"],
+  ])("ships static content, metadata and shared appearance", (html, title) => {
+    expect(html).toContain(`<title>${title} - KAJTEK</title>`);
+    expect(html).toContain(`<h1>${title}</h1>`);
     expect(html).toContain('name="description"');
     expect(html).toContain('href="/style.css"');
-    expect(html).not.toContain("<script");
+    expect(html.match(/<script\b[^>]*>[\s\S]*?<\/script>/g)).toEqual(['<script src="/appearance.js"></script>']);
   });
 });
 
