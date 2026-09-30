@@ -46,6 +46,7 @@ Neither alone is the differentiator; a competitor copying only the look or only 
 
 - Name: **KAJTEK Radio**, referencing the Unitra PS-101 / KAJTEK PRL-era cassette player.
 - `styles/` (retro design system CSS) is canon — existing visual language is locked and must be preserved/documented, not replaced, by future design work.
+- **One Well amendment (owner-approved, recorded 2026-09-30):** the display window is dark glass in every light/dark theme, and the case shell may tint it — only via the six `[data-case]` glass overrides in `themes.css`, within the limits of DESIGN.md's One Well Rule. This is the one sanctioned exception to "the well ignores its surroundings"; no other surface may follow the shell tint this way.
 
 ## Product Principles
 

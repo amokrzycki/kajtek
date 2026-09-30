@@ -75,8 +75,8 @@ export function createStationRow(station: Station, opts: StationRowOpts, rerende
       </span>`
           : ""
       }
-      <label class="catalog-toggle-switch" title="${enabled ? "Wyłącz stację" : "Włącz stację"}">
-        <input type="checkbox" class="catalog-checkbox" ${enabled ? "checked" : ""} aria-label="Włącz stację" />
+      <label class="catalog-toggle-switch" title="${enabled ? "Ukryj z mojej listy" : "Pokaż na mojej liście"}">
+        <input type="checkbox" class="catalog-checkbox" ${enabled ? "checked" : ""} aria-label="Pokaż na mojej liście: ${safeName}" />
       </label>
     </div>
   `;
@@ -96,7 +96,7 @@ export function createStationRow(station: Station, opts: StationRowOpts, rerende
     setStationEnabled(station.id, isChecked);
     notifyState();
     if (toggleSwitch) {
-      toggleSwitch.title = isChecked ? "Wyłącz stację" : "Włącz stację";
+      toggleSwitch.title = isChecked ? "Ukryj z mojej listy" : "Pokaż na mojej liście";
     }
   });
 

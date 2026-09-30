@@ -4,13 +4,18 @@ import { bindModalDismiss, closeModal, openModal } from "../modal.js";
 
 const FEATURES: { icon: string; title: string; desc: string }[] = [
   {
-    icon: ICONS.radio,
-    title: "1. Wybierz stację",
-    desc: "Wybierz stację z listy. Odtwarzanie ruszy od razu.",
+    icon: ICONS.plus,
+    title: "1. Włącz stacje w Katalogu",
+    desc: "Na liście pojawią się tylko stacje włączone w Katalogu stacji. Przełącznikiem włączysz te, których słuchasz.",
+  },
+  {
+    icon: ICONS.viewList,
+    title: "2. Kliknij stację",
+    desc: "Wybierz ją z listy pod odtwarzaczem. Gra od razu.",
   },
   {
     icon: ICONS.adSkip,
-    title: "2. Pomijaj reklamy",
+    title: "Bonus: pomijanie reklam",
     desc: "Kajtek sam przełącza stację na czas reklam. Wyłączysz to przełącznikiem na obudowie lub w Ustawieniach.",
   },
 ];
@@ -45,18 +50,14 @@ export function openOnboardingModal(onChooseStation: () => void): void {
       <div class="k-onboarding-body">
         <span class="k-onboarding-icon">${ICONS.tape}</span>
         <h2 id="onboarding-modal-title" class="k-onboarding-title">WITAJ W KAJTKU</h2>
-        <p class="k-onboarding-subtitle">Dwa ruchy i radio gra</p>
+        <p class="k-onboarding-subtitle">Włącz stację, kliknij i radio gra</p>
 
         <div class="k-onboarding-list">${FEATURES.map(featureHtml).join("")}</div>
-
-        <div class="k-onboarding-note">
-          Stacje możesz włączać i wyłączać w katalogu pod odtwarzaczem.
-        </div>
 
         <button type="button" id="onboarding-choose-stations-btn" class="btn-primary k-onboarding-cta">
           WYBIERAM STACJĘ ${ICONS.chevron}
         </button>
-        <button type="button" id="onboarding-skip-btn" class="k-onboarding-skip">zrobię to później</button>
+        <button type="button" id="onboarding-skip-btn" class="btn-secondary k-onboarding-skip">zrobię to później</button>
       </div>
     </div>
   `;

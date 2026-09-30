@@ -31,11 +31,6 @@
   }
 }
 
-.mute-btn:active {
-  box-shadow: var(--k-sh-inset);
-  transform: translateY(1px);
-}
-
 .mute-btn.muted {
   color: var(--k-accent-text);
 }

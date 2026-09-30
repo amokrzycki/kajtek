@@ -91,7 +91,6 @@
 .k-custom-form-wrap.is-open {
   grid-template-rows: 1fr;
   opacity: 1;
-  margin-top: 0.5rem;
 }
 
 .k-custom-form-inner {
@@ -100,6 +99,7 @@
 }
 
 .k-custom-form {
+  margin-top: 0.5rem;
   padding: 0.75rem 1rem;
   background: var(--k-bg-inset);
   border-bottom: 1px solid var(--k-border);
@@ -199,6 +199,7 @@
   box-shadow: var(--k-sh-btn);
   transition:
     transform 230ms var(--k-ease-mech),
+    translate var(--k-tr-fast),
     background var(--k-tr),
     border-color var(--k-tr),
     box-shadow var(--k-tr);
@@ -214,6 +215,11 @@
   background: var(--k-accent);
   border-color: var(--k-accent-2);
   box-shadow: 0 0 3px var(--k-accent-ring);
+}
+
+.catalog-toggle-switch:not(:has(.catalog-checkbox:disabled)):active::before {
+  box-shadow: var(--k-sh-inset);
+  translate: 0 1px;
 }
 
 .catalog-toggle-switch:has(.catalog-checkbox:disabled) {
@@ -312,7 +318,10 @@
   transition:
     color var(--k-tr),
     background var(--k-tr),
-    border-color var(--k-tr);
+    border-color var(--k-tr),
+    box-shadow var(--k-tr-fast),
+    transform var(--k-tr-fast);
+  -webkit-tap-highlight-color: transparent;
 }
 
 @media (hover: hover) and (pointer: fine) {

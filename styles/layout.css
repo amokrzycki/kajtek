@@ -95,12 +95,6 @@
     color var(--k-tr);
 }
 
-.dark-toggle:active .dark-toggle-knob,
-.settings-toggle:active .settings-toggle-knob {
-  transform: translateY(1px);
-  box-shadow: var(--k-sh-inset);
-}
-
 .dark-toggle .dark-toggle-icon,
 .settings-toggle .settings-toggle-icon {
   position: relative;
@@ -167,7 +161,7 @@
   text-align: center;
   padding: 1.5rem 1rem 2.5rem;
   font-family: var(--k-font-mono);
-  font-size: 0.625rem;
+  font-size: var(--k-fs-data);
   color: var(--k-text-faint);
   letter-spacing: 0.08em;
   border-top: 1px solid var(--k-border);

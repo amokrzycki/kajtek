@@ -5,7 +5,7 @@ const SHORTCUTS: { keys: string[]; label: string }[] = [
   { keys: ["←", "→"], label: "Poprzednia / następna stacja" },
   { keys: ["M"], label: "Wycisz / włącz dźwięk" },
   { keys: ["1", "2", "3", "4"], label: "Wyłącznik czasowy: 15 / 30 / 60 / 90 min" },
-  { keys: ["?"], label: "Ta ściągawka" },
+  { keys: ["?"], label: "Jak słuchać" },
   { keys: ["Esc"], label: "Zamknij okno" },
 ];
 

@@ -96,6 +96,12 @@ function createModalElements(): void {
     }
   });
 
+  const filtersBtn = modalEl.querySelector<HTMLButtonElement>("#catalog-filters-btn");
+  filtersBtn?.addEventListener("click", () => {
+    const open = modalEl?.querySelector(".k-modal")?.classList.toggle("filters-open");
+    filtersBtn.setAttribute("aria-expanded", String(Boolean(open)));
+  });
+
   const chipsRow = modalEl.querySelector<HTMLElement>("#catalog-network-chips");
   chipsRow?.addEventListener("click", (e) => {
     const chip = (e.target as HTMLElement).closest<HTMLButtonElement>("[data-network]");
@@ -106,6 +112,7 @@ function createModalElements(): void {
     });
     const listContainer = modalEl?.querySelector<HTMLElement>("#catalog-list-container");
     if (listContainer) applyAllTabFilters(listContainer, normalizedQuery(), activeNetwork);
+    filtersBtn?.classList.toggle("has-filter", activeNetwork !== null);
   });
 
   const refreshBtn = modalEl.querySelector("#catalog-refresh-btn");
@@ -139,7 +146,8 @@ function createModalElements(): void {
       urlEl.value,
       (msg) => {
         if (errEl) {
-          errEl.textContent = msg;
+          const msgEl = errEl.querySelector(".k-error-msg");
+          if (msgEl) msgEl.textContent = msg;
           errEl.classList.add("is-visible");
         }
       },
@@ -214,6 +222,11 @@ function renderNetworkChips(allStations: Station[]): void {
   if (!chipsRow) return;
 
   chipsRow.hidden = activeTab !== "all";
+  const filtersBtn = modalEl?.querySelector<HTMLButtonElement>("#catalog-filters-btn");
+  if (filtersBtn) {
+    filtersBtn.hidden = chipsRow.hidden;
+    filtersBtn.classList.toggle("has-filter", activeNetwork !== null);
+  }
   if (chipsRow.hidden) return;
 
   const chip = (network: string, label: string, count?: number) =>
@@ -247,7 +260,8 @@ function renderModalBody(): void {
   if (errorBanner) {
     const errorMessage = getErrorMessage();
     if (errorMessage) {
-      errorBanner.textContent = errorMessage;
+      const msgEl = errorBanner.querySelector(".k-error-msg");
+      if (msgEl) msgEl.textContent = errorMessage;
       errorBanner.classList.add("is-visible");
     } else {
       errorBanner.classList.remove("is-visible");

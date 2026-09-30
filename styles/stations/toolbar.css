@@ -37,11 +37,6 @@
   }
 }
 
-.btn-catalog-trigger:active {
-  box-shadow: var(--k-sh-inset);
-  transform: translateY(1px);
-}
-
 .view-toggle-group {
   position: relative;
   display: flex;
