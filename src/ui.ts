@@ -302,7 +302,6 @@ function applyTheme(): void {
   document.documentElement.classList.toggle("dark", state.dark);
   els.darkToggle.classList.toggle("on", state.dark);
   els.darkToggle.setAttribute("aria-pressed", String(state.dark));
-  localStorage.setItem(STORAGE_KEYS.THEME, state.dark ? "dark" : "light");
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", state.dark ? "#1a1816" : "#eeebe3");
 }
 

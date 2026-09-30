@@ -111,7 +111,7 @@
 
 .album-art.empty .album-art-initial {
   font-size: var(--k-fs-art);
-  color: rgba(255, 255, 255, 0.14);
+  color: var(--k-disp-dim);
 }
 
 /* station logo replaces the initial — nothing else layers over it */

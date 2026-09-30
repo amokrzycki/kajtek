@@ -10,11 +10,11 @@ export function persistFavTracks(): void {
 }
 
 const storedCase = localStorage.getItem(STORAGE_KEYS.CASE);
+const storedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
+const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
 
 export const state: AppState = {
-  dark: localStorage.getItem(STORAGE_KEYS.THEME)
-    ? localStorage.getItem(STORAGE_KEYS.THEME) === "dark"
-    : window.matchMedia("(prefers-color-scheme: dark)").matches,
+  dark: storedTheme === "dark" || (storedTheme !== "light" && systemTheme.matches),
   case: (CASES as readonly string[]).includes(storedCase ?? "") ? (storedCase as CaseSlug) : "red",
   station: null,
   playing: false,
@@ -48,6 +48,20 @@ export function notifyState(): void {
     fn(state);
   });
 }
+
+export function setTheme(dark: boolean | null): void {
+  if (dark === null) localStorage.removeItem(STORAGE_KEYS.THEME);
+  else localStorage.setItem(STORAGE_KEYS.THEME, dark ? "dark" : "light");
+  state.dark = dark ?? systemTheme.matches;
+  notifyState();
+}
+
+systemTheme.addEventListener("change", () => {
+  const theme = localStorage.getItem(STORAGE_KEYS.THEME);
+  if (theme === "dark" || theme === "light") return;
+  state.dark = systemTheme.matches;
+  notifyState();
+});
 
 export const radioAudio = new Audio();
 radioAudio.crossOrigin = "anonymous";

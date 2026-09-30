@@ -12,7 +12,7 @@ import { STORAGE_KEYS } from "./consts.js";
 import { setAdSkipEnabled, setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
 import { currentTrack, selectStation, togglePlay } from "./player.js";
 import { genericProvider, getProvider } from "./providers.js";
-import { notifyState, state, subscribeState } from "./state.js";
+import { notifyState, setTheme, state, subscribeState } from "./state.js";
 import type { Station } from "./types.js";
 import { openCatalogModal } from "./ui/catalog/modal.js";
 import { openChangelogModal } from "./ui/changelog/modal.js";
@@ -94,8 +94,7 @@ function attachEvents() {
   els.helpBtn.addEventListener("click", () => openOnboardingModal(focusStationSelection));
 
   els.darkToggle.addEventListener("click", () => {
-    state.dark = !state.dark;
-    notifyState();
+    setTheme(!state.dark);
   });
 
   els.settingsToggle.addEventListener("click", () => {

@@ -4,6 +4,9 @@
 
 Czytelniejsze komunikaty i łatwiejsza obsługa.
 
+- Motyw podąża za ustawieniami systemu, dopóki nie wybierzesz go ręcznie. W ustawieniach możesz wrócić do trybu „Zgodny z systemem”.
+- Uspokojono animacje ikon i znaczników oraz rozjaśniono symbol pustej okładki.
+
 - Przyspieszono rozpoczęcie ładowania czcionek odtwarzacza i stron prawnych.
 
 - Czarna obudowa wyraźniej odcina się od tła w ciemnym motywie. Przełączniki mają czytelny stan wyłączony i oznaczenia I/O.
