@@ -242,7 +242,7 @@
   border: 1px solid var(--k-border-2);
   border-radius: var(--k-rb);
   font-family: var(--k-font-mono);
-  font-size: 0.6875rem;
+  font-size: var(--k-fs-data);
   letter-spacing: 0.09em;
   color: var(--k-text-muted);
   cursor: pointer;
