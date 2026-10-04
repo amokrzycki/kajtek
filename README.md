@@ -15,7 +15,8 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 7. **Dark / Light Theme & Accent Color** - Follows the OS theme until a manual choice is saved in `localStorage`; Settings can restore system mode. Six case shell colors.
 8. **Favorite Stations & Tracks** - Bookmark favorite stations and tracks, browsable in a dedicated history/favorites panel.
 9. **Sleep Timer** - Automatically turn off audio after 15, 30, 60, or 90 minutes.
-10. **VU Meter & Cassette Reels** - Smooth cassette tape reel animations and an interactive VU meter during playback (uses Web Audio FFT spectrum analysis with dynamic beat emulation fallback).
+10. **Personal Listening Recap** - A local weekly/all-time recap of timed ads avoided, blacklist protection, successful automatic detours, and actual listening time.
+11. **VU Meter & Cassette Reels** - Smooth cassette tape reel animations and an interactive VU meter during playback (uses Web Audio FFT spectrum analysis with dynamic beat emulation fallback).
 
 ---
 
@@ -26,6 +27,8 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
   - `consts.ts` - Default radio station presets, storage keys, timers, and constants.
   - `types.ts` - Shared TypeScript interfaces (`Station`, `TrackInfo`, `AppState`, `Provider`, ...).
   - `state.ts` - Local state store and subscription system.
+  - `statistics.ts` - Versioned recap aggregation, local-week boundaries, idempotent route events, and playback accounting.
+  - `statisticsPlayback.ts` - Audio-event instrumentation, serialized local persistence, and recap subscriptions.
   - `player.ts` - Audio playback management, track polling, metadata fetch, and stream failover.
   - `providers.ts` / `providers/` - Radio provider integrations (RMF, Trojka, Eska, generic).
   - `catalog.ts` - RMF catalog fetching/caching and known-station resolution (built-in, local, custom).
@@ -35,7 +38,7 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
   - `controls.ts` - Volume, mute, favorites, and sleep timer control handling.
   - `visualizer.ts` - VU meter and audio visualization animation engine.
   - `ui.ts` - Primary DOM rendering engine and album art resolver.
-  - `ui/` - UI subcomponents: `catalog/` (station browser & custom station form), `blacklist/` (modal & warning banner), `settings/` (settings modal), `changelog/` (changelog modal), `shortcuts/` (keyboard shortcuts cheatsheet), `favorites.ts`, `history.ts`, `stations.ts`, `modal.ts`, `elements.ts`.
+  - `ui/` - UI subcomponents: `catalog/` (station browser & custom station form), `blacklist/` (modal & warning banner), `settings/` (settings modal), `changelog/` (changelog modal), `shortcuts/` (keyboard shortcuts cheatsheet), `favorites.ts`, `history.ts`, `statistics.ts` (personal listening recap), `stations.ts`, `modal.ts`, `elements.ts`.
   - `icons.ts` - SVG icon component definitions.
   - `utils.ts` - String decoding, timing helpers, and DOM fade triggers.
   - `md.d.ts` - Type declaration enabling `.md` file imports (used for `CHANGELOG.md`).
@@ -43,7 +46,7 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 - `dev.mjs` - Zero-dependency dev server with esbuild watching and RMF API proxying.
 - `server-utils.mjs` - Shared static-route resolution and privacy-safe upstream proxy headers.
 - `index.html` - Core HTML5 layout and structure.
-- `styles/` - Retro design system and CSS stylesheet modules, including the legal-document layout.
+- `styles/` - Retro design system and CSS stylesheet modules, including `statistics.css` for the personal recap and the legal-document layout.
 - `public/` - Static assets and `/privacy` and `/legal` pages copied verbatim into the build; `appearance.js` restores their saved theme and case shell before rendering.
 - `tests/` - Vitest coverage and captured provider fixtures.
 - `scripts/inject-hashes.mjs` - Injects hashed build asset filenames into `dist/index.html`.
@@ -54,6 +57,21 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 - `.github/workflows/` - Automated GitHub Actions workflows:
   - `ci.yml` - Linting, source/test type checking, and Vitest on pushes & PRs.
   - `deploy.yml` - Automated build & deployment via rsync on release tags (`v*`).
+
+---
+
+## How the listening recap counts
+
+Tracking starts when this feature is first loaded; existing favorites, playlists and settings cannot establish past listening or protection. The recap offers **this week** and **since tracking began**, without a session view. A week runs Monday–Sunday in the device's local time, including daylight-saving transitions.
+
+- **Ads avoided:** actual replacement audio time overlapping a remaining advertisement window explicitly reported by ESKA's HLS `REKLAMA` tag. `timeout` and `duration` are milliseconds: the deadline is observation time plus total minus elapsed. Loading, the warning grace period, mute and buffering earn no saved time. This is bounded by provider-reported timing; it does not claim independently observed completion of the original block. A manual station change, return or pause ends the window. RMF playlist gaps, predicted breaks, news and missing REST titles do **not** prove ad duration and earn no saved minutes.
+- **Blacklisted tracks avoided:** one completed protective station switch, confirmed by replacement audio's `playing` event. Includes **Przełącz teraz**. If detection was mid-track, only the remainder was avoided; this is an avoidance action count, not a count of unique songs. Warnings, candidate checks, dismissals, unsuccessful playback and rate-limited attempts do not count.
+- **Automatic detours:** one completed automatic ad/blacklist station switch or successful failover to a **different stream URL**. Excludes manual switches (including **Przełącz teraz**), returns, same-URL retries and internal HLS recovery. One blacklist switch can contribute to both avoidance and detours; those counts must not be added together.
+- **Listening:** advancement of `HTMLAudioElement.currentTime`, bounded by elapsed time and adjusted for playback rate, while unmuted with nonzero volume. Pause, waiting/stalled playback, failed requests, seeks, timeline jumps and open-app time are excluded. Playback baselines and pending operations remain in memory.
+
+`kajtek_statistics` holds a versioned aggregate: tracking start, all-time totals, the current local-week totals, and the last 128 opaque completed-operation IDs. Pending operations are consumed before recording, so repeated `playing` events cannot double-count; persisted IDs also make repeated commits idempotent. Duration spans are split at week boundaries. No track names, station URLs or event history are stored. Another metric can be added to the totals/schema with a versioned migration.
+
+Media advancement is checkpointed every five seconds and on playback/volume/visibility changes. Writes merge the latest aggregate and use Web Locks when available to serialize multiple tabs; browsers without Web Locks provide best-effort merging. A sudden browser/process termination can lose the last uncommitted interval. Normal reloads retain committed totals. Storage failure keeps the current run in memory and the recap says that it cannot be saved. Clearing site data clears the recap.
 
 ---
 

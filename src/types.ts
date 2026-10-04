@@ -121,6 +121,8 @@ export interface TrackInfo {
   label?: string;
   isLiveBreak?: boolean;
   isFacts?: boolean;
+  // Playback-relative deadline from an explicitly identified, timed advertisement block.
+  adEndsAt?: number;
   coverUrl?: string;
 }
 

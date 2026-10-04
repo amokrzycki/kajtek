@@ -4,6 +4,8 @@
 
 Czytelniejsze komunikaty i łatwiejsza obsługa.
 
+- Pod odtwarzaczem pojawiło się osobiste podsumowanie: czas pominiętych reklam o znanej długości, utwory ominięte dzięki czarnej liście, automatyczne objazdy i czas słuchania. Dane są zapisywane lokalnie od teraz, z widokiem tego tygodnia i całego okresu.
+
 - Motyw podąża za ustawieniami systemu, dopóki nie wybierzesz go ręcznie. W ustawieniach możesz wrócić do trybu „Zgodny z systemem”.
 - Uspokojono animacje ikon i znaczników oraz rozjaśniono symbol pustej okładki.
 

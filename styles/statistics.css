@@ -1,0 +1,153 @@
+.listening-recap {
+  padding: var(--k-s4);
+  background: var(--k-bg-panel);
+  border-radius: var(--k-rc);
+  box-shadow: var(--k-sh-inset);
+}
+
+.recap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--k-s3);
+  margin-bottom: var(--k-s4);
+}
+
+.recap-header h2 {
+  font-family: var(--k-font-display);
+  font-size: var(--k-fs-num);
+  font-weight: 600;
+  line-height: 1.3;
+  text-wrap: balance;
+}
+
+.recap-periods {
+  border: 0;
+  min-width: 0;
+  display: flex;
+  gap: var(--k-s1);
+}
+
+.recap-periods button {
+  min-height: 44px;
+  padding: var(--k-s1) var(--k-s2);
+  border: 1px solid var(--k-border-3);
+  border-radius: var(--k-rb);
+  background: var(--k-bg-raised);
+  box-shadow: var(--k-sh-btn);
+  color: var(--k-text-muted);
+  font: inherit;
+  font-size: var(--k-fs-data);
+  cursor: pointer;
+  transition:
+    background var(--k-tr-fast),
+    box-shadow var(--k-tr-fast),
+    transform var(--k-tr-fast);
+}
+
+.recap-periods button[aria-pressed="true"] {
+  background: var(--k-bg-inset);
+  color: var(--k-text);
+  box-shadow: var(--k-sh-inset);
+  transform: translateY(1px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .recap-periods button:hover {
+    color: var(--k-text);
+  }
+}
+
+.recap-lead {
+  max-width: 52ch;
+  font-size: var(--k-fs-lead);
+  font-weight: 500;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.recap-ad-note,
+.recap-empty {
+  max-width: 70ch;
+  margin-top: var(--k-s1);
+  font-size: var(--k-fs-data);
+  line-height: 1.7;
+  color: var(--k-text-muted);
+}
+
+.recap-activity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--k-s1);
+  margin-top: var(--k-s4);
+  font-size: var(--k-fs-body);
+  line-height: 1.7;
+  color: var(--k-text-2);
+}
+
+.recap-footer {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--k-s1) var(--k-s4);
+  margin-top: var(--k-s4);
+  padding-top: var(--k-s3);
+  border-top: 1px solid var(--k-border-2);
+  font-size: var(--k-fs-data);
+  line-height: 1.7;
+  color: var(--k-text-muted);
+}
+
+.recap-listening {
+  flex: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.recap-method summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--k-text);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.recap-method[open] {
+  flex-basis: 100%;
+}
+
+.recap-method-copy {
+  max-width: 70ch;
+  padding: var(--k-s1) 0 var(--k-s3);
+}
+
+.recap-method-copy p + p {
+  margin-top: var(--k-s2);
+}
+
+.recap-storage {
+  margin-top: var(--k-s1);
+  color: var(--k-text-faint);
+  font-size: var(--k-fs-data);
+  line-height: 1.7;
+}
+
+@media (max-width: 480px) {
+  .listening-recap {
+    padding: var(--k-s3);
+  }
+
+  .recap-periods {
+    width: 100%;
+  }
+
+  .recap-periods button {
+    flex: 1;
+  }
+
+  .recap-listening {
+    flex-basis: 100%;
+  }
+}

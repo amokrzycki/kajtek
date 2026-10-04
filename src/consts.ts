@@ -4,6 +4,7 @@ export const CASES = ["red", "green", "yellow", "blue", "pink", "black"] as cons
 export type CaseSlug = (typeof CASES)[number];
 
 export const STORAGE_KEYS = {
+  STATISTICS: "kajtek_statistics",
   THEME: "kajtek_theme",
   CASE: "kajtek_case",
   FAVS: "kajtek_favs",

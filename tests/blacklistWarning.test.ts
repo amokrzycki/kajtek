@@ -42,11 +42,12 @@ const state = vi.hoisted(
 );
 
 const mocks = vi.hoisted(() => ({
+  isBlacklisted: vi.fn(() => false),
   notifyState: vi.fn(),
   selectStation: vi.fn(),
 }));
 
-vi.mock("../src/blacklist.js", () => ({ isBlacklisted: vi.fn(() => false) }));
+vi.mock("../src/blacklist.js", () => ({ isBlacklisted: mocks.isBlacklisted }));
 vi.mock("../src/catalog.js", () => ({
   getOrderedStations: vi.fn(() => [candidate]),
   getStoredRmfCatalog: vi.fn(() => null),
@@ -66,6 +67,7 @@ beforeEach(async () => {
   vi.setSystemTime(new Date("2026-09-17T12:00:00.000Z"));
   vi.clearAllMocks();
   vi.resetModules();
+  mocks.isBlacklisted.mockReturnValue(false);
   state.station = origin;
   state.playing = true;
   state.liveTrack = { artist: origin.name, title: "Przerwa / Reklamy", isLiveBreak: true };
@@ -110,5 +112,44 @@ describe("blacklist warning automation", () => {
     await Promise.resolve();
 
     expect(blacklistWarning.getBlacklistWarningState()?.phase).toBe("warning");
+  });
+});
+
+describe("protective route instrumentation", () => {
+  it("marks countdown switches as automatic and forwards only available explicit ad timing", async () => {
+    state.liveTrack = {
+      artist: origin.name,
+      title: "Przerwa / Reklamy",
+      isLiveBreak: true,
+      adEndsAt: Date.now() + 30_000,
+    };
+    blacklistWarning.detectUpcomingAdBreak();
+    await vi.advanceTimersByTimeAsync(6000);
+    expect(mocks.selectStation).toHaveBeenCalledTimes(1);
+    expect(mocks.selectStation.mock.calls[0]?.[1]).toMatchObject({
+      kind: "adSkip",
+      automatic: true,
+      adEndsAt: Date.now() + 24_000,
+    });
+    blacklistWarning.switchBlacklistCandidateNow();
+    expect(mocks.selectStation).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks switch-now blacklist protection as manual and never sends fabricated ad timing", async () => {
+    mocks.isBlacklisted.mockReturnValue(true);
+    state.liveTrack = { artist: "Blocked", title: "Song" };
+    blacklistWarning.detectBlacklistedUpcoming();
+    await vi.advanceTimersByTimeAsync(0);
+    blacklistWarning.switchBlacklistCandidateNow();
+    expect(mocks.selectStation.mock.calls[0]?.[1]).toMatchObject({ kind: "blacklist", automatic: false });
+    expect(mocks.selectStation.mock.calls[0]?.[1]).not.toHaveProperty("adEndsAt");
+  });
+
+  it("never starts a statistics route for a dismissed warning", async () => {
+    blacklistWarning.detectUpcomingAdBreak();
+    await vi.advanceTimersByTimeAsync(0);
+    blacklistWarning.dismissBlacklistWarning();
+    await vi.advanceTimersByTimeAsync(10_000);
+    expect(mocks.selectStation).not.toHaveBeenCalled();
   });
 });

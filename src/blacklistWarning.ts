@@ -3,6 +3,7 @@ import { getOrderedStations, getStoredRmfCatalog } from "./catalog.js";
 import { DEFAULT_BREAK_LABEL, MIN_SKIP_GRACE_SEC, SWITCH_RATE_LIMIT, TIMERS } from "./consts.js";
 import { fetchPlaylist, selectStation } from "./player.js";
 import { notifyState, state } from "./state.js";
+import { createStatisticsOperationId } from "./statistics.js";
 import type { Station, TrackInfo } from "./types.js";
 import { getTrackKey, withinRateLimit } from "./utils.js";
 
@@ -105,6 +106,7 @@ function performStationSwitch(
   originStation: Station,
   candidate: Station,
   reason: string,
+  automatic = true,
 ) {
   const rateLimit = withinRateLimit(blacklistSwitchTimestamps, SWITCH_RATE_LIMIT.WINDOW_MS, SWITCH_RATE_LIMIT.MAX);
   blacklistSwitchTimestamps = rateLimit.timestamps;
@@ -116,7 +118,12 @@ function performStationSwitch(
     return;
   }
 
-  selectStation(candidate);
+  selectStation(candidate, {
+    id: createStatisticsOperationId(),
+    kind,
+    automatic,
+    ...(kind === "adSkip" && track.adEndsAt !== undefined ? { adEndsAt: track.adEndsAt } : {}),
+  });
   const trackKey = getTrackKey(track);
   blacklistWarning = {
     kind,
@@ -213,6 +220,7 @@ export function switchBlacklistCandidateNow(): void {
     blacklistWarning.originStation,
     blacklistWarning.candidate,
     blacklistWarning.candidateReason,
+    false,
   );
   notifyState();
 }

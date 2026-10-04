@@ -162,6 +162,31 @@ describe("readZprTag", () => {
 });
 
 describe("eskaProvider.fetch", () => {
+  it.each([
+    [1000, null],
+    [-1000, 30000],
+    [30000, 30000],
+    [31000, 30000],
+  ])(
+    "withholds ad savings timing when elapsed=%s and total=%s cannot establish a remaining block",
+    async (elapsed, total) => {
+      eska.startEskaSession(station.id);
+      eska.readZprTag(fragment("REKLAMA ESKA", elapsed, total), station.id);
+      expect((await fetchResult(restSong)).current?.adEndsAt).toBeUndefined();
+    },
+  );
+
+  it("exposes only explicit ad timing, subtracting elapsed milliseconds and metadata age", async () => {
+    eska.startEskaSession(station.id);
+    eska.readZprTag(adFragment, station.id);
+    vi.advanceTimersByTime(2_000);
+    const ad = await fetchResult(restSong);
+    expect(ad.current?.adEndsAt).toBe(Date.now() + 27_000);
+    eska.startEskaSession(station.id);
+    const inferred = await fetchResult(restNull);
+    expect(inferred.current?.adEndsAt).toBeUndefined();
+  });
+
   it("classifies synthetic ads above REST and treats a short empty transition as REST", async () => {
     eska.startEskaSession(station.id);
     expect(eska.readZprTag(adFragment, station.id)).toBe(true);

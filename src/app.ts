@@ -20,6 +20,7 @@ import { removeFavTrackByKey } from "./ui/favorites.js";
 import { openOnboardingModal, shouldShowOnboarding } from "./ui/onboarding/modal.js";
 import { openSettingsModal } from "./ui/settings/modal.js";
 import { openShortcutsModal } from "./ui/shortcuts/modal.js";
+import { initStatisticsUI } from "./ui/statistics.js";
 import {
   els,
   initVolumeControlUI,
@@ -220,6 +221,7 @@ function init() {
   initVolumeControlUI();
   startHistoryClock();
   attachEvents();
+  initStatisticsUI();
   subscribeState(refresh);
   refresh();
 
