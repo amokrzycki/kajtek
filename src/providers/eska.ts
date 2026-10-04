@@ -14,6 +14,7 @@ interface ZprState {
   stationId: string;
   blockStartSec: number | null;
   timeoutMs: number | null;
+  adEndsAt: number | null;
   updatedAt: number;
   titleEmpty: boolean;
 }
@@ -79,6 +80,16 @@ export function readZprTag(frag: { tagList: string[][]; programDateTime: number 
     stationId,
     blockStartSec,
     timeoutMs: tag.data.timeout ?? null,
+    // ZPR duration and timeout are both milliseconds; programDateTime can lag the live edge.
+    adEndsAt:
+      typeof tag.duration === "number" &&
+      Number.isFinite(tag.duration) &&
+      tag.duration >= 0 &&
+      typeof tag.data.timeout === "number" &&
+      Number.isFinite(tag.data.timeout) &&
+      tag.data.timeout > tag.duration
+        ? Date.now() + tag.data.timeout - tag.duration
+        : null,
     updatedAt: Date.now(),
     titleEmpty: false,
   };
@@ -176,8 +187,8 @@ export const eskaProvider: Provider = {
     // A real signal, replacing the old "current == null means ads" guess. Jingles are ~7s station idents, treating them as breaks would make Ad Skip switch stations over an ident. An "ad" held over from the grace window doesn't count, only a block the tag is still naming.
     const breakTrack: TrackInfo = { artist: station.name, title: DEFAULT_BREAK_LABEL, isLiveBreak: true };
     let current: TrackInfo;
-    if (kind === "ad" && !zpr?.titleEmpty) {
-      current = breakTrack;
+    if (kind === "ad" && zpr && !zpr.titleEmpty) {
+      current = { ...breakTrack, ...(zpr.adEndsAt === null ? {} : { adEndsAt: zpr.adEndsAt }) };
     } else if (data.current) {
       current = toTrackInfo(data.current, 0);
     } else if (kind === "song" && zpr) {

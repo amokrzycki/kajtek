@@ -131,7 +131,12 @@ export function renderBlacklistWarning(): void {
   lastContentKey = contentKey;
 
   if (!isNewContent) {
-    els.blacklistWarningContent.innerHTML = buildWarningHtml(warning);
+    // Rebuilding the markup every tick would swap the buttons out from under a click in progress (mousedown and mouseup on different nodes fire no click), so only the countdown text changes.
+    const clock = els.blacklistWarningContent.querySelector(".bl-warn-clock, .bl-warn-mini-clock");
+    if (clock)
+      clock.textContent = isAutoReturnPending(warning)
+        ? `wracamy za ${formatMMSS(warning.secondsLeft)}`
+        : formatMMSS(warning.secondsLeft);
     return;
   }
 

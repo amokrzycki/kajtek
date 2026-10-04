@@ -8,6 +8,8 @@ import { rmfProvider } from "./providers/rmf.js";
 import { trojkaProvider } from "./providers/trojka.js";
 import { genericProvider, getFactsInfo, getProvider } from "./providers.js";
 import { intervals, notifyState, radioAudio, state } from "./state.js";
+import type { ProtectiveRoute } from "./statistics.js";
+import { bindListeningStatistics, listeningStatistics } from "./statisticsPlayback.js";
 import type { Station, TrackInfo } from "./types.js";
 import {
   els,
@@ -19,6 +21,8 @@ import {
   updateNowPlayingTrack,
 } from "./ui.js";
 import { getFactsLabel, resolveProtocolRelativeUrl, withinRateLimit } from "./utils.js";
+
+bindListeningStatistics(radioAudio);
 
 let failoverTimestamps: number[] = [];
 let hlsInstance: Hls | null = null;
@@ -102,6 +106,12 @@ async function playStreamUrl(url: string | undefined): Promise<void> {
   radioAudio.play().catch((error: unknown) => {
     if (requestId !== playbackRequestId) return;
     if (error instanceof DOMException && error.name === "AbortError") return;
+    listeningStatistics.stop(
+      radioAudio.currentTime,
+      Date.now(),
+      !radioAudio.muted && radioAudio.volume > 0,
+      radioAudio.playbackRate,
+    );
     state.playing = false;
     notifyState();
     setPlaybackStatus("Nie udało się włączyć stacji. Ponów lub wybierz inną.", "failed");
@@ -117,6 +127,12 @@ function handleAudioFailover() {
   const streams = state.station._streams || [state.station.stream];
 
   if (rateLimit.limited) {
+    listeningStatistics.stop(
+      radioAudio.currentTime,
+      Date.now(),
+      !radioAudio.muted && radioAudio.volume > 0,
+      radioAudio.playbackRate,
+    );
     // max 3 stream switches in 30s limit to avoid infinite retry loop during outage.
     state.playing = false;
     radioAudio.pause();
@@ -131,6 +147,17 @@ function handleAudioFailover() {
 
   const currentIdx = state.station._currentStreamIndex || 0;
   const nextIdx = (currentIdx + 1) % streams.length;
+  listeningStatistics.suspend(
+    radioAudio.currentTime,
+    Date.now(),
+    !radioAudio.muted && radioAudio.volume > 0,
+    radioAudio.playbackRate,
+  );
+  listeningStatistics.recovery(
+    streams[currentIdx] ?? state.station.stream,
+    streams[nextIdx] ?? state.station.stream,
+    Date.now(),
+  );
   state.station._currentStreamIndex = nextIdx;
   setPlaybackStatus("Zmiana strumienia…");
   playStreamUrl(streams[nextIdx]);
@@ -376,7 +403,15 @@ export function currentTrack(): TrackInfo | null {
   return state.liveTrack;
 }
 
-export function selectStation(s: Station) {
+export function selectStation(s: Station, protection: ProtectiveRoute | null = null) {
+  listeningStatistics.suspend(
+    radioAudio.currentTime,
+    Date.now(),
+    !radioAudio.muted && radioAudio.volume > 0,
+    radioAudio.playbackRate,
+  );
+  listeningStatistics.route(protection, Date.now());
+  listeningStatistics.selectStation(s);
   state.station = s;
   if (getProvider(s) === genericProvider) {
     state.showHistory = false;
@@ -410,6 +445,12 @@ export function togglePlay() {
     startTrackRotation();
   } else {
     playbackRequestId++;
+    listeningStatistics.stop(
+      radioAudio.currentTime,
+      Date.now(),
+      !radioAudio.muted && radioAudio.volume > 0,
+      radioAudio.playbackRate,
+    );
     radioAudio.pause();
     stopTrackRotation();
   }

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.13.0
+
+Kajtek zbiera statystyki odtwarzania, które możesz sprawdzić w ustawieniach. Pomijanie reklam działa stabilniej.
+
+- Przycisk „Statystyki”, obok pomocy, motywu i ustawień, otwiera podsumowanie czasu pominiętych reklam o znanej długości, utworów ominiętych dzięki czarnej liście, automatycznych przełączeń i czasu słuchania. Dane od teraz zapisują się lokalnie. Możesz przeglądać statystyki z tego tygodnia lub z całego okresu. Lista do pięciu najczęściej słuchanych stacji uwzględnia rzeczywisty czas słuchania. Dotychczasowe statystyki zostają zachowane, a czas dla poszczególnych stacji jest liczony od tej aktualizacji.
+- Przyciski „Przełącz teraz” i „Zostań mimo to” nie znikają spod kursora podczas odliczania. Ręczne przełączenie działa niezależnie od limitu automatycznych przełączeń.
+- Po przełączeniu Kajtek wraca na poprzednią stację, gdy reklama faktycznie się skończy. Jeśli jej długość jest nieznana, czeka 3 minuty lub do końca bloku reklamowego.
+- Odrzucone ostrzeżenie o reklamie nie pojawia się ponownie, gdy zacznie się blok reklamowy.
+
 ## 0.12.1
 
 Czytelniejsze komunikaty i łatwiejsza obsługa.
