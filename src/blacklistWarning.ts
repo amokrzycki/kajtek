@@ -26,11 +26,20 @@ interface ActiveAdSkip {
   originStation: Station;
   trackKey: string;
   startedAt: number;
+  // Epoch ms the break is known to end; null means only the explicit fallback wait applies.
+  endsAtMs: number | null;
+  // Origin's API can still show the previous track right after we leave, so "not a break" only means "ended" once a break was actually seen.
+  sawBreak: boolean;
+}
+
+interface Dismissal {
+  kind: WarningKind;
+  trackKey: string;
+  fromTrackKey: string | null;
 }
 
 let blacklistWarning: BlacklistWarning | null = null;
-let dismissedTrackKey: string | null = null;
-let dismissedFromTrackKey: string | null = null;
+let dismissed: Dismissal | null = null;
 let blacklistSwitchTimestamps: number[] = [];
 let activeAdSkip: ActiveAdSkip | null = null;
 let lastAdReturnPollAt = 0;
@@ -42,23 +51,51 @@ export function getBlacklistWarningState(): BlacklistWarning | null {
 
 export function resetBlacklistWarningState(): void {
   blacklistWarning = null;
-  dismissedTrackKey = null;
-  dismissedFromTrackKey = null;
+  dismissed = null;
   activeAdSkip = null;
+  lastAdReturnPollAt = 0;
 }
 
-function rememberDismissedTrack(trackKey: string): void {
-  dismissedTrackKey = trackKey;
-  dismissedFromTrackKey = state.liveTrack ? getTrackKey(state.liveTrack) : null;
+function rememberDismissedTrack(kind: WarningKind, trackKey: string): void {
+  dismissed = { kind, trackKey, fromTrackKey: state.liveTrack ? getTrackKey(state.liveTrack) : null };
+}
+
+function isAdBreak(track: TrackInfo | null): boolean {
+  return track?.isLiveBreak === true && track.title === DEFAULT_BREAK_LABEL;
 }
 
 function expireDismissedTrack(): void {
-  if (!dismissedTrackKey) return;
+  if (!dismissed) return;
   const liveTrackKey = state.liveTrack ? getTrackKey(state.liveTrack) : null;
-  if (liveTrackKey !== dismissedTrackKey && liveTrackKey !== dismissedFromTrackKey) {
-    dismissedTrackKey = null;
-    dismissedFromTrackKey = null;
+  if (liveTrackKey === dismissed.trackKey || liveTrackKey === dismissed.fromTrackKey) return;
+  if (dismissed.kind === "adSkip") {
+    // An ad dismissed once stays dismissed for the whole break: the upcoming item and the live break carry different keys, and metadata can flap in between.
+    if (isAdBreak(state.liveTrack)) return;
+    const nowSec = Math.floor(Date.now() / 1000);
+    const { trackKey } = dismissed;
+    if (
+      state.history.some(
+        (t) => t.isBreak && getTrackKey(t) === trackKey && (t.endTimestamp ?? t.timestamp ?? 0) > nowSec,
+      )
+    )
+      return;
   }
+  dismissed = null;
+}
+
+function knownAdEndMs(track: TrackInfo): number | null {
+  if (track.adEndsAt !== undefined) return track.adEndsAt;
+  const nowSec = Math.floor(Date.now() / 1000);
+  const scheduled = track.isBreak
+    ? track
+    : state.history.find(
+        (t) =>
+          t.isBreak &&
+          t.label === DEFAULT_BREAK_LABEL &&
+          (t.timestamp ?? Infinity) <= nowSec &&
+          (t.endTimestamp ?? 0) > nowSec,
+      );
+  return scheduled?.endTimestamp ? scheduled.endTimestamp * 1000 : null;
 }
 
 async function candidateCurrentlyBlocked(candidate: Station, kind: WarningKind): Promise<boolean> {
@@ -108,16 +145,19 @@ function performStationSwitch(
   reason: string,
   automatic = true,
 ) {
-  const rateLimit = withinRateLimit(blacklistSwitchTimestamps, SWITCH_RATE_LIMIT.WINDOW_MS, SWITCH_RATE_LIMIT.MAX);
-  blacklistSwitchTimestamps = rateLimit.timestamps;
+  if (automatic) {
+    const rateLimit = withinRateLimit(blacklistSwitchTimestamps, SWITCH_RATE_LIMIT.WINDOW_MS, SWITCH_RATE_LIMIT.MAX);
+    blacklistSwitchTimestamps = rateLimit.timestamps;
 
-  if (rateLimit.limited) {
-    // avoid switching forever if every candidate keeps landing on another blocked track/break.
-    rememberDismissedTrack(getTrackKey(track));
-    blacklistWarning = null;
-    return;
+    if (rateLimit.limited) {
+      // avoid switching forever if every candidate keeps landing on another blocked track/break; an explicit click is never throttled.
+      rememberDismissedTrack(kind, getTrackKey(track));
+      blacklistWarning = null;
+      return;
+    }
   }
 
+  const endsAtMs = kind === "adSkip" ? knownAdEndMs(track) : null;
   selectStation(candidate, {
     id: createStatisticsOperationId(),
     kind,
@@ -137,7 +177,14 @@ function performStationSwitch(
     switchedAt: Date.now(),
   };
   if (kind === "adSkip" && state.adSkipAutoReturnEnabled) {
-    activeAdSkip = { originStation, trackKey, startedAt: Date.now() };
+    activeAdSkip = {
+      originStation,
+      trackKey,
+      startedAt: Date.now(),
+      endsAtMs,
+      sawBreak: track.isLiveBreak === true,
+    };
+    lastAdReturnPollAt = Date.now();
   }
 }
 
@@ -178,7 +225,7 @@ export function detectBlacklistedUpcoming() {
 
   if (state.liveTrack && (!state.liveTrack.isLiveBreak || state.liveTrack.isFacts) && isBlacklisted(state.liveTrack)) {
     const key = getTrackKey(state.liveTrack);
-    if (key !== dismissedTrackKey) void armSwitchWarning("blacklist", state.liveTrack, state.station, true);
+    if (key !== dismissed?.trackKey) void armSwitchWarning("blacklist", state.liveTrack, state.station, true);
     return;
   }
 
@@ -187,7 +234,7 @@ export function detectBlacklistedUpcoming() {
     .filter((t) => !t.isBreak && t.artist && t.title && t.timestamp && t.timestamp > nowSec)
     .sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0))[0];
 
-  if (upcoming && isBlacklisted(upcoming) && getTrackKey(upcoming) !== dismissedTrackKey) {
+  if (upcoming && isBlacklisted(upcoming) && getTrackKey(upcoming) !== dismissed?.trackKey) {
     void armSwitchWarning("blacklist", upcoming, state.station, false);
   }
 }
@@ -196,9 +243,8 @@ export function detectUpcomingAdBreak() {
   expireDismissedTrack();
   if (!state.station || blacklistWarning || !state.adSkipEnabled) return;
 
-  if (state.liveTrack?.isLiveBreak && state.liveTrack.title === DEFAULT_BREAK_LABEL) {
-    const key = getTrackKey(state.liveTrack);
-    if (key !== dismissedTrackKey) void armSwitchWarning("adSkip", state.liveTrack, state.station, true);
+  if (isAdBreak(state.liveTrack) && state.liveTrack) {
+    if (dismissed?.kind !== "adSkip") void armSwitchWarning("adSkip", state.liveTrack, state.station, true);
     return;
   }
 
@@ -207,7 +253,7 @@ export function detectUpcomingAdBreak() {
     .filter((t) => t.timestamp && t.timestamp > nowSec)
     .sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0))[0];
 
-  if (nextUp?.isBreak && nextUp.label === DEFAULT_BREAK_LABEL && getTrackKey(nextUp) !== dismissedTrackKey) {
+  if (nextUp?.isBreak && nextUp.label === DEFAULT_BREAK_LABEL && getTrackKey(nextUp) !== dismissed?.trackKey) {
     void armSwitchWarning("adSkip", nextUp, state.station, false);
   }
 }
@@ -227,7 +273,7 @@ export function switchBlacklistCandidateNow(): void {
 
 export function dismissBlacklistWarning(): void {
   if (!blacklistWarning) return;
-  rememberDismissedTrack(blacklistWarning.trackKey);
+  rememberDismissedTrack(blacklistWarning.kind, blacklistWarning.trackKey);
   blacklistWarning = null;
   notifyState();
 }
@@ -243,11 +289,11 @@ export function undoBlacklistBlock(): void {
 
 export function returnToPreviousStation(): void {
   if (blacklistWarning?.phase !== "switched") return;
-  const { originStation, trackKey } = blacklistWarning;
+  const { kind, originStation, trackKey } = blacklistWarning;
   blacklistWarning = null;
   activeAdSkip = null;
   selectStation(originStation);
-  rememberDismissedTrack(trackKey);
+  rememberDismissedTrack(kind, trackKey);
 }
 
 export function cancelAdSkipAutoReturn(): void {
@@ -257,21 +303,26 @@ export function cancelAdSkipAutoReturn(): void {
   notifyState();
 }
 
-async function checkAdBreakEnded(): Promise<void> {
-  if (!activeAdSkip) return;
-  const { originStation, trackKey, startedAt } = activeAdSkip;
-  const timedOut = Date.now() - startedAt >= TIMERS.AD_RETURN_MAX_WAIT_MS;
-  const data = await fetchPlaylist(originStation);
-  if (!state.playing || !activeAdSkip) return;
-  // Give up waiting past the cap even if the origin still reports a break — a stuck/misreporting
-  // station API would otherwise poll forever and never bring us back.
-  if (!timedOut && (data?.current == null || data.current.isLiveBreak)) return;
+function adReturnAtMs(session: ActiveAdSkip): number {
+  return session.endsAtMs ?? session.startedAt + TIMERS.AD_RETURN_FALLBACK_MS;
+}
 
+function returnFromAdSkip(session: ActiveAdSkip): void {
+  if (activeAdSkip !== session) return;
   activeAdSkip = null;
   blacklistWarning = null;
-  selectStation(originStation);
-  rememberDismissedTrack(trackKey);
+  selectStation(session.originStation);
+  rememberDismissedTrack("adSkip", session.trackKey);
   notifyState();
+}
+
+async function pollAdBreakEnded(session: ActiveAdSkip): Promise<void> {
+  const data = await fetchPlaylist(session.originStation);
+  // The user may have cancelled, returned or started another skip while the request was in flight.
+  if (!state.playing || activeAdSkip !== session) return;
+  if (data?.current == null) return;
+  if (data.current.isLiveBreak) session.sawBreak = true;
+  else if (session.sawBreak) returnFromAdSkip(session);
 }
 
 setInterval(() => {
@@ -283,9 +334,16 @@ setInterval(() => {
     return;
   }
 
-  if (activeAdSkip && Date.now() - lastAdReturnPollAt >= TIMERS.TRACK_POLL_MS) {
-    lastAdReturnPollAt = Date.now();
-    void checkAdBreakEnded();
+  if (activeAdSkip) {
+    // A known end is authoritative: the origin API is not consulted, so a stale or break-less response cannot end the skip early.
+    if (Date.now() >= adReturnAtMs(activeAdSkip)) {
+      returnFromAdSkip(activeAdSkip);
+      return;
+    }
+    if (activeAdSkip.endsAtMs === null && Date.now() - lastAdReturnPollAt >= TIMERS.TRACK_POLL_MS) {
+      lastAdReturnPollAt = Date.now();
+      void pollAdBreakEnded(activeAdSkip);
+    }
   }
 
   if (!blacklistWarning) return;
@@ -308,7 +366,7 @@ setInterval(() => {
     }
   } else if (blacklistWarning.phase === "switched") {
     if (blacklistWarning.kind === "adSkip" && activeAdSkip) {
-      const remainingMs = TIMERS.AD_RETURN_MAX_WAIT_MS - (Date.now() - activeAdSkip.startedAt);
+      const remainingMs = adReturnAtMs(activeAdSkip) - Date.now();
       const secondsLeft = Math.max(0, Math.ceil(remainingMs / 1000));
       if (secondsLeft !== blacklistWarning.secondsLeft) {
         blacklistWarning.secondsLeft = secondsLeft;

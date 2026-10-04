@@ -80,7 +80,8 @@ export const TIMERS = {
   TRACK_POLL_MS: 5000,
   SLEEP_STEP_MS: 1000,
   HISTORY_SLIDE_MS: 700,
-  AD_RETURN_MAX_WAIT_MS: 180_000,
+  // Used only when the ad break length is unknown.
+  AD_RETURN_FALLBACK_MS: 180_000,
 } as const;
 
 export const SWITCH_RATE_LIMIT = {
