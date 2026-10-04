@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { STORAGE_KEYS } from "../src/consts.js";
 import type { Station, TrackInfo } from "../src/types.js";
 
 const mocks = vi.hoisted(() => ({
@@ -17,6 +18,9 @@ const mocks = vi.hoisted(() => ({
   catalog: vi.fn(),
   blacklisted: false,
 }));
+vi.hoisted(() => {
+  vi.stubGlobal("DOMParser", class {});
+});
 vi.mock("../src/catalog.js", () => ({ getEnabledStations: () => mocks.stations }));
 vi.mock("../src/metadata.js", () => ({ fetchMetadata: mocks.fetch }));
 vi.mock("../src/ui/elements.js", () => ({ els: mocks.els }));
@@ -38,7 +42,8 @@ vi.mock("../src/state.js", () => ({
     return () => mocks.liveListeners.delete(listener);
   },
 }));
-vi.mock("../src/utils.js", () => ({
+vi.mock("../src/utils.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/utils.js")>()),
   escapeHtml: (value: string) => value,
   getStoredJSON: (key: string, fallback: unknown) =>
     mocks.blacklisted && key === "kajtek_blacklist"
@@ -53,10 +58,19 @@ class ElementStub {
   readonly dataset: Record<string, string> = {};
   readonly attributes = new Map<string, string>();
   readonly events = new Map<string, () => void>();
-  readonly classList = { toggle: vi.fn() };
+  readonly classes = new Set<string>();
+  readonly classList = {
+    toggle: vi.fn((name: string, on: boolean) => {
+      if (on) this.classes.add(name);
+      else this.classes.delete(name);
+    }),
+    add: (name: string) => this.classes.add(name),
+    remove: (name: string) => this.classes.delete(name),
+  };
   className = "";
   type = "";
   hidden = false;
+  inert = false;
   innerHTML = "";
   textContent = "";
   tabIndex = 0;
@@ -65,6 +79,12 @@ class ElementStub {
   onkeydown: ((event: { key: string; preventDefault: () => void }) => void) | null = null;
   setAttribute(name: string, value: string) {
     this.attributes.set(name, value);
+  }
+  getAttribute(name: string) {
+    return this.attributes.get(name) ?? null;
+  }
+  getBoundingClientRect() {
+    return { height: 100 };
   }
   querySelector() {
     return this.children[0] ?? null;
@@ -99,7 +119,17 @@ class ElementStub {
   focus() {
     documentStub.activeElement = this;
   }
+  readonly animate = vi.fn(() => {
+    let finish: () => void = () => undefined;
+    const finished = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    const animation = { finished, finish, cancel: vi.fn() };
+    animations.push(animation);
+    return animation;
+  });
 }
+const animations: { finished: Promise<void>; finish: () => void; cancel: ReturnType<typeof vi.fn> }[] = [];
 const documentStub = {
   hidden: false,
   activeElement: null as ElementStub | null,
@@ -134,6 +164,7 @@ beforeEach(() => {
   vi.useFakeTimers();
   vi.setSystemTime(100_000);
   vi.clearAllMocks();
+  animations.length = 0;
   elements.clear();
   documentStub.events.clear();
   documentStub.hidden = false;
@@ -157,6 +188,7 @@ beforeEach(() => {
     "discovery-empty-text",
     "station-view-toggle",
     "station-list-container",
+    "browser-panels",
     "open-catalog-btn",
     "discovery-back",
     "discovery-catalog",
@@ -168,9 +200,14 @@ beforeEach(() => {
     element("station-view-toggle").appendChild(button);
   }
   element("now-playing-browser").hidden = true;
+  element("now-playing-browser").appendChild(element("discovery-list"));
   mocks.els.stationListContainer = element("station-list-container");
   vi.stubGlobal("document", documentStub);
-  vi.stubGlobal("window", { addEventListener: vi.fn(), removeEventListener: vi.fn() });
+  vi.stubGlobal("window", {
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    matchMedia: () => ({ matches: true }),
+  });
   vi.stubGlobal("HTMLButtonElement", ElementStub);
   vi.stubGlobal("localStorage", { setItem: vi.fn() });
 });
@@ -182,6 +219,51 @@ afterEach(() => {
 });
 
 describe("station browser wiring and lifecycle", () => {
+  it("replaces animations on rapid switches and keeps only the final panel interactive", async () => {
+    window.matchMedia = vi.fn().mockReturnValue({ matches: false });
+    cleanup = initStationBrowser(vi.fn());
+    element("browser-now").click();
+    const old = animations.slice();
+    expect(old).toHaveLength(3);
+    expect(element("station-list-container").inert).toBe(true);
+    expect(element("station-list-container").attributes.get("aria-hidden")).toBe("true");
+    expect(element("now-playing-browser").inert).toBe(false);
+    element("browser-stations").click();
+    old.forEach((animation) => {
+      expect(animation.cancel).toHaveBeenCalled();
+      animation.finish();
+    });
+    element("browser-now").click();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(element("now-playing-browser").inert).toBe(false);
+    expect(element("station-list-container").inert).toBe(true);
+    animations.slice(-3).forEach((animation) => {
+      animation.finish();
+    });
+    await vi.advanceTimersByTimeAsync(0);
+    expect(element("station-list-container").hidden).toBe(true);
+    expect(element("now-playing-browser").hidden).toBe(false);
+    expect(element("browser-panels").classes.has("is-transitioning")).toBe(false);
+  });
+  it("keeps polling independent of animation completion and restores focus before disabling the old panel", async () => {
+    window.matchMedia = vi.fn().mockReturnValue({ matches: false });
+    cleanup = initStationBrowser(vi.fn());
+    element("browser-now").click();
+    await vi.advanceTimersByTimeAsync(0);
+    const button = element("discovery-list").children[0]?.children[0];
+    button?.focus();
+    element("now-playing-browser").setAttribute("aria-labelledby", "browser-now");
+    element("station-list-container").setAttribute("aria-labelledby", "browser-stations");
+    element("browser-stations").click();
+    expect(documentStub.activeElement).toBe(element("browser-stations"));
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(mocks.fetch).toHaveBeenCalledTimes(1);
+    expect(element("station-list-container").inert).toBe(false);
+    documentStub.hidden = true;
+    documentStub.events.get("visibilitychange")?.();
+    expect(element("now-playing-browser").hidden).toBe(true);
+    expect(element("browser-panels").classes.has("is-transitioning")).toBe(false);
+  });
   it("defaults to stations, preserves grid preference and never fetches until discovery is active", async () => {
     cleanup = initStationBrowser(vi.fn());
     await vi.advanceTimersByTimeAsync(60_000);
@@ -191,7 +273,7 @@ describe("station browser wiring and lifecycle", () => {
     element("browser-now").click();
     await vi.advanceTimersByTimeAsync(0);
     expect(element("station-list-container").hidden).toBe(true);
-    expect(element("station-view-toggle").hidden).toBe(true);
+    expect(element("station-view-toggle").hidden).toBe(false);
     expect(element("now-playing-browser").hidden).toBe(false);
     expect(mocks.fetch).toHaveBeenCalledTimes(1);
     await vi.advanceTimersByTimeAsync(15_000);
@@ -201,6 +283,70 @@ describe("station browser wiring and lifecycle", () => {
     expect(mocks.fetch).toHaveBeenCalledTimes(2);
     expect(mocks.state.viewMode).toBe("grid");
     expect(element("station-list-container").hidden).toBe(false);
+  });
+  it("shares one persisted view preference and applies it to both panels across mode switches", async () => {
+    const select = vi.fn();
+    cleanup = initStationBrowser(select);
+    const [list, grid] = element("station-view-toggle").children;
+    const assertView = (mode: string) => {
+      expect(mocks.state.viewMode).toBe(mode);
+      for (const id of ["station-list-container", "now-playing-browser"])
+        expect(element(id).classes.has("is-grid-view")).toBe(mode === "grid");
+      expect(element("station-view-toggle").hidden).toBe(false);
+    };
+    assertView("grid");
+    element("browser-now").click();
+    await vi.advanceTimersByTimeAsync(0);
+    const button = element("discovery-list").children[0]?.children[0];
+    mocks.state.station = station;
+    list?.click();
+    assertView("list");
+    expect(element("discovery-list").children[0]?.children[0]).toBe(button);
+    expect(button?.attributes.get("aria-pressed")).toBe("true");
+    element("browser-stations").click();
+    assertView("list");
+    grid?.click();
+    assertView("grid");
+    element("browser-now").click();
+    assertView("grid");
+    expect(localStorage.setItem).toHaveBeenCalledTimes(2);
+    expect(localStorage.setItem).toHaveBeenNthCalledWith(1, STORAGE_KEYS.VIEW_MODE, "list");
+    expect(localStorage.setItem).toHaveBeenNthCalledWith(2, STORAGE_KEYS.VIEW_MODE, "grid");
+    expect(button?.attributes.get("aria-pressed")).toBe("true");
+    button?.click();
+    expect(select).toHaveBeenCalledWith(station);
+  });
+  it("preserves a failed-image fallback during unchanged renders and view switches", async () => {
+    cleanup = initStationBrowser(vi.fn());
+    element("browser-now").click();
+    await vi.advanceTimersByTimeAsync(0);
+    const button = element("discovery-list").children[0]?.children[0];
+    if (!button) throw new Error("Missing discovery button");
+    button.innerHTML = "fallback after image failure";
+    element("station-view-toggle").children[0]?.click();
+    expect(button.innerHTML).toBe("fallback after image failure");
+    expect(element("discovery-list").children[0]?.children[0]).toBe(button);
+  });
+  it("settles rapid reduced-motion switches immediately and cancels obsolete polling", async () => {
+    let signal: AbortSignal | undefined;
+    mocks.fetch.mockImplementationOnce((_station: Station, options: { signal: AbortSignal }) => {
+      signal = options.signal;
+      return new Promise(() => undefined);
+    });
+    cleanup = initStationBrowser(vi.fn());
+    element("browser-now").click();
+    element("browser-stations").click();
+    expect(signal?.aborted).toBe(true);
+    element("browser-now").click();
+    expect(element("now-playing-browser").hidden).toBe(false);
+    expect(element("now-playing-browser").inert).toBe(false);
+    expect(element("station-list-container").hidden).toBe(true);
+    expect(element("station-list-container").inert).toBe(true);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(mocks.fetch).toHaveBeenCalledTimes(2);
+    element("browser-stations").click();
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(mocks.fetch).toHaveBeenCalledTimes(2);
   });
   it("routes clicks through the supplied station callback, including blacklisted content", async () => {
     mocks.blacklisted = true;

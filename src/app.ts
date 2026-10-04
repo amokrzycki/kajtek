@@ -225,8 +225,8 @@ function init() {
   startHistoryClock();
   attachEvents();
   initStatisticsUI();
-  initStationBrowser(selectRememberedStation);
   subscribeState(refresh);
+  initStationBrowser(selectRememberedStation);
   refresh();
 
   const newEntries = checkForNewChangelog();

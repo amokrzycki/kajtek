@@ -38,6 +38,8 @@
 }
 
 .view-toggle-group {
+  margin: 0;
+  min-width: 0;
   position: relative;
   display: flex;
   align-items: center;
@@ -80,6 +82,8 @@
   align-items: center;
   justify-content: center;
   line-height: 0;
+  min-width: 44px;
+  min-height: 44px;
   transition: color var(--k-tr);
 }
 
@@ -91,4 +95,10 @@
 
 .btn-view-toggle.active {
   color: var(--k-accent-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view-toggle-indicator {
+    transition: none;
+  }
 }

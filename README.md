@@ -16,7 +16,7 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 8. **Favorite Stations & Tracks** - Bookmark favorite stations and tracks, browsable in a dedicated history/favorites panel.
 9. **Sleep Timer** - Automatically turn off audio after 15, 30, 60, or 90 minutes.
 10. **Personal Listening Recap** - A local weekly/all-time recap of timed ads avoided, blacklist protection, successful automatic detours, actual listening time, and the five most-listened stations. Opens from the header utility controls.
-11. **Co teraz gra?** - Browse current songs and programmes across enabled stations, then tune by content through the existing player. Artist affinity comes from saved favorite tracks; blacklist markers remain track-specific.
+11. **Co teraz gra?** - Browse current songs and programmes across enabled stations, with artwork and a shared list/grid preference, then tune by content through the existing player. Artist affinity comes from saved favorite tracks; blacklist markers remain track-specific.
 12. **VU Meter & Cassette Reels** - Smooth cassette tape reel animations and an interactive VU meter during playback (uses Web Audio FFT spectrum analysis with dynamic beat emulation fallback).
 
 ---
@@ -41,7 +41,7 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
   - `controls.ts` - Volume, mute, favorites, and sleep timer control handling.
   - `visualizer.ts` - VU meter and audio visualization animation engine.
   - `ui.ts` - Primary DOM rendering engine and album art resolver.
-  - `ui/` - UI subcomponents: `catalog/` (station browser & custom station form), `blacklist/` (modal & warning banner), `settings/` (settings modal), `changelog/` (changelog modal), `shortcuts/` (keyboard shortcuts cheatsheet), `favorites.ts`, `history.ts`, `statistics.ts` (personal listening recap modal), `stations.ts`, `stationBrowser.ts` (browser mode and polling lifecycle), `nowPlaying.ts` (content entries), `modal.ts`, `elements.ts`.
+  - `ui/` - UI subcomponents: `catalog/` (station browser & custom station form), `blacklist/` (modal & warning banner), `settings/` (settings modal), `changelog/` (changelog modal), `shortcuts/` (keyboard shortcuts cheatsheet), `favorites.ts`, `history.ts`, `statistics.ts` (personal listening recap modal), `stations.ts`, `stationBrowser.ts` (browser mode and polling lifecycle), `browserTransition.ts` (interruptible panel handoff), `nowPlaying.ts` (content entries), `modal.ts`, `elements.ts`.
   - `icons.ts` - SVG icon component definitions.
   - `utils.ts` - String decoding, timing helpers, and DOM fade triggers.
   - `md.d.ts` - Type declaration enabling `.md` file imports (used for `CHANGELOG.md`).

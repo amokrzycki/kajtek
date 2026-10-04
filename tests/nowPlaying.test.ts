@@ -6,6 +6,7 @@ import {
   NOW_PLAYING_MAX_AGE_MS,
   NOW_PLAYING_TTL_MS,
   NowPlayingCache,
+  type NowPlayingSnapshot,
   orderSnapshots,
 } from "../src/nowPlaying.js";
 import type { FavTrack, PlaylistResult, Station, TrackInfo } from "../src/types.js";
@@ -51,6 +52,67 @@ afterEach(() => {
 });
 
 describe("discovery classification and presentation", () => {
+  const artworkSnapshot = (): NowPlayingSnapshot => ({
+    station: { ...station, coverUrl: "/station.jpg" },
+    track: { ...song, coverUrl: "/track.jpg" },
+    kind: "track",
+    evidence: null,
+    flags: { blacklisted: false, favoriteArtist: false },
+    updatedAt: null,
+    stale: false,
+    error: false,
+    loading: false,
+    source: "passive",
+  });
+  it("prefers decorative track artwork with station fallback and loads the first visible entries eagerly", () => {
+    const snapshot = artworkSnapshot();
+    const html = snapshotHtml(snapshot, false);
+    expect(html).toContain('src="/track.jpg"');
+    expect(html).toContain('data-fallback-src="/station.jpg"');
+    expect(html).toContain('alt=""');
+    expect(html).toContain('aria-hidden="true"');
+    expect(html).toContain('decoding="async"');
+    expect(html).toContain('loading="eager"');
+    expect(snapshotHtml(snapshot, false, 3)).toContain('loading="lazy"');
+    expect(snapshotLabel(snapshot)).toBe("Odtwórz Artist – Song na Radio A");
+  });
+  it.each(["advertisement", "news", "programme", "unknown"] as const)(
+    "uses station artwork for %s, even when a stale song cover is present",
+    (kind) => {
+      const html = snapshotHtml({ ...artworkSnapshot(), kind }, false);
+      expect(html).toContain('src="/station.jpg"');
+      expect(html).not.toContain("/track.jpg");
+    },
+  );
+  it("falls back for missing, blank and RMF placeholder track artwork", () => {
+    const snapshot = artworkSnapshot();
+    for (const coverUrl of ["", "  ", "/assets/images/logo200x200.png"]) {
+      expect(snapshotHtml({ ...snapshot, track: { ...song, coverUrl } }, false)).toContain('src="/station.jpg"');
+    }
+    const html = snapshotHtml({ ...snapshot, station, track: song }, false);
+    expect(html).not.toContain("<img");
+    expect(html).toContain('class="discovery-placeholder">R</div>');
+  });
+  it("tries station artwork once after a broken track cover, then hides the image and reveals the initial", () => {
+    const html = snapshotHtml(artworkSnapshot(), false);
+    const handler = html.match(/onerror="([^"]+)"/)?.[1];
+    if (!handler) throw new Error("Missing artwork error handler");
+    const img = {
+      src: "/track.jpg",
+      dataset: { fallbackSrc: "/station.jpg" } as { fallbackSrc?: string },
+      style: { display: "" },
+      nextElementSibling: { style: { display: "none" } },
+    };
+    const fail = new Function(handler);
+    fail.call(img);
+    expect(img.src).toBe("/station.jpg");
+    expect(img.dataset.fallbackSrc).toBeUndefined();
+    fail.call(img);
+    expect(img.style.display).toBe("none");
+    expect(img.nextElementSibling.style.display).toBe("flex");
+    fail.call(img);
+    expect(img.src).toBe("/station.jpg");
+  });
   it("maps Facts to news before all other classification", () => {
     expect(classifyContent(station, { ...song, isFacts: true, isLiveBreak: true })).toBe("news");
   });

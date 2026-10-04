@@ -4,6 +4,7 @@ import { ICONS } from "../icons.js";
 import { type ActiveMetadata, NOW_PLAYING_TTL_MS, NowPlayingCache } from "../nowPlaying.js";
 import { getLiveTrackUpdatedAt, notifyState, state, subscribeLiveTrack, subscribeState } from "../state.js";
 import type { Station } from "../types.js";
+import { createBrowserTransition } from "./browserTransition.js";
 import { openCatalogModal } from "./catalog/modal.js";
 import { els } from "./elements.js";
 import { renderNowPlaying } from "./nowPlaying.js";
@@ -17,7 +18,10 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
   const empty = document.getElementById("discovery-empty");
   const emptyText = document.getElementById("discovery-empty-text");
   const view = document.getElementById("station-view-toggle");
-  if (!stationsTab || !nowTab || !panel || !list || !status || !empty || !emptyText || !view) return () => undefined;
+  const panels = document.getElementById("browser-panels");
+  if (!stationsTab || !nowTab || !panel || !list || !status || !empty || !emptyText || !view || !panels)
+    return () => undefined;
+  const transition = createBrowserTransition(panels, [els.stationListContainer, panel]);
   let active = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let stationKey = "";
@@ -66,6 +70,7 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
     }, NOW_PLAYING_TTL_MS);
   };
   const switchMode = (now: boolean) => {
+    if (active === now) return;
     active = now;
     stationsTab.setAttribute("aria-selected", String(!now));
     nowTab.setAttribute("aria-selected", String(now));
@@ -73,14 +78,12 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
     nowTab.classList.toggle("active", now);
     stationsTab.tabIndex = now ? -1 : 0;
     nowTab.tabIndex = now ? 0 : -1;
-    els.stationListContainer.hidden = now;
-    panel.hidden = !now;
-    view.hidden = now;
     stop();
     if (now) {
       render();
       void poll();
     }
+    transition.switchTo(now ? panel : els.stationListContainer, now ? 1 : -1);
   };
   const tabs = [stationsTab, nowTab];
   tabs.forEach((tab, index) => {
@@ -102,6 +105,8 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
   const viewButtons = Array.from(view.querySelectorAll<HTMLButtonElement>(".btn-view-toggle"));
   const updateView = () => {
     view.dataset.view = state.viewMode;
+    els.stationListContainer.classList.toggle("is-grid-view", state.viewMode === "grid");
+    panel.classList.toggle("is-grid-view", state.viewMode === "grid");
     viewButtons.forEach((button) => {
       const selected = button.dataset.view === state.viewMode;
       button.classList.toggle("active", selected);
@@ -114,7 +119,6 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
     button.onclick = () => {
       state.viewMode = button.dataset.view === "grid" ? "grid" : "list";
       localStorage.setItem(STORAGE_KEYS.VIEW_MODE, state.viewMode);
-      updateView();
       notifyState();
     };
     button.onkeydown = (event) => {
@@ -137,6 +141,7 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
     render();
   };
   const visibility = () => {
+    transition.cancel();
     stop();
     if (active && !document.hidden) {
       render();
@@ -151,6 +156,7 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
   update();
   return () => {
     active = false;
+    transition.cancel();
     stop();
     unsubscribe();
     unsubscribeLive();

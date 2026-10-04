@@ -1,6 +1,6 @@
 import type { NowPlayingSnapshot } from "../nowPlaying.js";
 import type { Station } from "../types.js";
-import { escapeHtml } from "../utils.js";
+import { escapeHtml, renderStationThumbHtml } from "../utils.js";
 
 export function snapshotLabel(snapshot: NowPlayingSnapshot): string {
   const { track, kind, station } = snapshot;
@@ -17,7 +17,7 @@ export function snapshotLabel(snapshot: NowPlayingSnapshot): string {
   return `Odtwórz ${content} na ${station.name}`;
 }
 
-export function snapshotHtml(snapshot: NowPlayingSnapshot, selected: boolean): string {
+export function snapshotHtml(snapshot: NowPlayingSnapshot, selected: boolean, index = 0): string {
   const { track, kind, flags, station, updatedAt, stale, error, loading } = snapshot;
   const artist =
     kind === "track"
@@ -49,10 +49,18 @@ export function snapshotHtml(snapshot: NowPlayingSnapshot, selected: boolean): s
     updatedAt === null
       ? ""
       : new Date(updatedAt).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  return `<span class="discovery-content"><span class="discovery-artist">${escapeHtml(artist)}</span>
+  const trackCover = kind === "track" ? track?.coverUrl?.trim() : undefined;
+  const stationCover = station.coverUrl?.trim();
+  const cover = trackCover && !trackCover.includes("/assets/images/logo200x200.png") ? trackCover : stationCover;
+  const artwork = renderStationThumbHtml(cover, station.name, "discovery-image", "discovery-placeholder", false, {
+    ...(stationCover ? { fallbackUrl: stationCover } : {}),
+    loading: index < 3 ? "eager" : "lazy",
+  });
+  return `<span class="discovery-artwork" aria-hidden="true">${artwork}</span>
+    <span class="discovery-content"><span class="discovery-artist">${escapeHtml(artist)}</span>
     <span class="discovery-title">${escapeHtml(title)}</span></span>
     <span class="discovery-meta"><span class="discovery-station">${escapeHtml(station.name)}</span>
-    <span class="discovery-badges">${badges.map((badge) => `<span>${escapeHtml(badge)}</span>`).join("")}</span>
+    <span class="discovery-badges">${badges.map((badge) => `<span${badge === "czarna lista" ? ' class="discovery-blacklist"' : ""}>${escapeHtml(badge)}</span>`).join("")}</span>
     ${time ? `<time class="discovery-time" datetime="${new Date(updatedAt ?? 0).toISOString()}">stan ${time}</time>` : ""}</span>`;
 }
 
@@ -81,8 +89,12 @@ export function renderNowPlaying(
     button.setAttribute("aria-pressed", String(selected));
     button.classList.toggle("active", selected);
     button.classList.toggle("is-blacklisted", snapshot.flags.blacklisted);
-    const html = snapshotHtml(snapshot, selected);
-    if (button.innerHTML !== html) button.innerHTML = html;
+    const html = snapshotHtml(snapshot, selected, index);
+    // Compare authored markup so an image error fallback survives unchanged snapshots.
+    if (button.dataset.html !== html) {
+      button.innerHTML = html;
+      button.dataset.html = html;
+    }
     if (list.children[index] !== row) list.insertBefore(row, list.children[index] ?? null);
     existing.delete(snapshot.station.id);
   });
