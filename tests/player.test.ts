@@ -665,6 +665,66 @@ describe("metadata failure boundaries", () => {
 });
 
 describe("listening recap integration", () => {
+  it("closes audible intervals at volume changes and excludes zero-volume and paused audio for both totals", async () => {
+    player.selectStation(station());
+    mocks.audio.dispatch("playing");
+    vi.advanceTimersByTime(3000);
+    mocks.audio.currentTime = 3;
+    mocks.audio.volume = 0;
+    mocks.audio.dispatch("volumechange");
+    vi.advanceTimersByTime(5000);
+    mocks.audio.currentTime = 8;
+    mocks.audio.volume = 1;
+    mocks.audio.dispatch("volumechange");
+    vi.advanceTimersByTime(2000);
+    mocks.audio.currentTime = 10;
+    mocks.audio.dispatch("pause");
+    vi.advanceTimersByTime(5000);
+    mocks.audio.currentTime = 15;
+    mocks.audio.dispatch("timeupdate");
+    await vi.advanceTimersByTimeAsync(0);
+    const { statisticsStore } = await import("../src/statisticsPlayback.js");
+    expect(statisticsStore.snapshot().allTime.listeningMs).toBe(5000);
+    expect(statisticsStore.snapshot().allTimeStations).toEqual([{ id: "test", name: "Test Radio", listeningMs: 5000 }]);
+  });
+
+  it("flushes manual and automatic switches to the previous station and keeps URL recovery in the same bucket", async () => {
+    player.selectStation(station({ _streams: ["https://example.test/a.mp3", "https://example.test/b.mp3"] }));
+    mocks.audio.dispatch("playing");
+    vi.advanceTimersByTime(3000);
+    mocks.audio.currentTime = 3;
+    mocks.audio.dispatch("error");
+    mocks.audio.currentTime = 0;
+    mocks.audio.dispatch("playing");
+    vi.advanceTimersByTime(2000);
+    mocks.audio.currentTime = 2;
+    player.selectStation(station({ id: "manual", name: "Manual Radio" }));
+    mocks.audio.currentTime = 0;
+    mocks.audio.dispatch("playing");
+    vi.advanceTimersByTime(4000);
+    mocks.audio.currentTime = 4;
+    player.selectStation(station({ id: "automatic", name: "Automatic Radio" }), {
+      id: "ad",
+      kind: "adSkip",
+      automatic: true,
+    });
+    mocks.audio.currentTime = 0;
+    mocks.audio.dispatch("playing");
+    vi.advanceTimersByTime(1000);
+    mocks.audio.currentTime = 1;
+    mocks.audio.dispatch("pause");
+    await vi.advanceTimersByTimeAsync(0);
+    const { statisticsStore } = await import("../src/statisticsPlayback.js");
+    const snapshot = statisticsStore.snapshot();
+    expect(snapshot.allTime.listeningMs).toBe(10_000);
+    expect(snapshot.allTimeStations).toEqual([
+      { id: "test", name: "Test Radio", listeningMs: 5000 },
+      { id: "manual", name: "Manual Radio", listeningMs: 4000 },
+      { id: "automatic", name: "Automatic Radio", listeningMs: 1000 },
+    ]);
+    expect(snapshot.allTime.detours).toBe(2);
+  });
+
   it("records successful protective routes only once, and excludes failed playback", async () => {
     player.selectStation(station(), { id: "protection-1", kind: "blacklist", automatic: true });
     mocks.audio.dispatch("playing");
@@ -714,5 +774,6 @@ describe("listening recap integration", () => {
     await vi.advanceTimersByTimeAsync(0);
     const { statisticsStore } = await import("../src/statisticsPlayback.js");
     expect(statisticsStore.snapshot().allTime).toMatchObject({ listeningMs: 5000, detours: 0 });
+    expect(statisticsStore.snapshot().allTimeStations).toEqual([{ id: "test", name: "Test Radio", listeningMs: 5000 }]);
   });
 });

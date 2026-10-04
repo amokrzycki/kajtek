@@ -7,13 +7,31 @@ export interface StatisticsTotals {
   detours: number;
 }
 
+export interface ListeningStation {
+  id: string;
+  name: string;
+}
+
+export interface StationListening extends ListeningStation {
+  listeningMs: number;
+}
+
 interface StoredStatistics {
-  version: 1;
+  version: 2;
   startedAt: number;
   weekStart: number;
   allTime: StatisticsTotals;
   week: StatisticsTotals;
+  allTimeStations: StationListening[];
+  weekStations: StationListening[];
   recentOperations: string[];
+}
+
+export function getTopStations(stations: readonly StationListening[]): StationListening[] {
+  return stations
+    .filter((station) => station.listeningMs > 0)
+    .sort((a, b) => b.listeningMs - a.listeningMs || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+    .slice(0, 5);
 }
 
 export interface StatisticsSnapshot extends StoredStatistics {
@@ -53,6 +71,28 @@ function validTotals(value: unknown): value is StatisticsTotals {
   );
 }
 
+function validStations(value: unknown): value is StationListening[] {
+  if (!Array.isArray(value)) return false;
+  const ids = new Set<string>();
+  return value.every((station: unknown) => {
+    if (
+      !station ||
+      typeof station !== "object" ||
+      !("id" in station) ||
+      typeof station.id !== "string" ||
+      !station.id ||
+      ids.has(station.id) ||
+      !("name" in station) ||
+      typeof station.name !== "string" ||
+      !("listeningMs" in station) ||
+      !validNumber(station.listeningMs)
+    )
+      return false;
+    ids.add(station.id);
+    return true;
+  });
+}
+
 function decode(raw: string | null): StoredStatistics | null {
   if (!raw) return null;
   try {
@@ -60,7 +100,7 @@ function decode(raw: string | null): StoredStatistics | null {
     if (!value || typeof value !== "object") return null;
     if (
       !("version" in value) ||
-      value.version !== 1 ||
+      (value.version !== 1 && value.version !== 2) ||
       !("startedAt" in value) ||
       !validNumber(value.startedAt) ||
       !Number.isFinite(new Date(value.startedAt).getTime()) ||
@@ -76,12 +116,27 @@ function decode(raw: string | null): StoredStatistics | null {
       !value.recentOperations.every((id: unknown) => typeof id === "string")
     )
       return null;
+    let allTimeStations: StationListening[] = [];
+    let weekStations: StationListening[] = [];
+    if (value.version === 2) {
+      if (
+        !("allTimeStations" in value) ||
+        !validStations(value.allTimeStations) ||
+        !("weekStations" in value) ||
+        !validStations(value.weekStations)
+      )
+        return null;
+      allTimeStations = value.allTimeStations.map((station) => ({ ...station }));
+      weekStations = value.weekStations.map((station) => ({ ...station }));
+    }
     return {
-      version: 1,
+      version: 2,
       startedAt: value.startedAt,
       weekStart: value.weekStart,
       allTime: { ...value.allTime },
       week: { ...value.week },
+      allTimeStations,
+      weekStations,
       recentOperations: value.recentOperations.slice(-128),
     };
   } catch {
@@ -92,11 +147,13 @@ function decode(raw: string | null): StoredStatistics | null {
 export function createStatisticsStore(storage: Storage, now = Date.now()) {
   let persistent = true;
   let data: StoredStatistics = {
-    version: 1,
+    version: 2,
     startedAt: now,
     weekStart: getWeekStart(now),
     allTime: emptyTotals(),
     week: emptyTotals(),
+    allTimeStations: [],
+    weekStations: [],
     recentOperations: [],
   };
 
@@ -123,7 +180,17 @@ export function createStatisticsStore(storage: Storage, now = Date.now()) {
     if (start > data.weekStart) {
       data.weekStart = start;
       data.week = emptyTotals();
+      data.weekStations = [];
     }
+  }
+
+  function addStation(stations: StationListening[], station: ListeningStation, listeningMs: number): void {
+    if (listeningMs <= 0) return;
+    const existing = stations.find((entry) => entry.id === station.id);
+    if (existing) {
+      existing.listeningMs += listeningMs;
+      existing.name = station.name;
+    } else stations.push({ id: station.id, name: station.name, listeningMs });
   }
 
   function add(delta: Partial<StatisticsTotals>, at: number): void {
@@ -151,7 +218,7 @@ export function createStatisticsStore(storage: Storage, now = Date.now()) {
       add(delta, at);
       save();
     },
-    duration(start: number, end: number, listeningMs: number, adSavedMs: number): void {
+    duration(start: number, end: number, listeningMs: number, adSavedMs: number, station?: ListeningStation): void {
       if (end <= start || !validNumber(listeningMs) || !validNumber(adSavedMs)) return;
       sync();
       let cursor = start;
@@ -159,6 +226,10 @@ export function createStatisticsStore(storage: Storage, now = Date.now()) {
         const boundary = Math.min(end, nextWeek(cursor));
         const fraction = (boundary - cursor) / (end - start);
         add({ listeningMs: listeningMs * fraction, adSavedMs: Math.min(adSavedMs, listeningMs) * fraction }, cursor);
+        if (station) {
+          addStation(data.allTimeStations, station, listeningMs * fraction);
+          if (getWeekStart(cursor) === data.weekStart) addStation(data.weekStations, station, listeningMs * fraction);
+        }
         cursor = boundary;
       }
       save();
@@ -170,6 +241,8 @@ export function createStatisticsStore(storage: Storage, now = Date.now()) {
         ...data,
         allTime: { ...data.allTime },
         week: { ...data.week },
+        allTimeStations: data.allTimeStations.map((station) => ({ ...station })),
+        weekStations: data.weekStations.map((station) => ({ ...station })),
         recentOperations: [...data.recentOperations],
         persistent,
       };
@@ -198,8 +271,14 @@ export class ListeningStatistics {
   private pending: ProtectiveRoute | null = null;
   private pendingRecovery: string | null = null;
   private adEndsAt: number | null = null;
+  private station: ListeningStation | undefined;
 
   constructor(private readonly store: Pick<StatisticsStore, "record" | "duration">) {}
+
+  selectStation(station: ListeningStation): void {
+    this.baseline = null;
+    this.station = { id: station.id, name: station.name };
+  }
 
   route(route: ProtectiveRoute | null, _at: number): void {
     this.baseline = null;
@@ -244,9 +323,9 @@ export class ListeningStatistics {
     if (listening <= 0) return;
     const start = at - listening;
     const savedEnd = Math.min(at, this.adEndsAt ?? start);
-    if (savedEnd > start) this.store.duration(start, savedEnd, savedEnd - start, savedEnd - start);
+    if (savedEnd > start) this.store.duration(start, savedEnd, savedEnd - start, savedEnd - start, this.station);
     if (at > Math.max(start, savedEnd))
-      this.store.duration(Math.max(start, savedEnd), at, at - Math.max(start, savedEnd), 0);
+      this.store.duration(Math.max(start, savedEnd), at, at - Math.max(start, savedEnd), 0, this.station);
   }
 
   suspend(media: number, at: number, audible: boolean, playbackRate = 1): void {

@@ -34,6 +34,29 @@
               <span class="settings-toggle-icon" aria-hidden="true">?</span>
             </span>
           </button>
+          <button
+            id="statistics-toggle"
+            type="button"
+            class="settings-toggle"
+            aria-label="Statystyki"
+            aria-haspopup="dialog"
+            title="Statystyki">
+            <span class="settings-toggle-knob">
+              <svg
+                class="settings-toggle-icon"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true">
+                <path d="M4 19h16M7 15V9M12 15V5M17 15v-3"></path>
+              </svg>
+            </span>
+          </button>
           <button id="dark-toggle" type="button" class="dark-toggle" aria-label="Przełącz tryb ciemny/jasny">
             <span class="dark-toggle-knob">
               <span class="dark-toggle-icon">
@@ -291,50 +314,6 @@
             </div>
           </section>
         </div>
-
-        <section id="listening-recap" class="listening-recap" aria-labelledby="recap-title">
-          <div class="recap-header">
-            <h2 id="recap-title">Co Kajtek zrobił dla Ciebie?</h2>
-            <fieldset class="recap-periods">
-              <legend class="sr-only">Okres podsumowania</legend>
-              <button type="button" data-recap-period="week" aria-pressed="true">Ten tydzień</button>
-              <button type="button" data-recap-period="all" aria-pressed="false">Od początku</button>
-            </fieldset>
-          </div>
-          <p class="recap-lead">Twoje radio. Kajtek czuwa nad resztą.</p>
-          <p class="recap-empty">Wybierz stację i słuchaj jak zwykle. Podsumowanie zaczyna się od teraz.</p>
-          <p class="recap-ad-note">Czas reklam pojawi się tutaj, gdy stacja poda ich długość. Nie zgadujemy.</p>
-          <div class="recap-activity hidden">
-            <p class="recap-blacklist"></p>
-            <p class="recap-detours"></p>
-          </div>
-          <div class="recap-footer">
-            <p class="recap-listening">Czas słuchania: jeszcze bez słuchania.</p>
-            <details class="recap-method">
-              <summary>Jak liczymy?</summary>
-              <div class="recap-method-copy">
-                <p>
-                  Reklamy: liczymy czas, gdy gra inne radio, do końca bloku podanego przez stację. Obecnie takie dane
-                  dostarcza ESKA. Przerw w playliście i reklam bez długości nie przeliczamy na minuty.
-                </p>
-                <p>
-                  Czarna lista: udane przełączenia z powodu zablokowanego utworu. Jeśli utwór już się zaczął, omijamy
-                  jego resztę. Przycisk „Przełącz teraz” też się liczy.
-                </p>
-                <p>
-                  Objazdy: udane automatyczne zmiany stacji z powodu reklam lub czarnej listy oraz zmiany strumienia po
-                  awarii. Powrotów i ręcznych zmian nie doliczamy. Ominięty utwór może też być objazdem — te liczby
-                  opisują te same działania z dwóch stron.
-                </p>
-                <p>
-                  Słuchanie: tylko odtwarzane, niewyciszone audio. Pauza, buforowanie i samo otwarcie aplikacji nie
-                  wydłużają tego czasu. Tydzień zaczyna się w poniedziałek, według czasu na Twoim urządzeniu.
-                </p>
-              </div>
-            </details>
-          </div>
-          <p class="recap-storage"></p>
-        </section>
 
         <section id="station-list-container" class="station-list" aria-label="Lista stacji radiowych"></section>
       </main>

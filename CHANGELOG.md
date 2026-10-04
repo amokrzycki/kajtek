@@ -1,10 +1,14 @@
 # Changelog
 
+## 0.13.0
+
+Kajtek zbiera dla Ciebie statystyki odtwarzania i pozwala je przeglądać w ustawieniach.
+
+- Przycisk „Statystyki” obok pomocy, motywu i ustawień otwiera osobiste podsumowanie: czas pominiętych reklam o znanej długości, utwory ominięte dzięki czarnej liście, automatyczne objazdy i czas słuchania. Dane są zapisywane lokalnie od teraz, z widokiem tego tygodnia i całego okresu. Najczęściej słuchane stacje (do pięciu) są uporządkowane według rzeczywistego czasu słuchania. Dotychczasowe statystyki zostają zachowane; czas poszczególnych stacji jest liczony od tej aktualizacji.
+
 ## 0.12.1
 
 Czytelniejsze komunikaty i łatwiejsza obsługa.
-
-- Pod odtwarzaczem pojawiło się osobiste podsumowanie: czas pominiętych reklam o znanej długości, utwory ominięte dzięki czarnej liście, automatyczne objazdy i czas słuchania. Dane są zapisywane lokalnie od teraz, z widokiem tego tygodnia i całego okresu.
 
 - Motyw podąża za ustawieniami systemu, dopóki nie wybierzesz go ręcznie. W ustawieniach możesz wrócić do trybu „Zgodny z systemem”.
 - Uspokojono animacje ikon i znaczników oraz rozjaśniono symbol pustej okładki.

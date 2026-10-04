@@ -411,6 +411,7 @@ export function selectStation(s: Station, protection: ProtectiveRoute | null = n
     radioAudio.playbackRate,
   );
   listeningStatistics.route(protection, Date.now());
+  listeningStatistics.selectStation(s);
   state.station = s;
   if (getProvider(s) === genericProvider) {
     state.showHistory = false;

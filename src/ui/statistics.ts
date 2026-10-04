@@ -1,5 +1,6 @@
-import type { StatisticsTotals } from "../statistics.js";
+import { getTopStations, type StatisticsTotals } from "../statistics.js";
 import { statisticsStore, subscribeStatistics } from "../statisticsPlayback.js";
+import { bindModalDismiss, closeModal, openModal } from "./modal.js";
 
 export function formatListeningTime(milliseconds: number): string {
   const minutes = Math.floor(milliseconds / 60_000);
@@ -50,8 +51,70 @@ export function recapCopy(totals: StatisticsTotals, allTime: boolean) {
 }
 
 export function initStatisticsUI(): void {
-  const section = document.getElementById("listening-recap");
-  if (!section) return;
+  const trigger = document.getElementById("statistics-toggle");
+  if (!trigger) return;
+  const section = document.createElement("div");
+  section.id = "statistics-modal-overlay";
+  section.className = "k-modal-overlay";
+  section.setAttribute("aria-hidden", "true");
+  section.innerHTML = `
+    <div class="k-modal statistics-modal" role="dialog" aria-modal="true" aria-labelledby="recap-title">
+      <div class="k-modal-header">
+        <h2 id="recap-title" class="k-modal-title">Co Kajtek zrobił dla Ciebie?</h2>
+        <button type="button" id="statistics-modal-close" class="k-modal-close" aria-label="Zamknij statystyki">&times;</button>
+      </div>
+      <div class="recap-body">
+        <fieldset class="recap-periods">
+          <legend class="sr-only">Okres podsumowania</legend>
+          <button type="button" data-recap-period="week" aria-pressed="true">Ten tydzień</button>
+          <button type="button" data-recap-period="all" aria-pressed="false">Od początku</button>
+        </fieldset>
+        <p class="recap-lead"></p>
+        <p class="recap-empty"></p>
+        <dl class="recap-metrics">
+          <div><dt>Zaoszczędzony czas reklam</dt><dd class="recap-ad-saved"></dd></div>
+          <div><dt>Ominięcia czarnej listy</dt><dd class="recap-blacklist"></dd></div>
+          <div><dt>Automatyczne objazdy</dt><dd class="recap-detours"></dd></div>
+          <div><dt>Czas słuchania</dt><dd class="recap-listening"></dd></div>
+        </dl>
+        <section class="recap-station-section" aria-labelledby="recap-stations-title">
+          <h3 id="recap-stations-title">Najdłużej słuchane stacje</h3>
+          <ol class="recap-stations" role="list"></ol>
+          <p class="recap-stations-empty"></p>
+        </section>
+        <div class="recap-footer">
+            <details class="recap-method">
+              <summary>Jak liczymy?</summary>
+              <div class="recap-method-copy">
+                <p>
+                  Reklamy: liczymy czas, gdy gra inne radio, do końca bloku podanego przez stację. Obecnie takie dane
+                  dostarcza ESKA. Przerw w playliście i reklam bez długości nie przeliczamy na minuty.
+                </p>
+                <p>
+                  Czarna lista: udane przełączenia z powodu zablokowanego utworu. Jeśli utwór już się zaczął, omijamy
+                  jego resztę. Przycisk „Przełącz teraz” też się liczy.
+                </p>
+                <p>
+                  Objazdy: udane automatyczne zmiany stacji z powodu reklam lub czarnej listy oraz zmiany strumienia po
+                  awarii. Powrotów i ręcznych zmian nie doliczamy. Ominięty utwór może też być objazdem — te liczby
+                  opisują te same działania z dwóch stron.
+                </p>
+                <p>
+                  Słuchanie: tylko odtwarzane, niewyciszone audio. Pauza, buforowanie i samo otwarcie aplikacji nie
+                  wydłużają tego czasu. Te same odcinki audio przypisujemy do odtwarzanej stacji. Tydzień zaczyna się w poniedziałek, według czasu na Twoim urządzeniu.
+                </p>
+                <p>Lista stacji zaczyna się od aktualizacji, która ją wprowadziła. Wcześniejszego słuchania nie przypisujemy do stacji.</p>
+              </div>
+            </details>
+          <p class="recap-storage"></p>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(section);
+  const close = () => closeModal(section);
+  bindModalDismiss(section, close);
+  section.querySelector("#statistics-modal-close")?.addEventListener("click", close);
   let allTime = false;
   const setText = (selector: string, value: string) => {
     const element = section.querySelector(selector);
@@ -59,12 +122,13 @@ export function initStatisticsUI(): void {
   };
   const render = () => {
     const snapshot = statisticsStore.snapshot();
-    const copy = recapCopy(allTime ? snapshot.allTime : snapshot.week, allTime);
+    const totals = allTime ? snapshot.allTime : snapshot.week;
+    const copy = recapCopy(totals, allTime);
     setText(".recap-lead", copy.lead);
-    setText(".recap-ad-note", copy.adNote);
-    setText(".recap-blacklist", copy.blacklist);
-    setText(".recap-detours", copy.detours);
-    setText(".recap-listening", copy.listening);
+    setText(".recap-ad-saved", totals.adSavedMs > 0 ? formatListeningTime(totals.adSavedMs) : "Jeszcze bez pomiaru");
+    setText(".recap-blacklist", String(totals.blacklistAvoided));
+    setText(".recap-detours", String(totals.detours));
+    setText(".recap-listening", formatListeningTime(totals.listeningMs));
     setText(
       ".recap-empty",
       allTime
@@ -72,14 +136,27 @@ export function initStatisticsUI(): void {
         : "Wybierz stację i słuchaj jak zwykle. Tutaj zobaczysz, jak Kajtek pomaga Ci w tym tygodniu.",
     );
     section.querySelector(".recap-empty")?.classList.toggle("hidden", !copy.empty);
-    section.querySelector(".recap-activity")?.classList.toggle("hidden", copy.empty);
-    section
-      .querySelector(".recap-blacklist")
-      ?.classList.toggle(
-        "hidden",
-        (allTime ? snapshot.allTime : snapshot.week).adSavedMs === 0 &&
-          (allTime ? snapshot.allTime : snapshot.week).blacklistAvoided > 0,
-      );
+    section.querySelector(".recap-metrics")?.classList.toggle("hidden", copy.empty);
+    const stations = getTopStations(allTime ? snapshot.allTimeStations : snapshot.weekStations);
+    const rows = stations.map((station) => {
+      const row = document.createElement("li");
+      const name = document.createElement("span");
+      name.className = "recap-station-name";
+      name.textContent = station.name;
+      const duration = document.createElement("span");
+      duration.className = "recap-station-duration";
+      duration.textContent = formatListeningTime(station.listeningMs);
+      row.append(name, duration);
+      return row;
+    });
+    section.querySelector(".recap-stations")?.replaceChildren(...rows);
+    section.querySelector(".recap-stations-empty")?.classList.toggle("hidden", stations.length > 0);
+    setText(
+      ".recap-stations-empty",
+      allTime
+        ? "Stacje pojawią się po pierwszym słuchaniu od tej aktualizacji."
+        : "Jeszcze bez stacji w tym tygodniu. Lista pojawi się, gdy posłuchasz radia.",
+    );
     const since = new Intl.DateTimeFormat("pl-PL", { day: "numeric", month: "long", year: "numeric" }).format(
       snapshot.startedAt,
     );
@@ -93,15 +170,23 @@ export function initStatisticsUI(): void {
       button.setAttribute("aria-pressed", String((button.dataset.recapPeriod === "all") === allTime));
     });
   };
+  trigger.addEventListener("click", () => {
+    render();
+    const body = section.querySelector(".recap-body");
+    if (body) body.scrollTop = 0;
+    openModal(section);
+  });
   section.querySelectorAll<HTMLButtonElement>("[data-recap-period]").forEach((button) => {
     button.addEventListener("click", () => {
       allTime = button.dataset.recapPeriod === "all";
       render();
     });
   });
-  subscribeStatistics(render);
-  document.addEventListener("visibilitychange", render);
+  const refresh = () => {
+    if (section.classList.contains("is-open")) render();
+  };
+  subscribeStatistics(refresh);
+  document.addEventListener("visibilitychange", refresh);
   // A recap left open overnight still switches to the new local week.
-  window.setInterval(render, 60_000);
-  render();
+  window.setInterval(refresh, 60_000);
 }

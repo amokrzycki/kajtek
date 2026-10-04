@@ -15,7 +15,7 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 7. **Dark / Light Theme & Accent Color** - Follows the OS theme until a manual choice is saved in `localStorage`; Settings can restore system mode. Six case shell colors.
 8. **Favorite Stations & Tracks** - Bookmark favorite stations and tracks, browsable in a dedicated history/favorites panel.
 9. **Sleep Timer** - Automatically turn off audio after 15, 30, 60, or 90 minutes.
-10. **Personal Listening Recap** - A local weekly/all-time recap of timed ads avoided, blacklist protection, successful automatic detours, and actual listening time.
+10. **Personal Listening Recap** - A local weekly/all-time recap of timed ads avoided, blacklist protection, successful automatic detours, actual listening time, and the five most-listened stations. Opens from the header utility controls.
 11. **VU Meter & Cassette Reels** - Smooth cassette tape reel animations and an interactive VU meter during playback (uses Web Audio FFT spectrum analysis with dynamic beat emulation fallback).
 
 ---
@@ -38,7 +38,7 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
   - `controls.ts` - Volume, mute, favorites, and sleep timer control handling.
   - `visualizer.ts` - VU meter and audio visualization animation engine.
   - `ui.ts` - Primary DOM rendering engine and album art resolver.
-  - `ui/` - UI subcomponents: `catalog/` (station browser & custom station form), `blacklist/` (modal & warning banner), `settings/` (settings modal), `changelog/` (changelog modal), `shortcuts/` (keyboard shortcuts cheatsheet), `favorites.ts`, `history.ts`, `statistics.ts` (personal listening recap), `stations.ts`, `modal.ts`, `elements.ts`.
+  - `ui/` - UI subcomponents: `catalog/` (station browser & custom station form), `blacklist/` (modal & warning banner), `settings/` (settings modal), `changelog/` (changelog modal), `shortcuts/` (keyboard shortcuts cheatsheet), `favorites.ts`, `history.ts`, `statistics.ts` (personal listening recap modal), `stations.ts`, `modal.ts`, `elements.ts`.
   - `icons.ts` - SVG icon component definitions.
   - `utils.ts` - String decoding, timing helpers, and DOM fade triggers.
   - `md.d.ts` - Type declaration enabling `.md` file imports (used for `CHANGELOG.md`).
@@ -69,7 +69,7 @@ Tracking starts when this feature is first loaded; existing favorites, playlists
 - **Automatic detours:** one completed automatic ad/blacklist station switch or successful failover to a **different stream URL**. Excludes manual switches (including **Przełącz teraz**), returns, same-URL retries and internal HLS recovery. One blacklist switch can contribute to both avoidance and detours; those counts must not be added together.
 - **Listening:** advancement of `HTMLAudioElement.currentTime`, bounded by elapsed time and adjusted for playback rate, while unmuted with nonzero volume. Pause, waiting/stalled playback, failed requests, seeks, timeline jumps and open-app time are excluded. Playback baselines and pending operations remain in memory.
 
-`kajtek_statistics` holds a versioned aggregate: tracking start, all-time totals, the current local-week totals, and the last 128 opaque completed-operation IDs. Pending operations are consumed before recording, so repeated `playing` events cannot double-count; persisted IDs also make repeated commits idempotent. Duration spans are split at week boundaries. No track names, station URLs or event history are stored. Another metric can be added to the totals/schema with a versioned migration.
+`kajtek_statistics` holds a versioned aggregate: tracking start, all-time totals, the current local-week totals, and the last 128 opaque completed-operation IDs. Pending operations are consumed before recording, so repeated `playing` events cannot double-count; persisted IDs also make repeated commits idempotent. Duration spans are split at week boundaries. Schema version 2 also stores cumulative and current-week station durations with the existing stable `Station.id` and a display-name snapshot, so unavailable stations remain readable and stream failover cannot fragment their totals. Global and station durations share one validated media-advancement interval and the same local-week split; switches flush the previous station before assigning the next. Rankings omit zero time, show at most five stations, and break ties by stable ID. No track names, station URLs or event history are stored. Version 1 migrates deterministically, preserving tracking start, week boundary, counters and recent operation IDs; station aggregates start empty without reconstructing earlier listening.
 
 Media advancement is checkpointed every five seconds and on playback/volume/visibility changes. Writes merge the latest aggregate and use Web Locks when available to serialize multiple tabs; browsers without Web Locks provide best-effort merging. A sudden browser/process termination can lose the last uncommitted interval. Normal reloads retain committed totals. Storage failure keeps the current run in memory and the recap says that it cannot be saved. Clearing site data clears the recap.
 
