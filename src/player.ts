@@ -3,11 +3,12 @@ import { detectBlacklistedUpcoming, detectUpcomingAdBreak, resetBlacklistWarning
 import { getOrderedStations } from "./catalog.js";
 import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, SWITCH_RATE_LIMIT, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
+import { fetchMetadata, parseJsonFromRes } from "./metadata.js";
 import { readZprTag, startEskaSession } from "./providers/eska.js";
 import { rmfProvider } from "./providers/rmf.js";
 import { trojkaProvider } from "./providers/trojka.js";
 import { genericProvider, getFactsInfo, getProvider } from "./providers.js";
-import { intervals, notifyState, radioAudio, state } from "./state.js";
+import { intervals, notifyState, radioAudio, setLiveTrack, state } from "./state.js";
 import type { ProtectiveRoute } from "./statistics.js";
 import { bindListeningStatistics, listeningStatistics } from "./statisticsPlayback.js";
 import type { Station, TrackInfo } from "./types.js";
@@ -213,19 +214,6 @@ if ("mediaSession" in navigator) {
   navigator.mediaSession.setActionHandler("nexttrack", () => navigateStation(1));
 }
 
-async function parseJsonFromRes(res: Response): Promise<unknown> {
-  if (!res.ok) return null;
-  const json = await res.json();
-  if (json?.contents && typeof json.contents === "string") {
-    try {
-      return JSON.parse(json.contents);
-    } catch (_) {
-      // ignore
-    }
-  }
-  return json;
-}
-
 async function ensureStationMetadata(station: Station) {
   if (!station.apiBaseUrl || getProvider(station) !== rmfProvider) return;
 
@@ -265,18 +253,8 @@ async function ensureStationMetadata(station: Station) {
 export async function fetchPlaylist(station: Station) {
   if (!station?.apiBaseUrl || (station._consecutiveFailures || 0) > MAX_CONSECUTIVE_FAILURES) return null;
 
-  const provider = getProvider(station);
-
   try {
-    const parsed = provider.fetch
-      ? await provider.fetch(station)
-      : await (async () => {
-          const res = await fetch(`${station.apiBaseUrl}/playlist`, {
-            signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS),
-          });
-          const data = await parseJsonFromRes(res);
-          return data ? provider.parse(data, station) : null;
-        })();
+    const parsed = await fetchMetadata(station);
 
     if (parsed) {
       station._consecutiveFailures = 0;
@@ -344,7 +322,7 @@ function checkRealtimeTrackState() {
   }
 
   if (evaluated && (state.liveTrack?.artist !== evaluated.artist || state.liveTrack?.title !== evaluated.title)) {
-    state.liveTrack = evaluated;
+    setLiveTrack(evaluated);
     updateNowPlayingTrack(state.liveTrack);
     updateAlbumArt(resolveAlbumCoverUrl(state.liveTrack, state.station), state.liveTrack);
   }
@@ -361,7 +339,7 @@ async function refreshTrackInfo() {
     if (state.station?.id !== targetId) return;
 
     if (data?.current) {
-      state.liveTrack = data.current;
+      setLiveTrack(data.current);
       state.history = data.all || [];
       checkRealtimeTrackState();
       updateNowPlayingTrack(state.liveTrack);
@@ -373,7 +351,7 @@ async function refreshTrackInfo() {
       detectUpcomingAdBreak();
     }
   } else {
-    state.liveTrack = null;
+    setLiveTrack(null);
     state.history = [];
     updateNowPlayingTrack(null);
     updateAlbumArt(resolveAlbumCoverUrl(null, state.station), null);
@@ -419,7 +397,7 @@ export function selectStation(s: Station, protection: ProtectiveRoute | null = n
   delete s._consecutiveFailures;
   delete s._apiFailed;
   state.playing = true;
-  state.liveTrack = null;
+  setLiveTrack(null);
   pendingStationSlideIn = true;
   failoverTimestamps = [];
   resetBlacklistWarningState();

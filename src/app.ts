@@ -20,6 +20,7 @@ import { removeFavTrackByKey } from "./ui/favorites.js";
 import { openOnboardingModal, shouldShowOnboarding } from "./ui/onboarding/modal.js";
 import { openSettingsModal } from "./ui/settings/modal.js";
 import { openShortcutsModal } from "./ui/shortcuts/modal.js";
+import { initStationBrowser } from "./ui/stationBrowser.js";
 import { initStatisticsUI } from "./ui/statistics.js";
 import {
   els,
@@ -50,7 +51,9 @@ function setVersion() {
 }
 
 function focusStationSelection(): void {
-  const firstStation = els.stationListContainer.querySelector<HTMLButtonElement>(".station-select");
+  const firstStation = document.querySelector<HTMLButtonElement>(
+    "#station-list-container:not([hidden]) button.station-select, #now-playing-browser:not([hidden]) #discovery-list button",
+  );
   if (!firstStation) {
     openCatalogModal();
     return;
@@ -73,7 +76,7 @@ function handleShortcut(e: KeyboardEvent): void {
   if (e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey) return;
   if (document.querySelector(".k-modal-overlay.is-open")) return;
   const target = e.target as HTMLElement;
-  if (target.closest("input, textarea, select, [contenteditable], [role=tab]")) return;
+  if (target.closest("input, textarea, select, [contenteditable], [role=tab], [role=radio]")) return;
 
   if (e.key === " ") {
     // a focused button/link/tab already handles Space natively
@@ -222,6 +225,7 @@ function init() {
   startHistoryClock();
   attachEvents();
   initStatisticsUI();
+  initStationBrowser(selectRememberedStation);
   subscribeState(refresh);
   refresh();
 

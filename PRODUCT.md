@@ -34,10 +34,11 @@ Neither alone is the differentiator; a competitor copying only the look or only 
 
 - Real-time audio streaming (MP3/HLS via `hls.js`), auto-failover to secondary stream mounts (3-retry / 30s rate limit).
 - Ad-skip: detects ad/commercial breaks, auto-switches station until break ends (toggleable in Settings).
-- Track blacklist: blocks artists/tracks, auto-switches with on-screen warning + revert.
+- Track blacklist: blocks exact artist + title pairs, auto-switches with on-screen warning + revert.
 - Album art with fallback to station logo cover during commercials/news/missing metadata.
 - Dark/light theme + accent color picker, persisted.
 - Favorites and history panel for stations and tracks.
+- “Co teraz gra?” discovery beside STACJE: current content across enabled stations, with track-specific blacklist markers and artist affinity derived from saved tracks. Passive polling never changes playback health or protective routing; ESKA REST absence remains unknown, RMF breaks retain timeline uncertainty, and Trójka programme fallback stays programme content.
 - Sleep timer (15/30/60/90 min).
 - VU meter + cassette reel animation using Web Audio FFT with beat-emulation fallback.
 - Strict TypeScript, Biome for lint/format, esbuild for bundling — no framework.

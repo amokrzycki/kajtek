@@ -300,3 +300,9 @@ Flat, no background — brand wordmark left, two icon-only round key-buttons rig
 - **Własna stacja** describes a station added by the listener. **WŁASNE** labels the catalog tab containing these stations. Use **adres strumienia** for its playback URL.
 - **PLAYLISTA** labels the panel of past, current, and upcoming tracks or broadcasts supplied by the station.
 - **Ponów** retries failed playback; **Wstaw aktualny utwór** fills the blacklist form without submitting it.
+
+### Station discovery browser
+
+STACJE and CO TERAZ GRA? are sibling mechanical keys above the station area. The selected key uses the existing inset shadow and 1px push; Katalog stacji remains below the keys in both modes. List/grid controls belong to STACJE and retain their preference across mode changes. The player stays in place above this area.
+
+Discovery entries use the existing paper panel, radii and raised/inset shadows, with the song artist in Chakra Petch and title in IBM Plex Mono. Artist and title dominate the smaller station identity, observation time and data badges. Small badges use existing ink/accent and border tokens; they introduce no new status colors. On mobile, station metadata sits below the content. Entries keep stable button identity and keyboard focus through refreshes. “Starsze dane” and “błąd danych” annotate retained snapshots; missing metadata has an explicit path back to STACJE or the catalog. Non-predicted RMF break snapshots use “reklama / przerwa (wg playlisty)” to retain timeline uncertainty; explicitly predicted breaks stay “brak danych”; “reklama” alone is reserved for explicit evidence.

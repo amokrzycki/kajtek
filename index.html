@@ -315,7 +315,69 @@
           </section>
         </div>
 
-        <section id="station-list-container" class="station-list" aria-label="Lista stacji radiowych"></section>
+        <section id="station-browser" aria-label="Przeglądanie stacji">
+          <div class="browser-mode-switch" role="tablist" aria-label="Sposób przeglądania">
+            <button
+              type="button"
+              id="browser-stations"
+              class="btn-key active"
+              role="tab"
+              aria-selected="true"
+              aria-controls="station-list-container">
+              STACJE
+            </button>
+            <button
+              type="button"
+              id="browser-now"
+              class="btn-key"
+              role="tab"
+              aria-selected="false"
+              aria-controls="now-playing-browser"
+              tabindex="-1">
+              CO TERAZ GRA?
+            </button>
+          </div>
+          <div class="station-list-toolbar">
+            <button type="button" id="open-catalog-btn" class="btn-catalog-trigger">Katalog stacji</button>
+            <div
+              id="station-view-toggle"
+              class="view-toggle-group"
+              data-view="list"
+              role="radiogroup"
+              aria-label="Przełącznik widoku">
+              <span class="view-toggle-indicator" aria-hidden="true"></span>
+              <button
+                type="button"
+                class="btn-view-toggle active"
+                data-view="list"
+                aria-pressed="true"
+                aria-label="Widok listy"></button>
+              <button
+                type="button"
+                class="btn-view-toggle"
+                data-view="grid"
+                aria-pressed="false"
+                aria-label="Widok kafelków"
+                tabindex="-1"></button>
+            </div>
+          </div>
+          <div
+            id="station-list-container"
+            class="station-list"
+            role="tabpanel"
+            aria-labelledby="browser-stations"></div>
+          <div id="now-playing-browser" role="tabpanel" aria-labelledby="browser-now" hidden>
+            <h2 class="section-header"><span class="section-title">Co teraz gra?</span><span class="k-rule"></span></h2>
+            <p class="discovery-hint">Wybierz to, czego chcesz posłuchać. Tylko Twoje włączone stacje.</p>
+            <p id="discovery-status" class="discovery-status" role="status"></p>
+            <div id="discovery-empty" class="discovery-empty" hidden>
+              <p id="discovery-empty-text"></p>
+              <button type="button" id="discovery-back" class="btn-secondary">Wróć do stacji</button>
+              <button type="button" id="discovery-catalog" class="btn-secondary">Otwórz katalog stacji</button>
+            </div>
+            <ul id="discovery-list" class="discovery-list" aria-label="Aktualna zawartość stacji"></ul>
+          </div>
+        </section>
       </main>
 
       <footer class="kajtek-footer">

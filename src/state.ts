@@ -81,3 +81,23 @@ export const intervals = {
 };
 
 export type { AppState, TrackInfo };
+
+let liveTrackUpdatedAt = 0;
+const liveTrackListeners = new Set<() => void>();
+
+export function setLiveTrack(track: TrackInfo | null): void {
+  state.liveTrack = track;
+  liveTrackUpdatedAt = Date.now();
+  liveTrackListeners.forEach((listener) => {
+    listener();
+  });
+}
+
+export function getLiveTrackUpdatedAt(): number {
+  return liveTrackUpdatedAt;
+}
+
+export function subscribeLiveTrack(listener: () => void): () => void {
+  liveTrackListeners.add(listener);
+  return () => liveTrackListeners.delete(listener);
+}

@@ -6,6 +6,7 @@ Kajtek zbiera statystyki odtwarzania, które możesz sprawdzić w ustawieniach. 
 
 - Przycisk „Statystyki”, obok pomocy, motywu i ustawień, otwiera podsumowanie czasu pominiętych reklam o znanej długości, utworów ominiętych dzięki czarnej liście, automatycznych przełączeń i czasu słuchania. Dane od teraz zapisują się lokalnie. Możesz przeglądać statystyki z tego tygodnia lub z całego okresu. Lista do pięciu najczęściej słuchanych stacji uwzględnia rzeczywisty czas słuchania. Dotychczasowe statystyki zostają zachowane, a czas dla poszczególnych stacji jest liczony od tej aktualizacji.
 - Przyciski „Przełącz teraz” i „Zostań mimo to” nie znikają spod kursora podczas odliczania. Ręczne przełączenie działa niezależnie od limitu automatycznych przełączeń.
+- „Co teraz gra?” pokazuje aktualne utwory i audycje na włączonych stacjach. Kliknij treść, aby wybrać stację w istniejącym odtwarzaczu. Małe oznaczenia pokazują czarną listę, wykonawców z ulubionych utworów oraz starsze dane; dotychczasowa lista i katalog stacji pozostają dostępne.
 - Po przełączeniu Kajtek wraca na poprzednią stację, gdy reklama faktycznie się skończy. Jeśli jej długość jest nieznana, czeka 3 minuty lub do końca bloku reklamowego.
 - Odrzucone ostrzeżenie o reklamie nie pojawia się ponownie, gdy zacznie się blok reklamowy.
 

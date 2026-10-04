@@ -106,6 +106,8 @@ export interface RawTrack {
   playlist?: RawTrack[];
 }
 
+export type ContentKind = "track" | "advertisement" | "news" | "programme" | "unknown";
+
 export interface TrackInfo {
   artist: string;
   title: string;
@@ -121,6 +123,8 @@ export interface TrackInfo {
   label?: string;
   isLiveBreak?: boolean;
   isFacts?: boolean;
+  contentKind?: ContentKind;
+  contentEvidence?: "explicit" | "inferred";
   // Playback-relative deadline from an explicitly identified, timed advertisement block.
   adEndsAt?: number;
   coverUrl?: string;
@@ -162,10 +166,15 @@ export interface PlaylistResult {
   all: TrackInfo[];
 }
 
+export interface MetadataOptions {
+  passive?: boolean;
+  signal?: AbortSignal;
+}
+
 export interface Provider {
   name: string;
   parse(data: unknown, station?: Station | null): PlaylistResult | null;
-  fetch?(station: Station): Promise<PlaylistResult | null>;
+  fetch?(station: Station, options?: MetadataOptions): Promise<PlaylistResult | null>;
 }
 
 export interface RamowkaItem {

@@ -20,6 +20,7 @@
 @import "./stations/card.css";
 @import "./stations/toolbar.css";
 @import "./stations/grid-view.css";
+@import "./stations/now-playing.css";
 @import "./modals/shell.css";
 @import "./modals/controls.css";
 @import "./modals/station-row.css";

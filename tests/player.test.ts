@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { AppState, PlaylistResult, Provider, Station } from "../src/types.js";
+import type { AppState, PlaylistResult, Provider, Station, TrackInfo } from "../src/types.js";
 
 type HlsEventData = {
   fatal?: boolean;
@@ -166,6 +166,9 @@ vi.mock("../src/state.js", () => ({
   intervals,
   notifyState: mocks.notifyState,
   radioAudio: mocks.audio,
+  setLiveTrack: (track: TrackInfo | null) => {
+    state.liveTrack = track;
+  },
   state,
 }));
 vi.mock("../src/ui.js", () => ({
