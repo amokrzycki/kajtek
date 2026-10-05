@@ -64,3 +64,15 @@ describe("theme preference", () => {
     expect(state.dark).toBe(false);
   });
 });
+
+describe("view mode preference", () => {
+  it.each([
+    ["grid", "grid"],
+    ["list", "list"],
+    ["bogus", "list"],
+    [undefined, "list"],
+  ])("restores stored %s as %s so the shared toggle always has a valid selection", async (stored, expected) => {
+    if (stored) storage.set("kajtek_view_mode", stored);
+    expect((await import("../src/state.js")).state.viewMode).toBe(expected);
+  });
+});

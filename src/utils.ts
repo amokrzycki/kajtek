@@ -63,11 +63,16 @@ export function renderStationThumbHtml(
   thumbClass: string,
   placeholderClass: string,
   tinted = false,
+  options: { fallbackUrl?: string; loading?: "eager" | "lazy" } = {},
 ): string {
   if (tinted) placeholderClass += " is-custom";
   const initial = escapeHtml(name.charAt(0));
   if (!coverUrl) return `<div class="${placeholderClass}">${initial}</div>`;
-  return `<img src="${escapeHtml(coverUrl)}" alt="" class="${thumbClass}" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';" /><div class="${placeholderClass}" style="display:none;">${initial}</div>`;
+  const fallback =
+    options.fallbackUrl && options.fallbackUrl !== coverUrl
+      ? ` data-fallback-src="${escapeHtml(options.fallbackUrl)}"`
+      : "";
+  return `<img src="${escapeHtml(coverUrl)}" alt="" class="${thumbClass}" decoding="async" loading="${options.loading ?? "eager"}"${fallback} onerror="if(this.dataset.fallbackSrc){const src=this.dataset.fallbackSrc;delete this.dataset.fallbackSrc;this.src=src;}else{this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';}" /><div class="${placeholderClass}" style="display:none;">${initial}</div>`;
 }
 
 export function getStoredJSON<T>(key: string, fallback: T, validate?: (value: unknown) => boolean): T {

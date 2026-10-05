@@ -1,5 +1,13 @@
 import { DEFAULT_BREAK_LABEL, TIMERS } from "../consts.js";
-import type { EskaNowPlaying, EskaTrack, PlaylistResult, Provider, Station, TrackInfo } from "../types.js";
+import type {
+  EskaNowPlaying,
+  EskaTrack,
+  MetadataOptions,
+  PlaylistResult,
+  Provider,
+  Station,
+  TrackInfo,
+} from "../types.js";
 
 /**
  * ESKA's encoder writes a private #EXT-X-ZPR tag before every segment of every chunklist
@@ -169,16 +177,24 @@ export const eskaProvider: Provider = {
   parse(): PlaylistResult | null {
     return null; // unused, fetch() below owns this provider's data flow
   },
-  async fetch(station: Station): Promise<PlaylistResult | null> {
+  async fetch(station: Station, options?: MetadataOptions): Promise<PlaylistResult | null> {
     // timestamp is mandatory, without it the API answers with a null current.
     const ts = Math.floor(Date.now() / 1000);
     const res = await fetch(`${station.apiBaseUrl}/?timestamp=${ts}`, {
-      signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS),
+      signal: options?.signal ?? AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS),
     });
     if (!res.ok) return null;
 
     const data = (await res.json()) as EskaNowPlaying | null;
     if (!data) return null;
+
+    options?.signal?.throwIfAborted();
+    if (options?.passive) {
+      return {
+        current: data.current?.name?.trim() ? toTrackInfo(data.current, 0) : null,
+        all: [],
+      };
+    }
 
     // Only the playing station has an HLS session, candidate polling (blacklistWarning) and ad-break-ended polling both hit stations that don't, and must fall back to REST alone.
     const zpr = getZprState(station.id);
@@ -188,14 +204,19 @@ export const eskaProvider: Provider = {
     const breakTrack: TrackInfo = { artist: station.name, title: DEFAULT_BREAK_LABEL, isLiveBreak: true };
     let current: TrackInfo;
     if (kind === "ad" && zpr && !zpr.titleEmpty) {
-      current = { ...breakTrack, ...(zpr.adEndsAt === null ? {} : { adEndsAt: zpr.adEndsAt }) };
+      current = {
+        ...breakTrack,
+        contentKind: "advertisement",
+        contentEvidence: "explicit",
+        ...(zpr.adEndsAt === null ? {} : { adEndsAt: zpr.adEndsAt }),
+      };
     } else if (data.current) {
       current = toTrackInfo(data.current, 0);
     } else if (kind === "song" && zpr) {
       current = zprFallbackTrack(zpr.title);
     } else {
       // No ZPR (not playing, stale, or a jingle) and no REST current, the original inference.
-      current = breakTrack;
+      current = { ...breakTrack, contentKind: "unknown", contentEvidence: "inferred" };
     }
 
     // REST owns the display names (ZPR uppercases the artist and " - " is ambiguous for tracks that contain a dash); ZPR owns the timing, since it is the one synced to the audio.
@@ -223,8 +244,7 @@ export const eskaProvider: Provider = {
       ...(current.isLiveBreak ? [] : [current]),
       ...(data.futures || []).map((t, i) => toTrackInfo(t, i + 1)),
     ];
-    if (all.length === 0) return null;
-
+    if (all.length === 0 && current.contentEvidence !== "explicit") return null;
     return { current, all };
   },
 };

@@ -1,5 +1,13 @@
 import { TIMERS, TROJKA_PLAYLIST_REFRESH_MS } from "../consts.js";
-import type { PlaylistaBlock, PlaylistResult, Provider, RamowkaItem, Station, TrackInfo } from "../types.js";
+import type {
+  MetadataOptions,
+  PlaylistaBlock,
+  PlaylistResult,
+  Provider,
+  RamowkaItem,
+  Station,
+  TrackInfo,
+} from "../types.js";
 import { decodeEntities } from "../utils.js";
 
 let trojkaBuildIdCache: string | null = null;
@@ -48,14 +56,17 @@ function parseTrojkaTime(value: string): number {
   return timestamp;
 }
 
-async function getTrojkaBuildId(station: Station): Promise<string | null> {
+async function getTrojkaBuildId(station: Station, signal?: AbortSignal): Promise<string | null> {
   if (trojkaBuildIdCache) return trojkaBuildIdCache;
   try {
-    const res = await fetch(`${station.apiBaseUrl}/`, { signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS) });
+    const res = await fetch(`${station.apiBaseUrl}/`, {
+      signal: signal ?? AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS),
+    });
     if (!res.ok) return null;
     const html = await res.text();
     const match = html.match(/\/_next\/static\/([^/]+)\/_buildManifest\.js/);
     if (!match?.[1]) return null;
+    signal?.throwIfAborted();
     trojkaBuildIdCache = match[1];
     return trojkaBuildIdCache;
   } catch (_) {
@@ -63,13 +74,17 @@ async function getTrojkaBuildId(station: Station): Promise<string | null> {
   }
 }
 
-async function fetchTrojkaJson<T>(station: Station, file: "ramowka.json" | "playlista.json"): Promise<T | null> {
-  const buildId = await getTrojkaBuildId(station);
+async function fetchTrojkaJson<T>(
+  station: Station,
+  file: "ramowka.json" | "playlista.json",
+  signal?: AbortSignal,
+): Promise<T | null> {
+  const buildId = await getTrojkaBuildId(station, signal);
   if (!buildId) return null;
 
   try {
     const res = await fetch(`${station.apiBaseUrl}/_next/data/${buildId}/${file}`, {
-      signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS),
+      signal: signal ?? AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS),
     });
     if (res.status === 404) {
       // build id rotates on Polskie Radio redeploys, re-resolve next call
@@ -78,6 +93,7 @@ async function fetchTrojkaJson<T>(station: Station, file: "ramowka.json" | "play
     }
     if (!res.ok) return null;
     const json = await res.json();
+    signal?.throwIfAborted();
     return json?.pageProps?.data ?? null;
   } catch (_) {
     return null;
@@ -89,22 +105,22 @@ function trojkaDayKey(d: Date): string {
   return `${parts.year}-${parts.month}-${parts.day}`;
 }
 
-async function getTrojkaSchedule(station: Station): Promise<RamowkaItem[] | null> {
+async function getTrojkaSchedule(station: Station, signal?: AbortSignal): Promise<RamowkaItem[] | null> {
   const day = trojkaDayKey(new Date());
   if (trojkaScheduleCache?.day === day) return trojkaScheduleCache.items;
 
-  const items = await fetchTrojkaJson<RamowkaItem[]>(station, "ramowka.json");
+  const items = await fetchTrojkaJson<RamowkaItem[]>(station, "ramowka.json", signal);
   if (!items) return trojkaScheduleCache?.items ?? null;
 
   trojkaScheduleCache = { day, items };
   return items;
 }
 
-async function getTrojkaPlaylist(station: Station): Promise<PlaylistaBlock[] | null> {
+async function getTrojkaPlaylist(station: Station, signal?: AbortSignal): Promise<PlaylistaBlock[] | null> {
   const isFresh = trojkaPlaylistCache && Date.now() - trojkaPlaylistCache.fetchedAt < TROJKA_PLAYLIST_REFRESH_MS;
   if (isFresh) return trojkaPlaylistCache?.items ?? null;
 
-  const items = await fetchTrojkaJson<PlaylistaBlock[]>(station, "playlista.json");
+  const items = await fetchTrojkaJson<PlaylistaBlock[]>(station, "playlista.json", signal);
   if (!items) return trojkaPlaylistCache?.items ?? null;
 
   trojkaPlaylistCache = { fetchedAt: Date.now(), items };
@@ -162,14 +178,14 @@ export const trojkaProvider: Provider = {
   parse(): PlaylistResult | null {
     return null; // unused — fetch() below owns this provider's data flow
   },
-  async fetch(station: Station): Promise<PlaylistResult | null> {
-    const schedule = await getTrojkaSchedule(station);
+  async fetch(station: Station, options?: MetadataOptions): Promise<PlaylistResult | null> {
+    const schedule = await getTrojkaSchedule(station, options?.signal);
     if (!schedule) return null;
 
     const nowMs = Date.now();
     const nowSec = Math.floor(nowMs / 1000);
     const program = findActiveProgram(schedule, nowMs);
-    const playlist = program ? await getTrojkaPlaylist(station) : null;
+    const playlist = program ? await getTrojkaPlaylist(station, options?.signal) : null;
     const block = playlist?.find((b) => b.id === program?.id && b.startTime === program?.fullStartTime) || null;
 
     const songs: TrackInfo[] = (block?.playlistItems || [])
@@ -201,7 +217,7 @@ export const trojkaProvider: Provider = {
     const current: TrackInfo | null = currentSong
       ? { artist: currentSong.artist, title: currentSong.title }
       : program
-        ? { artist: station.name, title: program.title, isLiveBreak: true }
+        ? { artist: station.name, title: program.title, isLiveBreak: true, contentKind: "programme" }
         : null;
 
     // No playlist items at all and we're showing the ramówka fallback as "current" —

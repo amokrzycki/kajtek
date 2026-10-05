@@ -139,7 +139,12 @@ describe("trojkaProvider current program", () => {
     queuePlaylist({ pageProps: { data: [] } });
 
     const atStart = await result();
-    expect(atStart.current).toEqual({ artist: "Trójka", title: "W tonacji Trójki", isLiveBreak: true });
+    expect(atStart.current).toEqual({
+      artist: "Trójka",
+      title: "W tonacji Trójki",
+      isLiveBreak: true,
+      contentKind: "programme",
+    });
     expect(atStart.all[0]).toMatchObject({ title: "W tonacji Trójki", isBreak: true });
 
     vi.setSystemTime(new Date("2026-09-17T15:00:00Z"));
@@ -164,6 +169,11 @@ describe("trojkaProvider current program", () => {
     vi.advanceTimersByTime(1_000);
     queuePlaylist();
     const stale = await result();
-    expect(stale.current).toEqual({ artist: "Trójka", title: "W tonacji Trójki", isLiveBreak: true });
+    expect(stale.current).toEqual({
+      artist: "Trójka",
+      title: "W tonacji Trójki",
+      isLiveBreak: true,
+      contentKind: "programme",
+    });
   });
 });

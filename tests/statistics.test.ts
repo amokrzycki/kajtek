@@ -247,6 +247,37 @@ describe("actual playback and protective routes", () => {
     expect(store.snapshot(monday).allTime).toMatchObject({ listeningMs: 60_000, adSavedMs: 30_000 });
   });
 
+  it("counts only the overlap with a scheduled window: nothing before its start, nothing after its end", () => {
+    const store = createStatisticsStore(memoryStorage(), monday);
+    const tracker = new ListeningStatistics(store);
+    tracker.route(
+      { id: "rmf", kind: "adSkip", automatic: false, adStartsAt: monday + 10_000, adEndsAt: monday + 20_000 },
+      monday,
+    );
+    tracker.playing(0, monday);
+    tracker.sample(5, monday + 5000, true);
+    expect(store.snapshot(monday).allTime).toMatchObject({ listeningMs: 5000, adSavedMs: 0 });
+    tracker.sample(30, monday + 30_000, true);
+    expect(store.snapshot(monday).allTime).toMatchObject({ listeningMs: 30_000, adSavedMs: 10_000 });
+    tracker.sample(40, monday + 40_000, true);
+    expect(store.snapshot(monday).allTime).toMatchObject({ listeningMs: 40_000, adSavedMs: 10_000 });
+  });
+
+  it("ignores an inverted or end-less window instead of fabricating saved time", () => {
+    const store = createStatisticsStore(memoryStorage(), monday);
+    const tracker = new ListeningStatistics(store);
+    tracker.route(
+      { id: "bad", kind: "adSkip", automatic: true, adStartsAt: monday + 20_000, adEndsAt: monday + 10_000 },
+      monday,
+    );
+    tracker.playing(0, monday);
+    tracker.sample(30, monday + 30_000, true);
+    tracker.route({ id: "open", kind: "adSkip", automatic: true, adStartsAt: monday }, monday + 30_000);
+    tracker.playing(30, monday + 30_000);
+    tracker.sample(60, monday + 60_000, true);
+    expect(store.snapshot(monday).allTime).toMatchObject({ listeningMs: 60_000, adSavedMs: 0 });
+  });
+
   it("counts only advancing audio, excludes timeline jumps and bounds saved ads by remaining duration", () => {
     const store = createStatisticsStore(memoryStorage(), monday);
     const tracker = new ListeningStatistics(store);
@@ -337,5 +368,43 @@ describe("operation IDs on local-network HTTP", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+});
+
+describe("temporary suspension and route cancellation", () => {
+  it("retains a known window across buffering and resets the media/wall baseline", () => {
+    const store = createStatisticsStore(memoryStorage(), monday);
+    const tracker = new ListeningStatistics(store);
+    tracker.route({ id: "ad", kind: "adSkip", automatic: true, adEndsAt: monday + 20_000 }, monday);
+    tracker.playing(0, monday);
+    tracker.suspend(2, monday + 2000, true);
+    tracker.sample(12, monday + 12_000, true);
+    tracker.playing(0, monday + 12_000);
+    tracker.suspend(3, monday + 15_000, true);
+    expect(store.snapshot(monday).allTime).toMatchObject({ listeningMs: 5000, adSavedMs: 5000, detours: 1 });
+  });
+
+  it("keeps a pending stream recovery independent of protective-route cancellation", () => {
+    const store = createStatisticsStore(memoryStorage(), monday);
+    const tracker = new ListeningStatistics(store);
+    tracker.route({ id: "ad", kind: "adSkip", automatic: true, adEndsAt: monday + 20_000 }, monday);
+    tracker.playing(0, monday);
+    tracker.suspend(2, monday + 2000, true);
+    tracker.recovery("first", "second", monday + 2000);
+    tracker.endRoute();
+    tracker.playing(0, monday + 3000);
+    tracker.sample(3, monday + 6000, true);
+    expect(store.snapshot(monday).allTime).toMatchObject({ listeningMs: 5000, adSavedMs: 2000, detours: 2 });
+  });
+
+  it("ends protection without stopping ordinary listening or leaking an old window", () => {
+    const store = createStatisticsStore(memoryStorage(), monday);
+    const tracker = new ListeningStatistics(store);
+    tracker.route({ id: "ad", kind: "adSkip", automatic: true, adEndsAt: monday + 20_000 }, monday);
+    tracker.playing(0, monday);
+    tracker.sample(2, monday + 2000, true);
+    tracker.endRoute();
+    tracker.sample(5, monday + 5000, true);
+    expect(store.snapshot(monday).allTime).toMatchObject({ listeningMs: 5000, adSavedMs: 2000, detours: 1 });
   });
 });

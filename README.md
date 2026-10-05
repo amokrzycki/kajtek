@@ -16,7 +16,8 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 8. **Favorite Stations & Tracks** - Bookmark favorite stations and tracks, browsable in a dedicated history/favorites panel.
 9. **Sleep Timer** - Automatically turn off audio after 15, 30, 60, or 90 minutes.
 10. **Personal Listening Recap** - A local weekly/all-time recap of timed ads avoided, blacklist protection, successful automatic detours, actual listening time, and the five most-listened stations. Opens from the header utility controls.
-11. **VU Meter & Cassette Reels** - Smooth cassette tape reel animations and an interactive VU meter during playback (uses Web Audio FFT spectrum analysis with dynamic beat emulation fallback).
+11. **Co teraz gra?** - Browse current songs and programmes across enabled stations, with artwork and a shared list/grid preference, then tune by content through the existing player. Artist affinity comes from saved favorite tracks; blacklist markers remain track-specific.
+12. **VU Meter & Cassette Reels** - Smooth cassette tape reel animations and an interactive VU meter during playback (uses Web Audio FFT spectrum analysis with dynamic beat emulation fallback).
 
 ---
 
@@ -30,6 +31,8 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
   - `statistics.ts` - Versioned recap aggregation, local-week boundaries, idempotent route events, and playback accounting.
   - `statisticsPlayback.ts` - Audio-event instrumentation, serialized local persistence, and recap subscriptions.
   - `player.ts` - Audio playback management, track polling, metadata fetch, and stream failover.
+  - `metadata.ts` - Shared metadata transport and provider parsing, with cancellable passive requests independent of playback health.
+  - `nowPlaying.ts` - Transient discovery snapshots, classification, exact user flags, bounded refresh cache and ordering.
   - `providers.ts` / `providers/` - Radio provider integrations (RMF, Trojka, Eska, generic).
   - `catalog.ts` - RMF catalog fetching/caching and known-station resolution (built-in, local, custom).
   - `localStations.ts` - Curated list of additional local stations.
@@ -38,7 +41,7 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
   - `controls.ts` - Volume, mute, favorites, and sleep timer control handling.
   - `visualizer.ts` - VU meter and audio visualization animation engine.
   - `ui.ts` - Primary DOM rendering engine and album art resolver.
-  - `ui/` - UI subcomponents: `catalog/` (station browser & custom station form), `blacklist/` (modal & warning banner), `settings/` (settings modal), `changelog/` (changelog modal), `shortcuts/` (keyboard shortcuts cheatsheet), `favorites.ts`, `history.ts`, `statistics.ts` (personal listening recap modal), `stations.ts`, `modal.ts`, `elements.ts`.
+  - `ui/` - UI subcomponents: `catalog/` (station browser & custom station form), `blacklist/` (modal & warning banner), `settings/` (settings modal), `changelog/` (changelog modal), `shortcuts/` (keyboard shortcuts cheatsheet), `favorites.ts`, `history.ts`, `statistics.ts` (personal listening recap modal), `stations.ts`, `stationBrowser.ts` (browser mode and polling lifecycle), `browserTransition.ts` (interruptible panel handoff), `nowPlaying.ts` (content entries), `modal.ts`, `elements.ts`.
   - `icons.ts` - SVG icon component definitions.
   - `utils.ts` - String decoding, timing helpers, and DOM fade triggers.
   - `md.d.ts` - Type declaration enabling `.md` file imports (used for `CHANGELOG.md`).
@@ -46,7 +49,7 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 - `dev.mjs` - Zero-dependency dev server with esbuild watching and RMF API proxying.
 - `server-utils.mjs` - Shared static-route resolution and privacy-safe upstream proxy headers.
 - `index.html` - Core HTML5 layout and structure.
-- `styles/` - Retro design system and CSS stylesheet modules, including `statistics.css` for the personal recap and the legal-document layout.
+- `styles/` - Retro design system and CSS stylesheet modules, including `stations/now-playing.css` for discovery entries, `statistics.css` for the personal recap and the legal-document layout.
 - `public/` - Static assets and `/privacy` and `/legal` pages copied verbatim into the build; `appearance.js` restores their saved theme and case shell before rendering.
 - `tests/` - Vitest coverage and captured provider fixtures.
 - `scripts/inject-hashes.mjs` - Injects hashed build asset filenames into `dist/index.html`.
@@ -64,10 +67,12 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 
 Tracking starts when this feature is first loaded; existing favorites, playlists and settings cannot establish past listening or protection. The recap offers **this week** and **since tracking began**, without a session view. A week runs Monday–Sunday in the device's local time, including daylight-saving transitions.
 
-- **Ads avoided:** actual replacement audio time overlapping a remaining advertisement window explicitly reported by ESKA's HLS `REKLAMA` tag. `timeout` and `duration` are milliseconds: the deadline is observation time plus total minus elapsed. Loading, the warning grace period, mute and buffering earn no saved time. This is bounded by provider-reported timing; it does not claim independently observed completion of the original block. A manual station change, return or pause ends the window. RMF playlist gaps, predicted breaks, news and missing REST titles do **not** prove ad duration and earn no saved minutes.
+- **Ads avoided:** actual replacement audio time overlapping a break with a known, bounded interval. Two providers supply one: ESKA's explicit HLS `REKLAMA` tag (`timeout` and `duration` are milliseconds, so the deadline is observation time plus total minus elapsed), and RMF playlist breaks that Kajtek already treats as an Ad Skip target (`Przerwa / Reklamy`) and whose playlist item carries both a scheduled start and end, counted only between those timestamps. An RMF break is inferred from a gap in the playlist, not announced as an advertisement, so it is a timed break interval rather than a proven ad. A live RMF break takes its interval from the matching playlist item. Auto-return and statistics use the same single deadline. Loading, the warning grace period, mute, pause and buffering earn no saved time; neither does audio before a scheduled break starts or after its end. This is bounded by provider-reported timing; it does not claim independently observed completion of the original block. Pause suspends measurement and resets its media/wall-clock baseline, while retaining the original deadline: audible replacement playback resumed inside that interval counts again, with no credit for paused time. A manual station change, explicit protective-route cancellation or return ends the relationship with that window. RMF predicted breaks without a scheduled end, the 3-minute return fallback, RMF news and missing REST titles earn no saved minutes.
 - **Blacklisted tracks avoided:** one completed protective station switch, confirmed by replacement audio's `playing` event. Includes **Przełącz teraz**. If detection was mid-track, only the remainder was avoided; this is an avoidance action count, not a count of unique songs. Warnings, candidate checks, dismissals, unsuccessful playback and rate-limited attempts do not count.
 - **Automatic detours:** one completed automatic ad/blacklist station switch or successful failover to a **different stream URL**. Excludes manual switches (including **Przełącz teraz**), returns, same-URL retries and internal HLS recovery. One blacklist switch can contribute to both avoidance and detours; those counts must not be added together.
 - **Listening:** advancement of `HTMLAudioElement.currentTime`, bounded by elapsed time and adjusted for playback rate, while unmuted with nonzero volume. Pause, waiting/stalled playback, failed requests, seeks, timeline jumps and open-app time are excluded. Playback baselines and pending operations remain in memory.
+
+Discovery refreshes reconcile artwork, text, badges and observation time separately, preserving unchanged nodes and keyboard focus. Failed artwork URLs are remembered only in memory for this page session; new URLs are attempted normally and a reload resets that memory. The first discovery activation polls immediately. Re-entry within a second waits for 250 ms of continuous activation before polling; leaving or hiding the panel still cancels requests immediately. The 15-second TTL and four-request concurrency limit are unchanged.
 
 `kajtek_statistics` holds a versioned aggregate: tracking start, all-time totals, the current local-week totals, and the last 128 opaque completed-operation IDs. Pending operations are consumed before recording, so repeated `playing` events cannot double-count; persisted IDs also make repeated commits idempotent. Duration spans are split at week boundaries. Schema version 2 also stores cumulative and current-week station durations with the existing stable `Station.id` and a display-name snapshot, so unavailable stations remain readable and stream failover cannot fragment their totals. Global and station durations share one validated media-advancement interval and the same local-week split; switches flush the previous station before assigning the next. Rankings omit zero time, show at most five stations, and break ties by stable ID. No track names, station URLs or event history are stored. Version 1 migrates deterministically, preserving tracking start, week boundary, counters and recent operation IDs; station aggregates start empty without reconstructing earlier listening.
 

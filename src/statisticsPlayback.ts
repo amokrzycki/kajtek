@@ -39,7 +39,6 @@ export function bindListeningStatistics(audio: HTMLAudioElement): void {
   let playbackRate = audio.playbackRate;
   const sample = () => listeningStatistics.sample(audio.currentTime, Date.now(), audible, playbackRate);
   const suspend = () => listeningStatistics.suspend(audio.currentTime, Date.now(), audible, playbackRate);
-  const stop = () => listeningStatistics.stop(audio.currentTime, Date.now(), audible, playbackRate);
   audio.addEventListener("playing", () => listeningStatistics.playing(audio.currentTime, Date.now()));
   let lastSampleAt = 0;
   audio.addEventListener("timeupdate", () => {
@@ -48,7 +47,7 @@ export function bindListeningStatistics(audio: HTMLAudioElement): void {
     sample();
   });
   for (const event of ["waiting", "stalled", "error", "seeking", "emptied"]) audio.addEventListener(event, suspend);
-  for (const event of ["pause", "ended"]) audio.addEventListener(event, stop);
+  for (const event of ["pause", "ended"]) audio.addEventListener(event, suspend);
   audio.addEventListener("ratechange", () => {
     sample();
     playbackRate = audio.playbackRate;
@@ -62,7 +61,7 @@ export function bindListeningStatistics(audio: HTMLAudioElement): void {
       listeningStatistics.playing(audio.currentTime, Date.now());
     }
   });
-  window.addEventListener("pagehide", stop);
+  window.addEventListener("pagehide", suspend);
   window.addEventListener("pageshow", () => {
     if (!audio.paused && audio.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) {
       listeningStatistics.playing(audio.currentTime, Date.now());

@@ -1,10 +1,8 @@
 import { getEnabledStations } from "../catalog.js";
-import { STORAGE_KEYS } from "../consts.js";
 import { ICONS } from "../icons.js";
 import { state } from "../state.js";
 import type { Station } from "../types.js";
 import { escapeHtml, renderStationThumbHtml } from "../utils.js";
-import { openCatalogModal } from "./catalog/modal.js";
 import { els } from "./elements.js";
 
 export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (id: string) => void): void {
@@ -21,67 +19,7 @@ export function renderStationList(onSelect: (s: Station) => void, onToggleFav: (
   // Toggle grid view modifier class on main station list container AFTER recording initial positions
   els.stationListContainer.classList.toggle("is-grid-view", state.viewMode === "grid");
 
-  let topBar = els.stationListContainer.querySelector<HTMLElement>(".station-list-toolbar");
-  if (!topBar) {
-    topBar = document.createElement("div");
-    topBar.className = "station-list-toolbar";
-    topBar.innerHTML = `
-      <button type="button" id="open-catalog-btn" class="btn-catalog-trigger">
-        ${ICONS.radio} Katalog stacji
-      </button>
-      <div class="view-toggle-group" data-view="${state.viewMode}" role="radiogroup" aria-label="Przełącznik widoku">
-        <span class="view-toggle-indicator" aria-hidden="true"></span>
-        <button type="button" class="btn-view-toggle${state.viewMode === "list" ? " active" : ""}" data-view="list" role="radio" aria-checked="${state.viewMode === "list"}" title="Widok listy" aria-label="Widok listy">
-          ${ICONS.viewList}
-        </button>
-        <button type="button" class="btn-view-toggle${state.viewMode === "grid" ? " active" : ""}" data-view="grid" role="radio" aria-checked="${state.viewMode === "grid"}" title="Widok kafelków" aria-label="Widok kafelków">
-          ${ICONS.viewGrid}
-        </button>
-      </div>
-    `;
-
-    topBar.querySelector("#open-catalog-btn")?.addEventListener("click", () => openCatalogModal());
-
-    topBar.querySelectorAll<HTMLButtonElement>(".btn-view-toggle").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const mode = btn.dataset.view as "list" | "grid";
-        if (mode && state.viewMode !== mode) {
-          state.viewMode = mode;
-          localStorage.setItem(STORAGE_KEYS.VIEW_MODE, mode);
-          renderStationList(onSelect, onToggleFav);
-        }
-      });
-      btn.addEventListener("keydown", (e) => {
-        const direction =
-          e.key === "ArrowRight" || e.key === "ArrowDown" ? 1 : e.key === "ArrowLeft" || e.key === "ArrowUp" ? -1 : 0;
-        if (!direction) return;
-        e.preventDefault();
-        const buttons = Array.from(topBar?.querySelectorAll<HTMLButtonElement>(".btn-view-toggle") ?? []);
-        const next = buttons[(buttons.indexOf(btn) + direction + buttons.length) % buttons.length];
-        next?.click();
-        next?.focus();
-      });
-    });
-  }
-
-  const toggleGroup = topBar.querySelector(".view-toggle-group");
-  if (toggleGroup) {
-    toggleGroup.setAttribute("data-view", state.viewMode);
-    toggleGroup.querySelectorAll<HTMLButtonElement>(".btn-view-toggle").forEach((btn) => {
-      const isActive = btn.dataset.view === state.viewMode;
-      btn.classList.toggle("active", isActive);
-      btn.setAttribute("aria-checked", String(isActive));
-      btn.tabIndex = isActive ? 0 : -1;
-    });
-  }
-
-  Array.from(els.stationListContainer.children).forEach((child) => {
-    if (child !== topBar) child.remove();
-  });
-
-  if (!topBar.parentElement) {
-    els.stationListContainer.appendChild(topBar);
-  }
+  els.stationListContainer.replaceChildren();
 
   const enabledStations = getEnabledStations();
   const favList = enabledStations.filter((s) => state.favs.has(s.id));

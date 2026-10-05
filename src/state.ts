@@ -28,7 +28,7 @@ export const state: AppState = {
   showHistory: false,
   historyTab: "program",
   favTracks: getStoredJSON<FavTrack[]>(STORAGE_KEYS.FAV_TRACKS, [], Array.isArray),
-  viewMode: (localStorage.getItem(STORAGE_KEYS.VIEW_MODE) as "list" | "grid") || "list",
+  viewMode: localStorage.getItem(STORAGE_KEYS.VIEW_MODE) === "grid" ? "grid" : "list",
   version: typeof APP_VERSION !== "undefined" ? APP_VERSION : DEFAULT_VERSION,
   blacklistEnabled: localStorage.getItem(STORAGE_KEYS.BLACKLIST_ENABLED) !== "false",
   adSkipEnabled: localStorage.getItem(STORAGE_KEYS.AD_SKIP_ENABLED) !== "false",
@@ -81,3 +81,23 @@ export const intervals = {
 };
 
 export type { AppState, TrackInfo };
+
+let liveTrackUpdatedAt = 0;
+const liveTrackListeners = new Set<() => void>();
+
+export function setLiveTrack(track: TrackInfo | null): void {
+  state.liveTrack = track;
+  liveTrackUpdatedAt = Date.now();
+  liveTrackListeners.forEach((listener) => {
+    listener();
+  });
+}
+
+export function getLiveTrackUpdatedAt(): number {
+  return liveTrackUpdatedAt;
+}
+
+export function subscribeLiveTrack(listener: () => void): () => void {
+  liveTrackListeners.add(listener);
+  return () => liveTrackListeners.delete(listener);
+}

@@ -47,6 +47,8 @@ const mocks = vi.hoisted(() => ({
   selectStation: vi.fn(),
   fetchPlaylist: vi.fn(),
   limited: false,
+  endRoute: vi.fn(),
+  sample: vi.fn(),
 }));
 
 vi.mock("../src/blacklist.js", () => ({ isBlacklisted: mocks.isBlacklisted }));
@@ -55,7 +57,14 @@ vi.mock("../src/catalog.js", () => ({
   getStoredRmfCatalog: vi.fn(() => null),
 }));
 vi.mock("../src/player.js", () => ({ fetchPlaylist: mocks.fetchPlaylist, selectStation: mocks.selectStation }));
-vi.mock("../src/state.js", () => ({ notifyState: mocks.notifyState, state }));
+vi.mock("../src/state.js", () => ({
+  notifyState: mocks.notifyState,
+  state,
+  radioAudio: { currentTime: 0, muted: false, volume: 1, playbackRate: 1 },
+}));
+vi.mock("../src/statisticsPlayback.js", () => ({
+  listeningStatistics: { endRoute: mocks.endRoute, sample: mocks.sample },
+}));
 vi.mock("../src/utils.js", () => ({
   getTrackKey: vi.fn((track: { title: string }) => track.title),
   withinRateLimit: vi.fn(() => ({ limited: mocks.limited, timestamps: [] })),
@@ -158,7 +167,109 @@ describe("protective route instrumentation", () => {
   });
 });
 
+describe("saved-ad window forwarded to statistics", () => {
+  const routeOf = () => mocks.selectStation.mock.calls[0]?.[1];
+  const nowSec = () => Math.floor(Date.now() / 1000);
+
+  it("forwards a scheduled RMF break's start and end for an upcoming break", async () => {
+    const now = nowSec();
+    state.liveTrack = { artist: "Artist", title: "Song", timestamp: now - 100 };
+    state.history = [
+      { artist: "", title: "", isBreak: true, label: DEFAULT_BREAK, timestamp: now + 6, endTimestamp: now + 66 },
+    ];
+    blacklistWarning.detectUpcomingAdBreak();
+    await settle();
+    await vi.advanceTimersByTimeAsync(7_000);
+    expect(mocks.selectStation).toHaveBeenCalledTimes(1);
+    expect(routeOf()).toMatchObject({
+      kind: "adSkip",
+      automatic: true,
+      adStartsAt: (now + 6) * 1000,
+      adEndsAt: (now + 66) * 1000,
+    });
+  });
+
+  it("resolves a live RMF break's deadline from the matching history item, for manual and automatic switches", async () => {
+    const now = nowSec();
+    state.history = [
+      { artist: "", title: "", isBreak: true, label: DEFAULT_BREAK, timestamp: now - 20, endTimestamp: now + 100 },
+    ];
+    blacklistWarning.detectUpcomingAdBreak();
+    await settle();
+    blacklistWarning.switchBlacklistCandidateNow();
+    expect(routeOf()).toMatchObject({
+      automatic: false,
+      adStartsAt: (now - 20) * 1000,
+      adEndsAt: (now + 100) * 1000,
+    });
+    await vi.advanceTimersByTimeAsync(100_000);
+    // auto-return fires at the very same deadline the statistics received
+    expect(mocks.selectStation).toHaveBeenCalledTimes(2);
+  });
+
+  it("forwards only the end for ESKA's explicit ad timing", async () => {
+    await startAdSwitch(Date.now() + 30_000);
+    expect(routeOf()).toMatchObject({ adEndsAt: Date.now() + 30_000 });
+    expect(routeOf()).not.toHaveProperty("adStartsAt");
+  });
+
+  it("retains a switched route while paused and returns at the known deadline after resume", async () => {
+    await startAdSwitch(Date.now() + 30_000);
+    state.playing = false;
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(blacklistWarning.getBlacklistWarningState()?.phase).toBe("switched");
+    state.playing = true;
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(mocks.selectStation).toHaveBeenCalledTimes(1);
+    state.playing = false;
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(mocks.selectStation).toHaveBeenCalledTimes(1);
+    state.playing = true;
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(mocks.selectStation).toHaveBeenLastCalledWith(origin);
+  });
+
+  it("forwards no window for a predicted or unknown-length break, the news label, or a blacklist route", async () => {
+    const now = nowSec();
+    state.history = [
+      { artist: "", title: "", isBreak: true, isPredicted: true, label: DEFAULT_BREAK, timestamp: now - 5 },
+    ];
+    await startAdSwitch();
+    expect(routeOf()).not.toHaveProperty("adEndsAt");
+    expect(routeOf()).not.toHaveProperty("adStartsAt");
+
+    vi.clearAllMocks();
+    blacklistWarning.resetBlacklistWarningState();
+    state.history = [
+      {
+        artist: "",
+        title: "",
+        isBreak: true,
+        label: "Serwis informacyjny (~12:00)",
+        timestamp: now - 20,
+        endTimestamp: now + 100,
+      },
+    ];
+    await startAdSwitch();
+    expect(routeOf()).not.toHaveProperty("adEndsAt");
+
+    vi.clearAllMocks();
+    blacklistWarning.resetBlacklistWarningState();
+    mocks.isBlacklisted.mockReturnValue(true);
+    state.liveTrack = { artist: "Blocked", title: "Song" };
+    state.history = [
+      { artist: "", title: "", isBreak: true, label: DEFAULT_BREAK, timestamp: now - 20, endTimestamp: now + 100 },
+    ];
+    blacklistWarning.detectBlacklistedUpcoming();
+    await settle();
+    blacklistWarning.switchBlacklistCandidateNow();
+    expect(routeOf()).toMatchObject({ kind: "blacklist" });
+    expect(routeOf()).not.toHaveProperty("adEndsAt");
+  });
+});
+
 const AD_TITLE = "Przerwa / Reklamy";
+const DEFAULT_BREAK = AD_TITLE;
 const settle = () => vi.advanceTimersByTimeAsync(0);
 
 async function startAdSwitch(adEndsAt?: number) {
@@ -234,6 +345,7 @@ describe("manual ad switch and auto-return", () => {
     mocks.fetchPlaylist.mockReturnValue(new Promise((r) => (resolvePoll = r)));
     await vi.advanceTimersByTimeAsync(5_000);
     blacklistWarning.cancelAdSkipAutoReturn();
+    expect(mocks.endRoute).toHaveBeenCalledTimes(1);
     resolvePoll({ current: { artist: "A", title: "Song" } });
     await vi.advanceTimersByTimeAsync(200_000);
     expect(mocks.selectStation).toHaveBeenCalledTimes(1);

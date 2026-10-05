@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { AppState, PlaylistResult, Provider, Station } from "../src/types.js";
+import type { AppState, PlaylistResult, Provider, Station, TrackInfo } from "../src/types.js";
 
 type HlsEventData = {
   fatal?: boolean;
@@ -166,6 +166,9 @@ vi.mock("../src/state.js", () => ({
   intervals,
   notifyState: mocks.notifyState,
   radioAudio: mocks.audio,
+  setLiveTrack: (track: TrackInfo | null) => {
+    state.liveTrack = track;
+  },
   state,
 }));
 vi.mock("../src/ui.js", () => ({
@@ -686,6 +689,80 @@ describe("listening recap integration", () => {
     const { statisticsStore } = await import("../src/statisticsPlayback.js");
     expect(statisticsStore.snapshot().allTime.listeningMs).toBe(5000);
     expect(statisticsStore.snapshot().allTimeStations).toEqual([{ id: "test", name: "Test Radio", listeningMs: 5000 }]);
+  });
+
+  it.each([
+    { provider: "eska", starts: undefined },
+    { provider: "rmf", starts: 0 },
+  ])("resumes saved time inside a known $provider window without counting paused wall time", async ({ starts }) => {
+    const start = Date.now();
+    player.selectStation(station(), {
+      id: "known-ad",
+      kind: "adSkip",
+      automatic: true,
+      adEndsAt: start + 30_000,
+      ...(starts === undefined ? {} : { adStartsAt: start + starts }),
+    });
+    mocks.audio.dispatch("playing");
+    vi.advanceTimersByTime(3000);
+    mocks.audio.currentTime = 3;
+    player.togglePlay();
+    vi.advanceTimersByTime(4000);
+    mocks.audio.currentTime = 0;
+    player.togglePlay();
+    mocks.audio.dispatch("playing");
+    vi.advanceTimersByTime(2000);
+    mocks.audio.currentTime = 2;
+    player.togglePlay();
+    vi.advanceTimersByTime(3000);
+    player.togglePlay();
+    mocks.audio.dispatch("playing");
+    vi.advanceTimersByTime(2000);
+    mocks.audio.currentTime = 4;
+    mocks.audio.dispatch("pause");
+    await vi.advanceTimersByTimeAsync(0);
+    const { statisticsStore } = await import("../src/statisticsPlayback.js");
+    expect(statisticsStore.snapshot().allTime).toMatchObject({ listeningMs: 7000, adSavedMs: 7000, detours: 1 });
+  });
+
+  it.each(["mute", "zero", "waiting", "expired", "unrelated"])("bounds known-ad listening through %s", async (mode) => {
+    const start = Date.now();
+    player.selectStation(station(), { id: "known-ad", kind: "adSkip", automatic: false, adEndsAt: start + 10_000 });
+    mocks.audio.dispatch("playing");
+    vi.advanceTimersByTime(2000);
+    mocks.audio.currentTime = 2;
+    if (mode === "mute") {
+      mocks.audio.muted = true;
+      mocks.audio.dispatch("volumechange");
+    } else if (mode === "zero") {
+      mocks.audio.volume = 0;
+      mocks.audio.dispatch("volumechange");
+    } else if (mode === "unrelated") player.selectStation(station({ id: "unrelated" }));
+    else if (mode === "waiting") mocks.audio.dispatch("waiting");
+    else player.togglePlay();
+    vi.advanceTimersByTime(mode === "expired" ? 12_000 : 3000);
+    mocks.audio.currentTime = 5;
+    if (mode === "mute") {
+      mocks.audio.muted = false;
+      mocks.audio.dispatch("volumechange");
+    } else if (mode === "zero") {
+      mocks.audio.volume = 1;
+      mocks.audio.dispatch("volumechange");
+    } else if (mode === "unrelated") mocks.audio.dispatch("playing");
+    else if (mode === "waiting") mocks.audio.dispatch("playing");
+    else {
+      player.togglePlay();
+      mocks.audio.dispatch("playing");
+    }
+    vi.advanceTimersByTime(2000);
+    mocks.audio.currentTime = 7;
+    mocks.audio.dispatch("pause");
+    await vi.advanceTimersByTimeAsync(0);
+    const { statisticsStore } = await import("../src/statisticsPlayback.js");
+    expect(statisticsStore.snapshot().allTime).toMatchObject({
+      listeningMs: 4000,
+      adSavedMs: mode === "expired" || mode === "unrelated" ? 2000 : 4000,
+    });
   });
 
   it("flushes manual and automatic switches to the previous station and keeps URL recovery in the same bucket", async () => {
