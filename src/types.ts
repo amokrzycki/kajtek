@@ -178,11 +178,10 @@ export interface Provider {
 }
 
 export interface RamowkaItem {
-  id: number;
   title: string;
-  startTime: string;
+  startTime: number;
+  endTime: number;
   fullStartTime: string;
-  fullStopTime: string;
 }
 
 export interface PlaylistaItem {

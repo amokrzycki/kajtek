@@ -97,4 +97,5 @@ export const STATIONS_WITH_FACTS = ["rmf", "rmf24"];
 export const VOL_LEDS = 18;
 export const MAX_CONSECUTIVE_FAILURES = 5;
 export const DEFAULT_VERSION = "0.11.3";
+export const TROJKA_SCHEDULE_REFRESH_MS = 60_000;
 export const TROJKA_PLAYLIST_REFRESH_MS = 60_000;

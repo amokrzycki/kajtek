@@ -1,4 +1,4 @@
-import { TIMERS, TROJKA_PLAYLIST_REFRESH_MS } from "../consts.js";
+import { TIMERS, TROJKA_PLAYLIST_REFRESH_MS, TROJKA_SCHEDULE_REFRESH_MS } from "../consts.js";
 import type {
   MetadataOptions,
   PlaylistaBlock,
@@ -10,9 +10,8 @@ import type {
 } from "../types.js";
 import { decodeEntities } from "../utils.js";
 
-let trojkaBuildIdCache: string | null = null;
-let trojkaScheduleCache: { day: string; items: RamowkaItem[] } | null = null;
-let trojkaPlaylistCache: { fetchedAt: number; items: PlaylistaBlock[] } | null = null;
+let trojkaScheduleCache: { day: string; fetchedAt: number; items: RamowkaItem[] } | null = null;
+let trojkaPlaylistCache: { day: string; fetchedAt: number; items: PlaylistaBlock[] } | null = null;
 
 const TROJKA_UPCOMING_COUNT = 5;
 const TROJKA_PAST_COUNT = 4;
@@ -56,45 +55,59 @@ function parseTrojkaTime(value: string): number {
   return timestamp;
 }
 
-async function getTrojkaBuildId(station: Station, signal?: AbortSignal): Promise<string | null> {
-  if (trojkaBuildIdCache) return trojkaBuildIdCache;
-  try {
-    const res = await fetch(`${station.apiBaseUrl}/`, {
-      signal: signal ?? AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS),
-    });
-    if (!res.ok) return null;
-    const html = await res.text();
-    const match = html.match(/\/_next\/static\/([^/]+)\/_buildManifest\.js/);
-    if (!match?.[1]) return null;
-    signal?.throwIfAborted();
-    trojkaBuildIdCache = match[1];
-    return trojkaBuildIdCache;
-  } catch (_) {
-    return null;
-  }
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }
 
-async function fetchTrojkaJson<T>(
-  station: Station,
-  file: "ramowka.json" | "playlista.json",
-  signal?: AbortSignal,
-): Promise<T | null> {
-  const buildId = await getTrojkaBuildId(station, signal);
-  if (!buildId) return null;
+function isScheduleItem(value: unknown): value is RamowkaItem {
+  return (
+    isRecord(value) &&
+    typeof value.title === "string" &&
+    typeof value.startTime === "number" &&
+    Number.isFinite(value.startTime) &&
+    typeof value.endTime === "number" &&
+    Number.isFinite(value.endTime) &&
+    value.endTime > value.startTime &&
+    typeof value.fullStartTime === "string" &&
+    Number.isFinite(parseTrojkaTime(value.fullStartTime))
+  );
+}
 
+function isPlaylistBlock(value: unknown): value is PlaylistaBlock {
+  return (
+    isRecord(value) &&
+    typeof value.id === "number" &&
+    typeof value.title === "string" &&
+    typeof value.startTime === "string" &&
+    Number.isFinite(parseTrojkaTime(value.startTime)) &&
+    typeof value.stopTime === "string" &&
+    Number.isFinite(parseTrojkaTime(value.stopTime)) &&
+    Array.isArray(value.playlistItems) &&
+    value.playlistItems.every(
+      (item: unknown) =>
+        isRecord(item) &&
+        typeof item.artist === "string" &&
+        typeof item.title === "string" &&
+        typeof item.startTime === "string" &&
+        Number.isFinite(parseTrojkaTime(item.startTime)) &&
+        typeof item.duration === "number" &&
+        Number.isFinite(item.duration) &&
+        item.duration >= 0,
+    )
+  );
+}
+
+async function fetchTrojkaJson(url: string, signal?: AbortSignal): Promise<unknown> {
   try {
-    const res = await fetch(`${station.apiBaseUrl}/_next/data/${buildId}/${file}`, {
+    // Onnetwork derives CORS from Referer but drops its port, breaking local origins.
+    const res = await fetch(url, {
       signal: signal ?? AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS),
+      referrerPolicy: "no-referrer",
     });
-    if (res.status === 404) {
-      // build id rotates on Polskie Radio redeploys, re-resolve next call
-      trojkaBuildIdCache = null;
-      return null;
-    }
     if (!res.ok) return null;
-    const json = await res.json();
+    const json: unknown = await res.json();
     signal?.throwIfAborted();
-    return json?.pageProps?.data ?? null;
+    return json;
   } catch (_) {
     return null;
   }
@@ -102,36 +115,49 @@ async function fetchTrojkaJson<T>(
 
 function trojkaDayKey(d: Date): string {
   const parts = warsawParts(d.getTime());
-  return `${parts.year}-${parts.month}-${parts.day}`;
+  return `${parts.year}-${String(parts.month).padStart(2, "0")}-${String(parts.day).padStart(2, "0")}`;
 }
 
-async function getTrojkaSchedule(station: Station, signal?: AbortSignal): Promise<RamowkaItem[] | null> {
+async function getTrojkaSchedule(signal?: AbortSignal): Promise<RamowkaItem[] | null> {
   const day = trojkaDayKey(new Date());
-  if (trojkaScheduleCache?.day === day) return trojkaScheduleCache.items;
+  if (trojkaScheduleCache?.day === day && Date.now() - trojkaScheduleCache.fetchedAt < TROJKA_SCHEDULE_REFRESH_MS) {
+    return trojkaScheduleCache.items;
+  }
 
-  const items = await fetchTrojkaJson<RamowkaItem[]>(station, "ramowka.json", signal);
-  if (!items) return trojkaScheduleCache?.items ?? null;
+  const json = await fetchTrojkaJson("https://video.onnetwork.tv/livePR2.php", signal);
+  const items: unknown = isRecord(json) ? json.Trójka : null;
+  if (!Array.isArray(items) || !items.every(isScheduleItem)) return trojkaScheduleCache?.items ?? null;
 
-  trojkaScheduleCache = { day, items };
+  trojkaScheduleCache = { day, fetchedAt: Date.now(), items };
   return items;
 }
 
 async function getTrojkaPlaylist(station: Station, signal?: AbortSignal): Promise<PlaylistaBlock[] | null> {
-  const isFresh = trojkaPlaylistCache && Date.now() - trojkaPlaylistCache.fetchedAt < TROJKA_PLAYLIST_REFRESH_MS;
-  if (isFresh) return trojkaPlaylistCache?.items ?? null;
+  const day = trojkaDayKey(new Date());
+  if (trojkaPlaylistCache?.day === day && Date.now() - trojkaPlaylistCache.fetchedAt < TROJKA_PLAYLIST_REFRESH_MS) {
+    return trojkaPlaylistCache.items;
+  }
 
-  const items = await fetchTrojkaJson<PlaylistaBlock[]>(station, "playlista.json", signal);
-  if (!items) return trojkaPlaylistCache?.items ?? null;
+  const json = await fetchTrojkaJson(`${station.apiBaseUrl}/playlist?date=${day}`, signal);
+  const items: unknown = isRecord(json) ? json.data : null;
+  if (!Array.isArray(items) || !items.every(isPlaylistBlock)) {
+    return trojkaPlaylistCache?.day === day ? trojkaPlaylistCache.items : null;
+  }
 
-  trojkaPlaylistCache = { fetchedAt: Date.now(), items };
+  trojkaPlaylistCache = { day, fetchedAt: Date.now(), items };
   return items;
+}
+
+function formatProgramTime(startSec: number): string {
+  const parts = warsawParts(startSec * 1000);
+  return `${String(parts.hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}`;
 }
 
 function findActiveProgram(schedule: RamowkaItem[], nowMs: number): RamowkaItem | null {
   return (
     schedule.find((p) => {
-      const start = parseTrojkaTime(p.fullStartTime);
-      const stop = parseTrojkaTime(p.fullStopTime);
+      const start = p.startTime * 1000;
+      const stop = p.endTime * 1000;
       return nowMs >= start && nowMs < stop;
     }) || null
   );
@@ -139,18 +165,18 @@ function findActiveProgram(schedule: RamowkaItem[], nowMs: number): RamowkaItem 
 
 function buildUpcomingProgramItems(schedule: RamowkaItem[], nowMs: number): TrackInfo[] {
   return schedule
-    .filter((p) => parseTrojkaTime(p.fullStartTime) > nowMs)
-    .sort((a, b) => parseTrojkaTime(a.fullStartTime) - parseTrojkaTime(b.fullStartTime))
+    .filter((p) => p.startTime * 1000 > nowMs)
+    .sort((a, b) => a.startTime - b.startTime)
     .slice(0, TROJKA_UPCOMING_COUNT)
     .map((p): TrackInfo => {
-      const startSec = Math.floor(parseTrojkaTime(p.fullStartTime) / 1000);
-      const stopSec = Math.floor(parseTrojkaTime(p.fullStopTime) / 1000);
+      const startSec = p.startTime;
+      const stopSec = p.endTime;
       return {
         artist: "",
         title: p.title,
         isBreak: true,
         label: p.title,
-        start: p.startTime,
+        start: formatProgramTime(p.startTime),
         timestamp: startSec,
         endTimestamp: stopSec,
         gapSec: stopSec - startSec,
@@ -159,14 +185,14 @@ function buildUpcomingProgramItems(schedule: RamowkaItem[], nowMs: number): Trac
 }
 
 function buildProgramHistoryItem(program: RamowkaItem): TrackInfo {
-  const startSec = Math.floor(parseTrojkaTime(program.fullStartTime) / 1000);
-  const stopSec = Math.floor(parseTrojkaTime(program.fullStopTime) / 1000);
+  const startSec = program.startTime;
+  const stopSec = program.endTime;
   return {
     artist: "",
     title: program.title,
     isBreak: true,
     label: program.title,
-    start: program.startTime,
+    start: formatProgramTime(program.startTime),
     timestamp: startSec,
     endTimestamp: stopSec,
     gapSec: stopSec - startSec,
@@ -179,16 +205,18 @@ export const trojkaProvider: Provider = {
     return null; // unused — fetch() below owns this provider's data flow
   },
   async fetch(station: Station, options?: MetadataOptions): Promise<PlaylistResult | null> {
-    const schedule = await getTrojkaSchedule(station, options?.signal);
+    const schedule = await getTrojkaSchedule(options?.signal);
     if (!schedule) return null;
 
     const nowMs = Date.now();
     const nowSec = Math.floor(nowMs / 1000);
     const program = findActiveProgram(schedule, nowMs);
     const playlist = program ? await getTrojkaPlaylist(station, options?.signal) : null;
-    const block = playlist?.find((b) => b.id === program?.id && b.startTime === program?.fullStartTime) || null;
+    const block =
+      playlist?.find((b) => parseTrojkaTime(b.startTime) === (program?.startTime ?? Number.NaN) * 1000) || null;
 
-    const songs: TrackInfo[] = (block?.playlistItems || [])
+    const startedSongs: TrackInfo[] = (block?.playlistItems || [])
+      .filter((item) => parseTrojkaTime(item.startTime) <= nowMs)
       .map((item): TrackInfo => {
         const startSec = Math.floor(parseTrojkaTime(item.startTime) / 1000);
         return {
@@ -202,13 +230,13 @@ export const trojkaProvider: Provider = {
       })
       .sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0));
 
-    const lastSong = songs[songs.length - 1] || null;
+    const lastSong = startedSongs[startedSongs.length - 1] || null;
     // Last song is only trusted as "still probably playing" within one playlist-poll's worth of
     // slack past its own end — beyond that, playlist is just stale and we genuinely don't know
     // the song, so fall through to the program-title fallback below instead of showing it forever.
-    const stalenessToleranceSec = (TROJKA_PLAYLIST_REFRESH_MS / 1000) * 1;
+    const stalenessToleranceSec = TROJKA_PLAYLIST_REFRESH_MS / 1000;
     const currentSong =
-      songs.find((t) => t.timestamp && t.endTimestamp && nowSec >= t.timestamp && nowSec < t.endTimestamp) ||
+      startedSongs.find((t) => t.endTimestamp != null && nowSec < t.endTimestamp) ||
       (lastSong?.endTimestamp && nowSec - lastSong.endTimestamp <= stalenessToleranceSec ? lastSong : null);
 
     // Playlist lags up to a minute behind, so a missing/expired song falls back to the
@@ -223,9 +251,9 @@ export const trojkaProvider: Provider = {
     // No playlist items at all and we're showing the ramówka fallback as "current" —
     // surface that same program in history too, so past isn't left empty next to a live current.
     const pastSongs =
-      songs.length === 0 && !currentSong && program
+      startedSongs.length === 0 && !currentSong && program
         ? [buildProgramHistoryItem(program)]
-        : songs.slice(-TROJKA_PAST_COUNT);
+        : startedSongs.slice(-TROJKA_PAST_COUNT);
 
     return {
       current,
