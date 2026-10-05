@@ -1,6 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { PlaylistResult, Station } from "../src/types.js";
-import home from "./fixtures/trojka/home.html?raw";
 import playlist from "./fixtures/trojka/playlista.json";
 import schedule from "./fixtures/trojka/ramowka.json";
 
@@ -9,7 +8,8 @@ vi.mock("../src/utils.js", () => ({
 }));
 
 type TrojkaModule = typeof import("../src/providers/trojka.js");
-
+const scheduleUrl = "https://video.onnetwork.tv/livePR2.php";
+const playlistUrl = "/api/trojka/playlist?date=2026-10-05";
 const station: Station = {
   id: "trojka",
   name: "Trójka",
@@ -19,35 +19,51 @@ const station: Station = {
   stream: "https://example.test/trojka.mp3",
   apiBaseUrl: "/api/trojka",
 };
-
 const fetchMock = vi.fn<typeof fetch>();
+const replies = new Map<string, () => Response | Promise<Response>>();
 let trojka: TrojkaModule;
 
-function jsonResponse(data: unknown, status = 200): Response {
-  return new Response(JSON.stringify(data), { status });
-}
-
-function queueDiscovery(buildId = "F3B0feyeEAMtls1dS-Mt8"): void {
-  fetchMock.mockResolvedValueOnce(new Response(home.replace("F3B0feyeEAMtls1dS-Mt8", buildId)));
-}
-
-function queueSchedule(data: unknown = schedule): void {
-  fetchMock.mockResolvedValueOnce(jsonResponse(data));
-}
-
-function queuePlaylist(data: unknown = playlist): void {
-  fetchMock.mockResolvedValueOnce(jsonResponse(data));
+function respond(url: string, data: unknown): void {
+  replies.set(url, () => new Response(JSON.stringify(data)));
 }
 
 async function result(): Promise<PlaylistResult> {
   const value = await trojka.trojkaProvider.fetch?.(station);
-  if (!value) throw new Error("Expected a Trójka playlist result");
+  if (!value) {
+    throw new Error(
+      `Expected a Trójka playlist result; requests: ${fetchMock.mock.calls.map(([url]) => url).join(", ")}`,
+    );
+  }
   return value;
+}
+
+function fallback(): object {
+  return { artist: "Trójka", title: "Zapraszamy do Trójki - ranek", isLiveBreak: true, contentKind: "programme" };
+}
+
+function activeProgram() {
+  const program = schedule.Trójka.find((item) => item.fullStartTime === "2026-10-05T07:07:00");
+  if (!program) throw new Error("Missing captured program");
+  return structuredClone(program);
+}
+
+function activeBlock() {
+  const block = playlist.data.find((item) => item.startTime === "2026-10-05T07:07:00");
+  if (!block) throw new Error("Missing captured playlist block");
+  return structuredClone(block);
 }
 
 beforeEach(async () => {
   vi.useFakeTimers();
-  vi.setSystemTime(new Date("2026-09-17T13:52:00Z"));
+  vi.setSystemTime(new Date("2026-10-05T05:46:00Z"));
+  replies.clear();
+  respond(scheduleUrl, schedule);
+  respond(playlistUrl, playlist);
+  fetchMock.mockImplementation((input) => {
+    const reply = replies.get(String(input));
+    if (!reply) throw new Error(`Unexpected Trójka endpoint: ${String(input)}`);
+    return Promise.resolve(reply());
+  });
   vi.stubGlobal("fetch", fetchMock);
   vi.resetModules();
   trojka = await import("../src/providers/trojka.js");
@@ -59,121 +75,225 @@ afterEach(() => {
   fetchMock.mockReset();
 });
 
-describe("trojkaProvider discovery", () => {
-  it("extracts the captured build ID and constructs both Next JSON URLs", async () => {
-    queueDiscovery();
-    queueSchedule();
-    queuePlaylist();
+describe("Trójka transport and metadata", () => {
+  it("uses only Onnetwork and the dated playlist, with abort signals", async () => {
+    expect((await result()).current).toEqual({ artist: "DAWID PODSIADŁO", title: "Na błysk" });
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([scheduleUrl, playlistUrl]);
+    for (const [, options] of fetchMock.mock.calls) expect(options?.signal).toBeInstanceOf(AbortSignal);
+  });
 
+  it("omits the referrer so Onnetwork does not reflect a port-stripped CORS origin", async () => {
     await result();
+    const scheduleRequest = fetchMock.mock.calls.find(([url]) => url === scheduleUrl);
+    expect(scheduleRequest?.[1]?.referrerPolicy).toBe("no-referrer");
+  });
 
-    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
-      "/api/trojka/",
-      "/api/trojka/_next/data/F3B0feyeEAMtls1dS-Mt8/ramowka.json",
-      "/api/trojka/_next/data/F3B0feyeEAMtls1dS-Mt8/playlista.json",
+  it("matches normalized start times without a schedule ID or title match", async () => {
+    const block = activeBlock();
+    block.startTime += ".000";
+    block.title = "Different playlist title";
+    respond(playlistUrl, { data: [playlist.data[0], block] });
+    expect((await result()).current).toEqual({ artist: "DAWID PODSIADŁO", title: "Na błysk" });
+  });
+
+  it("sorts songs and limits history to four started tracks", async () => {
+    const block = activeBlock();
+    block.playlistItems.reverse();
+    respond(playlistUrl, { data: [block] });
+    expect((await result()).all.filter((item) => !item.isBreak).map((item) => item.title)).toEqual([
+      "Helicopters",
+      "Immigrant Song",
+      "GIRLS GO WILD",
+      "Na błysk",
     ]);
   });
 
-  it("resets a rejected build ID after 404 and rediscovers it on the next call", async () => {
-    queueDiscovery("old-build");
-    fetchMock.mockResolvedValueOnce(jsonResponse({}, 404));
-    expect(await trojka.trojkaProvider.fetch?.(station)).toBeNull();
+  it("sorts and limits upcoming programs to five using Unix seconds and Warsaw hours", async () => {
+    respond(scheduleUrl, { ...schedule, Trójka: [...schedule.Trójka].reverse() });
+    const upcoming = (await result()).all.filter((item) => item.isBreak);
+    expect(upcoming.map((item) => item.start)).toEqual(["07:50", "07:55", "08:00", "08:05", "08:07"]);
+    expect(upcoming[0]).toMatchObject({
+      title: "Piosenka do Wyjaśnienia",
+      timestamp: 1791179400,
+      endTimestamp: 1791179700,
+      gapSec: 300,
+    });
+  });
 
-    queueDiscovery("new-build");
-    queueSchedule();
-    queuePlaylist();
-    await result();
-
-    expect(fetchMock.mock.calls.map(([url]) => url)).toContain("/api/trojka/_next/data/new-build/ramowka.json");
+  it.each(["empty playlist", "unmatched block"])("falls back and records the program for %s", async (kind) => {
+    respond(playlistUrl, { data: kind === "empty playlist" ? [] : [playlist.data[0]] });
+    const value = await result();
+    expect(value.current).toEqual(fallback());
+    expect(value.all[0]).toMatchObject({
+      title: "Zapraszamy do Trójki - ranek",
+      isBreak: true,
+      start: "07:07",
+      timestamp: 1791176820,
+      endTimestamp: 1791179400,
+      gapSec: 2580,
+    });
   });
 
   it.each([
-    [new Response("<html></html>"), "missing manifest"],
-    [new Response("error", { status: 500 }), "non-2xx homepage"],
-  ])("returns null when build discovery has %s", async (response) => {
-    fetchMock.mockResolvedValueOnce(response);
-    expect(await trojka.trojkaProvider.fetch?.(station)).toBeNull();
-    expect(fetchMock).toHaveBeenCalledTimes(1);
+    ["2026-10-05T05:07:00Z", true],
+    ["2026-10-05T05:50:00Z", false],
+  ])("uses start-inclusive, end-exclusive program intervals at %s", async (now, active) => {
+    vi.setSystemTime(new Date(now));
+    respond(scheduleUrl, { Trójka: [activeProgram()] });
+    respond(playlistUrl, { data: [] });
+    expect((await result()).current).toEqual(active ? fallback() : null);
+  });
+
+  it("returns no current item when no program is active", async () => {
+    respond(scheduleUrl, { Trójka: [] });
+    expect(await result()).toEqual({ current: null, all: [] });
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([scheduleUrl]);
+  });
+
+  it.each([
+    ["2026-10-05T05:49:56Z", { artist: "DAWID PODSIADŁO", title: "Na błysk" }],
+    ["2026-10-05T05:49:57Z", fallback()],
+  ])("handles the last song end +60/+61 seconds at %s", async (now, expected) => {
+    vi.setSystemTime(new Date(now));
+    expect((await result()).current).toEqual(expected);
+  });
+
+  it("does not show a future song as current or history", async () => {
+    vi.setSystemTime(new Date("2026-10-05T05:07:00Z"));
+    const block = activeBlock();
+    block.playlistItems = block.playlistItems.slice(-1);
+    respond(playlistUrl, { data: [block] });
+    const value = await result();
+    expect(value.current).toEqual(fallback());
+    expect(value.all.every((item) => item.isBreak)).toBe(true);
+  });
+
+  it("does not start a song before its captured fractional second", async () => {
+    vi.setSystemTime(new Date("2026-10-05T05:45:07.000Z"));
+    const block = activeBlock();
+    block.playlistItems = block.playlistItems.slice(-1);
+    respond(playlistUrl, { data: [block] });
+    expect((await result()).current).toEqual(fallback());
+    vi.setSystemTime(new Date("2026-10-05T05:45:07.493Z"));
+    expect((await result()).current).toEqual({ artist: "DAWID PODSIADŁO", title: "Na błysk" });
+  });
+
+  it("decodes song entities", async () => {
+    const block = activeBlock();
+    const song = block.playlistItems.at(-1);
+    if (!song) throw new Error("Missing song");
+    song.artist = "Artist &amp; band";
+    song.title = "Song &amp; title";
+    respond(playlistUrl, { data: [block] });
+    expect((await result()).current).toEqual({ artist: "Artist & band", title: "Song & title" });
   });
 });
 
-describe("trojkaProvider caches", () => {
-  it("caches schedule for the local day and playlist for 60 seconds, retaining the last good playlist", async () => {
-    queueDiscovery();
-    queueSchedule();
-    queuePlaylist();
-    const first = await result();
-
-    vi.advanceTimersByTime(59_999);
-    const cached = await result();
-    expect(fetchMock).toHaveBeenCalledTimes(3);
-    expect(cached).toEqual(first);
-
-    vi.advanceTimersByTime(1);
-    fetchMock.mockResolvedValueOnce(new Response("error", { status: 500 }));
-    const stale = await result();
-    expect(fetchMock).toHaveBeenCalledTimes(4);
-    expect(stale).toEqual(first);
-  });
-
-  it("refreshes schedule after the local day changes and retains the last good schedule on failure", async () => {
-    queueDiscovery();
-    queueSchedule();
-    queuePlaylist();
+describe("Trójka caches", () => {
+  it("refreshes both sources at 60,000 ms, but not 59,999 ms", async () => {
     await result();
+    vi.advanceTimersByTime(59_999);
+    await result();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    const program = activeProgram();
+    program.title = "Updated live program";
+    program.endTime += 60;
+    respond(scheduleUrl, { Trójka: [program] });
+    respond(playlistUrl, { data: [] });
+    vi.advanceTimersByTime(1);
+    const refreshed = await result();
+    expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([scheduleUrl, playlistUrl, scheduleUrl, playlistUrl]);
+    expect(refreshed.current).toEqual({
+      artist: "Trójka",
+      title: "Updated live program",
+      isLiveBreak: true,
+      contentKind: "programme",
+    });
+    expect(refreshed.all[0]?.endTimestamp).toBe(program.endTime);
+  });
 
-    vi.setSystemTime(new Date("2026-09-17T22:00:00Z"));
-    fetchMock.mockResolvedValueOnce(new Response("error", { status: 500 }));
-    const stale = await result();
+  it.each([
+    ["2026-10-05T21:59:59Z", "2026-10-05T22:00:00Z", "2026-10-05", "2026-10-06", "2026-10-06T00:00:00", 1791237600],
+    ["2026-01-05T22:59:59Z", "2026-01-05T23:00:00Z", "2026-01-05", "2026-01-06", "2026-01-06T00:00:00", 1767654000],
+  ])(
+    "refreshes on Warsaw midnight independently of process timezone at %s",
+    async (before, after, day, nextDay, local, start) => {
+      vi.setSystemTime(new Date(before));
+      const program = { ...activeProgram(), startTime: start - 3600, endTime: start + 3600, fullStartTime: local };
+      respond(scheduleUrl, { Trójka: [program] });
+      respond(`/api/trojka/playlist?date=${day}`, { data: [] });
+      await result();
+      vi.setSystemTime(new Date(after));
+      respond(`/api/trojka/playlist?date=${nextDay}`, { data: [] });
+      await result();
+      expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([
+        scheduleUrl,
+        `/api/trojka/playlist?date=${day}`,
+        scheduleUrl,
+        `/api/trojka/playlist?date=${nextDay}`,
+      ]);
+    },
+  );
 
-    expect(fetchMock.mock.calls.at(-1)?.[0]).toBe("/api/trojka/_next/data/F3B0feyeEAMtls1dS-Mt8/ramowka.json");
-    expect(stale.current).toBeNull();
+  it("never carries yesterday's playlist into the new day on failure", async () => {
+    vi.setSystemTime(new Date("2026-10-05T21:59:59Z"));
+    const program = {
+      ...activeProgram(),
+      startTime: 1791237000,
+      endTime: 1791238200,
+      fullStartTime: "2026-10-05T23:50:00",
+    };
+    const block = {
+      ...activeBlock(),
+      startTime: program.fullStartTime,
+      playlistItems: [{ artist: "Yesterday", title: "Old song", startTime: "2026-10-05T23:59:00", duration: 300 }],
+    };
+    respond(scheduleUrl, { Trójka: [program] });
+    respond(playlistUrl, { data: [block] });
+    expect((await result()).current?.title).toBe("Old song");
+    vi.setSystemTime(new Date("2026-10-05T22:00:00Z"));
+    replies.set("/api/trojka/playlist?date=2026-10-06", () => new Response("error", { status: 500 }));
+    expect((await result()).current).toEqual(fallback());
   });
 });
 
-describe("trojkaProvider current program", () => {
-  it("treats programs as start-inclusive and stop-exclusive and falls back to the program as live", async () => {
-    vi.setSystemTime(new Date("2026-09-17T13:05:00Z"));
-    queueDiscovery();
-    queueSchedule();
-    queuePlaylist({ pageProps: { data: [] } });
+const failures: [string, () => Response | Promise<Response>][] = [
+  ["HTTP 500", () => new Response("error", { status: 500 })],
+  ["rejected fetch", () => Promise.reject(new Error("Network failure"))],
+  ["invalid JSON", () => new Response("not json")],
+  ["missing wrapper", () => new Response(JSON.stringify({ pageProps: { data: [] } }))],
+  ["wrong wrapper type", () => new Response(JSON.stringify({ Trójka: {}, data: {} }))],
+  ["invalid records", () => new Response(JSON.stringify({ Trójka: [null], data: [null] }))],
+];
 
-    const atStart = await result();
-    expect(atStart.current).toEqual({
-      artist: "Trójka",
-      title: "W tonacji Trójki",
-      isLiveBreak: true,
-      contentKind: "programme",
-    });
-    expect(atStart.all[0]).toMatchObject({ title: "W tonacji Trójki", isBreak: true });
-
-    vi.setSystemTime(new Date("2026-09-17T15:00:00Z"));
-    const atStop = await result();
-    expect(atStop.current).toBeNull();
+describe("Trójka failures", () => {
+  it.each(failures)("returns null without cached schedule on %s", async (_name, response) => {
+    replies.set(scheduleUrl, response);
+    expect(await trojka.trojkaProvider.fetch?.(station)).toBeNull();
   });
 
-  it("sorts captured songs and tolerates the last song through 60 seconds after its end", async () => {
-    vi.setSystemTime(new Date("2026-09-17T13:56:51Z"));
-    queueDiscovery();
-    queueSchedule();
-    queuePlaylist();
+  it.each(failures)("falls back to an active program on playlist %s", async (_name, response) => {
+    replies.set(playlistUrl, response);
+    expect((await result()).current).toEqual(fallback());
+  });
 
-    const tolerated = await result();
-    expect(tolerated.current).toEqual({ artist: "O.N.A.", title: "Krzyczę - jestem" });
-    expect(tolerated.all.filter((track) => !track.isBreak).map((track) => track.title)).toEqual([
-      "Roses",
-      "I Will Survive",
-      "Krzyczę - jestem",
-    ]);
+  it.each(failures)("retains valid same-day data after %s and retries the failed refresh", async (_name, response) => {
+    const first = await result();
+    vi.advanceTimersByTime(60_000);
+    replies.set(scheduleUrl, response);
+    replies.set(playlistUrl, response);
+    expect((await result()).current).toEqual(first.current);
+    respond(scheduleUrl, schedule);
+    respond(playlistUrl, { data: [] });
+    expect((await result()).current).toEqual(fallback());
+    expect(fetchMock).toHaveBeenCalledTimes(6);
+  });
 
-    vi.advanceTimersByTime(1_000);
-    queuePlaylist();
-    const stale = await result();
-    expect(stale.current).toEqual({
-      artist: "Trójka",
-      title: "W tonacji Trójki",
-      isLiveBreak: true,
-      contentKind: "programme",
-    });
+  it("does not extend cached schedule beyond its emission interval", async () => {
+    respond(scheduleUrl, { Trójka: [activeProgram()] });
+    await result();
+    vi.setSystemTime(new Date("2026-10-05T05:50:00Z"));
+    replies.set(scheduleUrl, () => new Response("error", { status: 500 }));
+    expect((await result()).current).toBeNull();
   });
 });

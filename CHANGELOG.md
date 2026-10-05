@@ -10,6 +10,7 @@ Kajtek zbiera statystyki odtwarzania, które możesz sprawdzić w ustawieniach. 
 - Po przełączeniu Kajtek wraca na poprzednią stację, gdy reklama faktycznie się skończy. Jeśli jej długość jest nieznana, czeka 3 minuty lub do końca bloku reklamowego.
 - Czas pominiętych reklam liczy się też dla przerw RMF z zaplanowanym początkiem i końcem w playliście, wyłącznie w ich trakcie. Przerwy bez znanego końca nadal nie są przeliczane na minuty.
 - Odrzucone ostrzeżenie o reklamie nie pojawia się ponownie, gdy zacznie się blok reklamowy.
+- Przywrócono aktualny utwór, historię i zapowiedzi audycji Trójki po przebudowie strony Polskiego Radia. Gdy playlista nie podaje bieżącego utworu, Kajtek pokazuje tytuł audycji.
 
 ## 0.12.1
 
