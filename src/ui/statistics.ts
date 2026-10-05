@@ -32,8 +32,8 @@ export function recapCopy(totals: StatisticsTotals, allTime: boolean) {
           : "Twoje radio. Kajtek czuwa nad resztą.",
     adNote:
       totals.adSavedMs > 0
-        ? "Tyle czasu grało inne radio w trakcie reklam o znanym czasie trwania."
-        : "Czas reklam pojawi się tutaj, gdy stacja poda ich długość. Nie zgadujemy.",
+        ? "Tyle czasu grało inne radio w trakcie reklam lub przerw o znanym czasie trwania."
+        : "Czas reklam pojawi się tutaj, gdy znamy czas trwania przerwy. Nie zgadujemy.",
     blacklist:
       totals.blacklistAvoided > 0
         ? `Kajtek ominął ${totals.blacklistAvoided} ${plural(totals.blacklistAvoided, "utwór", "utwory", "utworów")} z Twojej czarnej listy.`
@@ -87,8 +87,10 @@ export function initStatisticsUI(): void {
               <summary>Jak liczymy?</summary>
               <div class="recap-method-copy">
                 <p>
-                  Reklamy: liczymy czas, gdy gra inne radio, do końca bloku podanego przez stację. Obecnie takie dane
-                  dostarcza ESKA. Przerw w playliście i reklam bez długości nie przeliczamy na minuty.
+                  Reklamy: liczymy czas, gdy gra inne radio, tylko w przedziale przerwy o znanym początku i końcu. ESKA
+                  podaje długość bloku reklamowego. W RMF korzystamy z zaplanowanej przerwy w playliście, jeśli znamy jej
+                  początek i koniec — to przerwa wg playlisty, a nie potwierdzona reklama. Przerw bez znanego końca,
+                  serwisów informacyjnych ani czasu spoza przedziału nie przeliczamy na minuty.
                 </p>
                 <p>
                   Czarna lista: udane przełączenia z powodu zablokowanego utworu. Jeśli utwór już się zaczął, omijamy

@@ -83,19 +83,31 @@ function expireDismissedTrack(): void {
   dismissed = null;
 }
 
-function knownAdEndMs(track: TrackInfo): number | null {
-  if (track.adEndsAt !== undefined) return track.adEndsAt;
+interface KnownAdWindow {
+  // Null when only the end is known (ESKA ZPR timing); the break is then already running.
+  startsAtMs: number | null;
+  endsAtMs: number;
+}
+
+// The one authoritative interval for a skipped break: auto-return and saved-ad statistics must agree on it.
+function knownAdWindow(track: TrackInfo): KnownAdWindow | null {
+  if (track.adEndsAt !== undefined) return { startsAtMs: null, endsAtMs: track.adEndsAt };
   const nowSec = Math.floor(Date.now() / 1000);
-  const scheduled = track.isBreak
-    ? track
-    : state.history.find(
-        (t) =>
-          t.isBreak &&
-          t.label === DEFAULT_BREAK_LABEL &&
-          (t.timestamp ?? Infinity) <= nowSec &&
-          (t.endTimestamp ?? 0) > nowSec,
-      );
-  return scheduled?.endTimestamp ? scheduled.endTimestamp * 1000 : null;
+  const scheduled =
+    track.isBreak && track.label === DEFAULT_BREAK_LABEL
+      ? track
+      : state.history.find(
+          (t) =>
+            t.isBreak &&
+            t.label === DEFAULT_BREAK_LABEL &&
+            (t.timestamp ?? Infinity) <= nowSec &&
+            (t.endTimestamp ?? 0) > nowSec,
+        );
+  if (!scheduled?.endTimestamp) return null;
+  return {
+    startsAtMs: scheduled.timestamp ? scheduled.timestamp * 1000 : null,
+    endsAtMs: scheduled.endTimestamp * 1000,
+  };
 }
 
 async function candidateCurrentlyBlocked(candidate: Station, kind: WarningKind): Promise<boolean> {
@@ -157,12 +169,14 @@ function performStationSwitch(
     }
   }
 
-  const endsAtMs = kind === "adSkip" ? knownAdEndMs(track) : null;
+  const adWindow = kind === "adSkip" ? knownAdWindow(track) : null;
+  const endsAtMs = adWindow?.endsAtMs ?? null;
   selectStation(candidate, {
     id: createStatisticsOperationId(),
     kind,
     automatic,
-    ...(kind === "adSkip" && track.adEndsAt !== undefined ? { adEndsAt: track.adEndsAt } : {}),
+    ...(adWindow ? { adEndsAt: adWindow.endsAtMs } : {}),
+    ...(adWindow?.startsAtMs != null ? { adStartsAt: adWindow.startsAtMs } : {}),
   });
   const trackKey = getTrackKey(track);
   blacklistWarning = {

@@ -263,6 +263,8 @@ export interface ProtectiveRoute {
   id: string;
   kind: "blacklist" | "adSkip";
   automatic: boolean;
+  // Epoch ms bounds of a break with a known, bounded interval; only replacement audio inside it is saved time.
+  adStartsAt?: number;
   adEndsAt?: number;
 }
 
@@ -270,6 +272,7 @@ export class ListeningStatistics {
   private baseline: { media: number; wall: number } | null = null;
   private pending: ProtectiveRoute | null = null;
   private pendingRecovery: string | null = null;
+  private adStartsAt: number | null = null;
   private adEndsAt: number | null = null;
   private station: ListeningStation | undefined;
 
@@ -284,7 +287,12 @@ export class ListeningStatistics {
     this.baseline = null;
     this.pending = route;
     this.pendingRecovery = null;
-    this.adEndsAt = route?.adEndsAt ?? null;
+    const endsAt = route?.adEndsAt ?? null;
+    const startsAt = route?.adStartsAt ?? null;
+    // An inverted window is bad provider data, not evidence.
+    const valid = endsAt !== null && (startsAt === null || startsAt < endsAt);
+    this.adStartsAt = valid ? startsAt : null;
+    this.adEndsAt = valid ? endsAt : null;
   }
 
   recovery(from: string, to: string, _at: number): void {
@@ -322,10 +330,15 @@ export class ListeningStatistics {
     const listening = Math.min(advanced, elapsed);
     if (listening <= 0) return;
     const start = at - listening;
-    const savedEnd = Math.min(at, this.adEndsAt ?? start);
-    if (savedEnd > start) this.store.duration(start, savedEnd, savedEnd - start, savedEnd - start, this.station);
-    if (at > Math.max(start, savedEnd))
-      this.store.duration(Math.max(start, savedEnd), at, at - Math.max(start, savedEnd), 0, this.station);
+    const windowStart = this.adStartsAt ?? -Infinity;
+    const windowEnd = this.adEndsAt ?? -Infinity;
+    // Cut at the window edges so each piece is wholly inside (saved) or outside it.
+    const cuts = [start, windowStart, windowEnd, at].map((cut) => Math.min(Math.max(cut, start), at));
+    cuts.reduce((from, to) => {
+      if (to > from)
+        this.store.duration(from, to, to - from, from >= windowStart && to <= windowEnd ? to - from : 0, this.station);
+      return to;
+    });
   }
 
   suspend(media: number, at: number, audible: boolean, playbackRate = 1): void {
@@ -337,6 +350,7 @@ export class ListeningStatistics {
     this.suspend(media, at, audible, playbackRate);
     this.pending = null;
     this.pendingRecovery = null;
+    this.adStartsAt = null;
     this.adEndsAt = null;
   }
 }
