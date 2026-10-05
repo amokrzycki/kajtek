@@ -1,6 +1,8 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { STORAGE_KEYS } from "../src/consts.js";
+import type { NowPlayingSnapshot } from "../src/nowPlaying.js";
 import type { Station, TrackInfo } from "../src/types.js";
+import { renderNowPlaying } from "../src/ui/nowPlaying.js";
 
 const mocks = vi.hoisted(() => ({
   stations: [] as Station[],
@@ -71,8 +73,38 @@ class ElementStub {
   type = "";
   hidden = false;
   inert = false;
-  innerHTML = "";
+  private markup = "";
+  readonly fields = new Map<string, ElementStub>();
+  get innerHTML() {
+    return this.markup;
+  }
+  set innerHTML(value: string) {
+    this.markup = value;
+    this.fields.clear();
+    const imageMatch = value.match(/<img src="([^"]+)"/);
+    if (imageMatch) {
+      const image = new ElementStub();
+      image.src = imageMatch[1] ?? "";
+      const fallback = value.match(/data-fallback-src="([^"]+)"/);
+      if (fallback?.[1]) image.dataset.fallbackSrc = fallback[1];
+      this.fields.set("img", image);
+      this.fields.set(".discovery-placeholder", new ElementStub());
+    }
+    if (value.includes('class="discovery-artwork"')) {
+      for (const name of ["artwork", "artist", "title", "station", "badges", "time"]) {
+        const field = new ElementStub();
+        const match = value.match(
+          new RegExp(`<(?:span|time) class="discovery-${name}"[^>]*>([\\s\\S]*?)</(?:span|time)>`),
+        );
+        field.innerHTML = match?.[1] ?? "";
+        this.fields.set(`.discovery-${name}`, field);
+      }
+    }
+  }
   textContent = "";
+  readonly style: Record<string, string> = {};
+  src = "";
+  onerror: (() => void) | null = null;
   tabIndex = 0;
   parent: ElementStub | null = null;
   onclick: (() => void) | null = null;
@@ -81,13 +113,13 @@ class ElementStub {
     this.attributes.set(name, value);
   }
   getAttribute(name: string) {
-    return this.attributes.get(name) ?? null;
+    return name === "src" ? this.src : (this.attributes.get(name) ?? null);
   }
   getBoundingClientRect() {
     return { height: 100 };
   }
-  querySelector() {
-    return this.children[0] ?? null;
+  querySelector(selector: string) {
+    return this.fields.get(selector) ?? this.children[0] ?? null;
   }
   querySelectorAll() {
     return this.children;
@@ -327,6 +359,55 @@ describe("station browser wiring and lifecycle", () => {
     expect(button.innerHTML).toBe("fallback after image failure");
     expect(element("discovery-list").children[0]?.children[0]).toBe(button);
   });
+  it("updates observation time without replacing artwork, content or a focused button", async () => {
+    const select = vi.fn();
+    cleanup = initStationBrowser(select);
+    element("browser-now").click();
+    await vi.advanceTimersByTimeAsync(0);
+    const button = element("discovery-list").children[0]?.children[0];
+    if (!button) throw new Error("Missing button");
+    const artwork = button.querySelector(".discovery-artwork");
+    const artist = button.querySelector(".discovery-artist");
+    const title = button.querySelector(".discovery-title");
+    const badges = button.querySelector(".discovery-badges");
+    if (!artwork) throw new Error("Missing artwork");
+    artwork.innerHTML = "fallback after failure";
+    button.focus();
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(button.querySelector(".discovery-artwork")).toBe(artwork);
+    expect(artwork.innerHTML).toBe("fallback after failure");
+    expect(button.querySelector(".discovery-artist")).toBe(artist);
+    expect(button.querySelector(".discovery-title")).toBe(title);
+    expect(button.querySelector(".discovery-badges")).toBe(badges);
+    expect(button.querySelector(".discovery-time")?.textContent).toContain("stan ");
+    expect(documentStub.activeElement).toBe(button);
+    button.click();
+    expect(select).toHaveBeenCalledWith(station);
+  });
+
+  it("keeps first entry prompt, cancels requests on exit and debounces repeated immediate re-entry", async () => {
+    const signals: AbortSignal[] = [];
+    mocks.fetch.mockImplementation((_station: Station, options: { signal: AbortSignal }) => {
+      signals.push(options.signal);
+      return new Promise(() => undefined);
+    });
+    cleanup = initStationBrowser(vi.fn());
+    element("browser-now").click();
+    expect(mocks.fetch).toHaveBeenCalledTimes(1);
+    element("browser-stations").click();
+    expect(signals[0]?.aborted).toBe(true);
+    for (let i = 0; i < 5; i++) {
+      element("browser-now").click();
+      await vi.advanceTimersByTimeAsync(30);
+      element("browser-stations").click();
+    }
+    element("browser-now").click();
+    expect(mocks.fetch).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(300);
+    expect(mocks.fetch).toHaveBeenCalledTimes(2);
+    expect(signals[1]?.aborted).toBe(false);
+  });
+
   it("settles rapid reduced-motion switches immediately and cancels obsolete polling", async () => {
     let signal: AbortSignal | undefined;
     mocks.fetch.mockImplementationOnce((_station: Station, options: { signal: AbortSignal }) => {
@@ -343,6 +424,8 @@ describe("station browser wiring and lifecycle", () => {
     expect(element("station-list-container").hidden).toBe(true);
     expect(element("station-list-container").inert).toBe(true);
     await vi.advanceTimersByTimeAsync(0);
+    expect(mocks.fetch).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(250);
     expect(mocks.fetch).toHaveBeenCalledTimes(2);
     element("browser-stations").click();
     await vi.advanceTimersByTimeAsync(60_000);
@@ -356,7 +439,7 @@ describe("station browser wiring and lifecycle", () => {
     await vi.advanceTimersByTimeAsync(0);
     const button = element("discovery-list").children[0]?.children[0];
     expect(button?.attributes.get("aria-label")).toBe("Odtwórz Artist – Song na Radio A");
-    expect(button?.innerHTML).toContain("czarna lista");
+    expect(button?.querySelector(".discovery-badges")?.innerHTML).toContain("czarna lista");
     button?.click();
     expect(select).toHaveBeenCalledWith(station);
     expect(mocks.state.playing).toBe(false);
@@ -430,5 +513,62 @@ describe("station browser wiring and lifecycle", () => {
     expect(documentStub.activeElement).toBe(button);
     await vi.advanceTimersByTimeAsync(15_000);
     expect(mocks.fetch).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("discovery artwork reconciliation", () => {
+  it("retains fallback nodes, remembers failures for the session and attempts changed URLs", async () => {
+    const snapshot: NowPlayingSnapshot = {
+      station: { ...station, coverUrl: "/unit-station.svg" },
+      track: { artist: "Artist", title: "Song", coverUrl: "/unit-broken.png" },
+      kind: "track",
+      evidence: null,
+      flags: { blacklisted: false, favoriteArtist: false },
+      updatedAt: Date.now(),
+      stale: false,
+      error: false,
+      loading: false,
+      source: "passive",
+    };
+    const list = element("discovery-list");
+    const render = () => renderNowPlaying(list as unknown as HTMLElement, [snapshot], undefined, vi.fn());
+    render();
+    const button = list.children[0]?.children[0];
+    const artwork = button?.querySelector(".discovery-artwork");
+    const image = artwork?.querySelector("img");
+    expect(image?.src).toBe("/unit-broken.png");
+    image?.onerror?.();
+    expect(image?.src).toBe("/unit-station.svg");
+    snapshot.updatedAt = Date.now() + 15_000;
+    snapshot.track = { ...snapshot.track, artist: "Changed artist", title: "Changed title" };
+    snapshot.stale = true;
+    snapshot.error = true;
+    render();
+    expect(artwork?.querySelector("img")).toBe(image);
+    expect(button?.querySelector(".discovery-title")?.textContent).toBe("Changed title");
+    renderNowPlaying(list as unknown as HTMLElement, [], undefined, vi.fn());
+    render();
+    expect(list.children[0]?.children[0]?.querySelector(".discovery-artwork")?.querySelector("img")?.src).toBe(
+      "/unit-station.svg",
+    );
+    snapshot.station = { ...snapshot.station, coverUrl: "/unit-new-station.svg" };
+    render();
+    const currentArtwork = list.children[0]?.children[0]?.querySelector(".discovery-artwork");
+    expect(currentArtwork?.querySelector("img")?.src).toBe("/unit-new-station.svg");
+    snapshot.track = { ...snapshot.track, coverUrl: "/unit-new-track.png" };
+    render();
+    expect(currentArtwork?.querySelector("img")?.src).toBe("/unit-new-track.png");
+    currentArtwork?.querySelector("img")?.onerror?.();
+    currentArtwork?.querySelector("img")?.onerror?.();
+    expect(currentArtwork?.querySelector("img")?.style.display).toBe("none");
+    expect(currentArtwork?.querySelector(".discovery-placeholder")?.style.display).toBe("flex");
+    expect(localStorage.setItem).not.toHaveBeenCalled();
+    vi.resetModules();
+    const reloaded = await import("../src/ui/nowPlaying.js");
+    reloaded.renderNowPlaying(list as unknown as HTMLElement, [], undefined, vi.fn());
+    reloaded.renderNowPlaying(list as unknown as HTMLElement, [snapshot], undefined, vi.fn());
+    expect(list.children[0]?.children[0]?.querySelector(".discovery-artwork")?.querySelector("img")?.src).toBe(
+      "/unit-new-track.png",
+    );
   });
 });

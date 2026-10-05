@@ -90,7 +90,9 @@ export function initStatisticsUI(): void {
                   Reklamy: liczymy czas, gdy gra inne radio, tylko w przedziale przerwy o znanym początku i końcu. ESKA
                   podaje długość bloku reklamowego. W RMF korzystamy z zaplanowanej przerwy w playliście, jeśli znamy jej
                   początek i koniec — to przerwa wg playlisty, a nie potwierdzona reklama. Przerw bez znanego końca,
-                  serwisów informacyjnych ani czasu spoza przedziału nie przeliczamy na minuty.
+                  serwisów informacyjnych ani czasu spoza przedziału nie przeliczamy na minuty. Pauza i wyciszenie się
+                  nie liczą. Po wznowieniu liczymy dalej, jeśli ta sama przerwa jeszcze trwa; ręczna zmiana stacji,
+                  anulowanie powrotu lub powrót kończą ten pomiar.
                 </p>
                 <p>
                   Czarna lista: udane przełączenia z powodu zablokowanego utworu. Jeśli utwór już się zaczął, omijamy

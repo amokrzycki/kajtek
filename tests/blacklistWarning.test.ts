@@ -47,6 +47,8 @@ const mocks = vi.hoisted(() => ({
   selectStation: vi.fn(),
   fetchPlaylist: vi.fn(),
   limited: false,
+  endRoute: vi.fn(),
+  sample: vi.fn(),
 }));
 
 vi.mock("../src/blacklist.js", () => ({ isBlacklisted: mocks.isBlacklisted }));
@@ -55,7 +57,14 @@ vi.mock("../src/catalog.js", () => ({
   getStoredRmfCatalog: vi.fn(() => null),
 }));
 vi.mock("../src/player.js", () => ({ fetchPlaylist: mocks.fetchPlaylist, selectStation: mocks.selectStation }));
-vi.mock("../src/state.js", () => ({ notifyState: mocks.notifyState, state }));
+vi.mock("../src/state.js", () => ({
+  notifyState: mocks.notifyState,
+  state,
+  radioAudio: { currentTime: 0, muted: false, volume: 1, playbackRate: 1 },
+}));
+vi.mock("../src/statisticsPlayback.js", () => ({
+  listeningStatistics: { endRoute: mocks.endRoute, sample: mocks.sample },
+}));
 vi.mock("../src/utils.js", () => ({
   getTrackKey: vi.fn((track: { title: string }) => track.title),
   withinRateLimit: vi.fn(() => ({ limited: mocks.limited, timestamps: [] })),
@@ -204,6 +213,22 @@ describe("saved-ad window forwarded to statistics", () => {
     expect(routeOf()).not.toHaveProperty("adStartsAt");
   });
 
+  it("retains a switched route while paused and returns at the known deadline after resume", async () => {
+    await startAdSwitch(Date.now() + 30_000);
+    state.playing = false;
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(blacklistWarning.getBlacklistWarningState()?.phase).toBe("switched");
+    state.playing = true;
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(mocks.selectStation).toHaveBeenCalledTimes(1);
+    state.playing = false;
+    await vi.advanceTimersByTimeAsync(30_000);
+    expect(mocks.selectStation).toHaveBeenCalledTimes(1);
+    state.playing = true;
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(mocks.selectStation).toHaveBeenLastCalledWith(origin);
+  });
+
   it("forwards no window for a predicted or unknown-length break, the news label, or a blacklist route", async () => {
     const now = nowSec();
     state.history = [
@@ -320,6 +345,7 @@ describe("manual ad switch and auto-return", () => {
     mocks.fetchPlaylist.mockReturnValue(new Promise((r) => (resolvePoll = r)));
     await vi.advanceTimersByTimeAsync(5_000);
     blacklistWarning.cancelAdSkipAutoReturn();
+    expect(mocks.endRoute).toHaveBeenCalledTimes(1);
     resolvePoll({ current: { artist: "A", title: "Song" } });
     await vi.advanceTimersByTimeAsync(200_000);
     expect(mocks.selectStation).toHaveBeenCalledTimes(1);

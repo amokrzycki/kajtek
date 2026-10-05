@@ -370,3 +370,41 @@ describe("operation IDs on local-network HTTP", () => {
     }
   });
 });
+
+describe("temporary suspension and route cancellation", () => {
+  it("retains a known window across buffering and resets the media/wall baseline", () => {
+    const store = createStatisticsStore(memoryStorage(), monday);
+    const tracker = new ListeningStatistics(store);
+    tracker.route({ id: "ad", kind: "adSkip", automatic: true, adEndsAt: monday + 20_000 }, monday);
+    tracker.playing(0, monday);
+    tracker.suspend(2, monday + 2000, true);
+    tracker.sample(12, monday + 12_000, true);
+    tracker.playing(0, monday + 12_000);
+    tracker.suspend(3, monday + 15_000, true);
+    expect(store.snapshot(monday).allTime).toMatchObject({ listeningMs: 5000, adSavedMs: 5000, detours: 1 });
+  });
+
+  it("keeps a pending stream recovery independent of protective-route cancellation", () => {
+    const store = createStatisticsStore(memoryStorage(), monday);
+    const tracker = new ListeningStatistics(store);
+    tracker.route({ id: "ad", kind: "adSkip", automatic: true, adEndsAt: monday + 20_000 }, monday);
+    tracker.playing(0, monday);
+    tracker.suspend(2, monday + 2000, true);
+    tracker.recovery("first", "second", monday + 2000);
+    tracker.endRoute();
+    tracker.playing(0, monday + 3000);
+    tracker.sample(3, monday + 6000, true);
+    expect(store.snapshot(monday).allTime).toMatchObject({ listeningMs: 5000, adSavedMs: 2000, detours: 2 });
+  });
+
+  it("ends protection without stopping ordinary listening or leaking an old window", () => {
+    const store = createStatisticsStore(memoryStorage(), monday);
+    const tracker = new ListeningStatistics(store);
+    tracker.route({ id: "ad", kind: "adSkip", automatic: true, adEndsAt: monday + 20_000 }, monday);
+    tracker.playing(0, monday);
+    tracker.sample(2, monday + 2000, true);
+    tracker.endRoute();
+    tracker.sample(5, monday + 5000, true);
+    expect(store.snapshot(monday).allTime).toMatchObject({ listeningMs: 5000, adSavedMs: 2000, detours: 1 });
+  });
+});

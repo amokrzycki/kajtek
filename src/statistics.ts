@@ -301,6 +301,10 @@ export class ListeningStatistics {
   }
 
   playing(media: number, at: number): void {
+    if (this.adEndsAt !== null && at >= this.adEndsAt) {
+      this.adStartsAt = null;
+      this.adEndsAt = null;
+    }
     const pending = this.pending;
     const recovery = this.pendingRecovery;
     // Consume before committing: repeated `playing` after buffering is not another detour.
@@ -348,8 +352,12 @@ export class ListeningStatistics {
 
   stop(media: number, at: number, audible: boolean, playbackRate = 1): void {
     this.suspend(media, at, audible, playbackRate);
-    this.pending = null;
     this.pendingRecovery = null;
+    this.endRoute();
+  }
+
+  endRoute(): void {
+    this.pending = null;
     this.adStartsAt = null;
     this.adEndsAt = null;
   }

@@ -423,7 +423,7 @@ export function togglePlay() {
     startTrackRotation();
   } else {
     playbackRequestId++;
-    listeningStatistics.stop(
+    listeningStatistics.suspend(
       radioAudio.currentTime,
       Date.now(),
       !radioAudio.muted && radioAudio.volume > 0,

@@ -2,8 +2,9 @@ import { isBlacklisted, normalizeTrackKey, removeFromBlacklist } from "./blackli
 import { getOrderedStations, getStoredRmfCatalog } from "./catalog.js";
 import { DEFAULT_BREAK_LABEL, MIN_SKIP_GRACE_SEC, SWITCH_RATE_LIMIT, TIMERS } from "./consts.js";
 import { fetchPlaylist, selectStation } from "./player.js";
-import { notifyState, state } from "./state.js";
+import { notifyState, radioAudio, state } from "./state.js";
 import { createStatisticsOperationId } from "./statistics.js";
+import { listeningStatistics } from "./statisticsPlayback.js";
 import type { Station, TrackInfo } from "./types.js";
 import { getTrackKey, withinRateLimit } from "./utils.js";
 
@@ -312,6 +313,13 @@ export function returnToPreviousStation(): void {
 
 export function cancelAdSkipAutoReturn(): void {
   if (!activeAdSkip) return;
+  listeningStatistics.sample(
+    radioAudio.currentTime,
+    Date.now(),
+    !radioAudio.muted && radioAudio.volume > 0,
+    radioAudio.playbackRate,
+  );
+  listeningStatistics.endRoute();
   activeAdSkip = null;
   blacklistWarning = null;
   notifyState();
@@ -341,7 +349,8 @@ async function pollAdBreakEnded(session: ActiveAdSkip): Promise<void> {
 
 setInterval(() => {
   if (!state.playing) {
-    if (blacklistWarning || activeAdSkip) {
+    // A paused replacement keeps its return route; an uncompleted warning must not switch while paused.
+    if (blacklistWarning?.phase === "warning") {
       resetBlacklistWarningState();
       notifyState();
     }

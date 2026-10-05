@@ -26,6 +26,7 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
   let timer: ReturnType<typeof setTimeout> | null = null;
   let stationKey = "";
   let lifecycle = 0;
+  let lastActivationAt = -Infinity;
 
   const activeMetadata = (): ActiveMetadata | null =>
     state.playing && state.station && state.liveTrack
@@ -81,7 +82,10 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
     stop();
     if (now) {
       render();
-      void poll();
+      const rapidReentry = Date.now() - lastActivationAt < 1000;
+      lastActivationAt = Date.now();
+      if (rapidReentry) timer = setTimeout(() => void poll(), 250);
+      else void poll();
     }
     transition.switchTo(now ? panel : els.stationListContainer, now ? 1 : -1);
   };
