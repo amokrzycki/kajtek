@@ -18,7 +18,7 @@ const mocks = vi.hoisted(() => ({
   liveListeners: new Set<() => void>(),
   fetch: vi.fn(),
   catalog: vi.fn(),
-  blacklisted: false,
+  negativeMusic: false,
 }));
 vi.hoisted(() => {
   vi.stubGlobal("DOMParser", class {});
@@ -48,11 +48,12 @@ vi.mock("../src/utils.js", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../src/utils.js")>()),
   escapeHtml: (value: string) => value,
   getStoredJSON: (key: string, fallback: unknown) =>
-    mocks.blacklisted && key === "kajtek_blacklist"
+    mocks.negativeMusic && key === "kajtek_blacklist"
       ? [{ key: "artist::song", artist: "Artist", title: "Song" }]
       : fallback,
 }));
 
+import { sharedSnapshots } from "../src/stationSnapshots.js";
 import { initStationBrowser } from "../src/ui/stationBrowser.js";
 
 class ElementStub {
@@ -208,7 +209,7 @@ beforeEach(() => {
   mocks.state.station = null;
   mocks.state.liveTrack = null;
   mocks.state.viewMode = "grid";
-  mocks.blacklisted = false;
+  mocks.negativeMusic = false;
   mocks.fetch.mockResolvedValue({ current: { artist: "Artist", title: "Song" }, all: [] });
   for (const id of [
     "browser-stations",
@@ -241,10 +242,24 @@ beforeEach(() => {
     matchMedia: () => ({ matches: true }),
   });
   vi.stubGlobal("HTMLButtonElement", ElementStub);
-  vi.stubGlobal("localStorage", { setItem: vi.fn() });
+  vi.stubGlobal("localStorage", {
+    getItem: (key: string) =>
+      key === "kajtek_smart_listening"
+        ? JSON.stringify({
+            version: 1,
+            enabled: true,
+            content: { advertisement: true, news: false, otherBreak: false },
+            preferences: mocks.negativeMusic
+              ? [{ scope: "track", artist: "Artist", title: "Song", key: "track:artist::song", value: "negative" }]
+              : [],
+          })
+        : null,
+    setItem: vi.fn(),
+  });
 });
 afterEach(() => {
   cleanup?.();
+  sharedSnapshots.dispose();
   cleanup = undefined;
   vi.useRealTimers();
   vi.unstubAllGlobals();
@@ -341,9 +356,11 @@ describe("station browser wiring and lifecycle", () => {
     assertView("grid");
     element("browser-now").click();
     assertView("grid");
-    expect(localStorage.setItem).toHaveBeenCalledTimes(2);
-    expect(localStorage.setItem).toHaveBeenNthCalledWith(1, STORAGE_KEYS.VIEW_MODE, "list");
-    expect(localStorage.setItem).toHaveBeenNthCalledWith(2, STORAGE_KEYS.VIEW_MODE, "grid");
+    const viewWrites = vi.mocked(localStorage.setItem).mock.calls.filter(([key]) => key === STORAGE_KEYS.VIEW_MODE);
+    expect(viewWrites).toEqual([
+      [STORAGE_KEYS.VIEW_MODE, "list"],
+      [STORAGE_KEYS.VIEW_MODE, "grid"],
+    ]);
     expect(button?.attributes.get("aria-pressed")).toBe("true");
     button?.click();
     expect(select).toHaveBeenCalledWith(station);
@@ -431,15 +448,15 @@ describe("station browser wiring and lifecycle", () => {
     await vi.advanceTimersByTimeAsync(60_000);
     expect(mocks.fetch).toHaveBeenCalledTimes(2);
   });
-  it("routes clicks through the supplied station callback, including blacklisted content", async () => {
-    mocks.blacklisted = true;
+  it("routes clicks through the supplied station callback, including negativeMusic content", async () => {
+    mocks.negativeMusic = true;
     const select = vi.fn();
     cleanup = initStationBrowser(select);
     element("browser-now").click();
     await vi.advanceTimersByTimeAsync(0);
     const button = element("discovery-list").children[0]?.children[0];
     expect(button?.attributes.get("aria-label")).toBe("Odtwórz Artist – Song na Radio A");
-    expect(button?.querySelector(".discovery-badges")?.innerHTML).toContain("czarna lista");
+    expect(button?.querySelector(".discovery-badges")?.innerHTML).toContain("niechciana muzyka");
     button?.click();
     expect(select).toHaveBeenCalledWith(station);
     expect(mocks.state.playing).toBe(false);
@@ -523,7 +540,7 @@ describe("discovery artwork reconciliation", () => {
       track: { artist: "Artist", title: "Song", coverUrl: "/unit-broken.png" },
       kind: "track",
       evidence: null,
-      flags: { blacklisted: false, favoriteArtist: false },
+      flags: { negativeMusic: false, positiveArtist: false },
       updatedAt: Date.now(),
       stale: false,
       error: false,

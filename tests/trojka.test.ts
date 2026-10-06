@@ -146,7 +146,7 @@ describe("Trójka transport and metadata", () => {
 
   it("returns no current item when no program is active", async () => {
     respond(scheduleUrl, { Trójka: [] });
-    expect(await result()).toEqual({ current: null, all: [] });
+    expect(await result()).toMatchObject({ current: null, all: [], observedAt: Date.now() });
     expect(fetchMock.mock.calls.map(([url]) => url)).toEqual([scheduleUrl]);
   });
 
@@ -282,7 +282,9 @@ describe("Trójka failures", () => {
     vi.advanceTimersByTime(60_000);
     replies.set(scheduleUrl, response);
     replies.set(playlistUrl, response);
-    expect((await result()).current).toEqual(first.current);
+    const stale = await result();
+    expect(stale.current).toEqual(first.current);
+    expect(stale.observedAt).toBe(Date.now() - 60_000);
     respond(scheduleUrl, schedule);
     respond(playlistUrl, { data: [] });
     expect((await result()).current).toEqual(fallback());

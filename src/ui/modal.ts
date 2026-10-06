@@ -19,19 +19,26 @@ function getFocusableElements(modalEl: HTMLElement): HTMLElement[] {
     modalEl.querySelectorAll<HTMLElement>(
       'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), summary, textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
     ),
-  ).filter((element) => element.getClientRects().length > 0 && element.getAttribute("aria-hidden") !== "true");
+  ).filter(
+    (element) =>
+      element.checkVisibility({ visibilityProperty: true }) && element.getAttribute("aria-hidden") !== "true",
+  );
 }
 
-export function openModal(modalEl: HTMLElement): void {
+export function openModal(modalEl: HTMLElement, focusTarget?: HTMLElement | null): void {
   if (document.activeElement instanceof HTMLElement) previousFocus.set(modalEl, document.activeElement);
   modalEl.removeAttribute("aria-hidden");
   document.body.style.overflow = "hidden";
   requestAnimationFrame(() => {
     modalEl.classList.add("is-open");
-    const coarse = window.matchMedia("(pointer: coarse)").matches;
-    const autofocusEl = coarse ? null : modalEl.querySelector<HTMLElement>("[autofocus]");
-    const fallback = getFocusableElements(modalEl).find((el) => !coarse || !el.hasAttribute("autofocus"));
-    (autofocusEl ?? fallback)?.focus();
+    // Hidden controls cannot receive focus until the opening visibility transition finishes.
+    void Promise.all(modalEl.getAnimations().map((animation) => animation.finished.catch(() => undefined))).then(() => {
+      if (!modalEl.classList.contains("is-open") || modalEl.contains(document.activeElement)) return;
+      const coarse = window.matchMedia("(pointer: coarse)").matches;
+      const autofocusEl = coarse ? null : modalEl.querySelector<HTMLElement>("[autofocus]");
+      const fallback = getFocusableElements(modalEl).find((el) => !coarse || !el.hasAttribute("autofocus"));
+      (focusTarget ?? autofocusEl ?? fallback)?.focus();
+    });
   });
 }
 

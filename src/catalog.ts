@@ -172,7 +172,22 @@ export function deleteCustomStation(id: string): void {
 }
 
 export function getStationPrefs(): Record<string, StationPref> {
-  return getStoredJSON<Record<string, StationPref>>(STORAGE_KEYS.STATION_PREFS, {});
+  const stored = getStoredJSON<Record<string, StationPref>>(STORAGE_KEYS.STATION_PREFS, {});
+  const prefs = stored && typeof stored === "object" && !Array.isArray(stored) ? stored : {};
+  let migrated = false;
+  for (const [id, pref] of Object.entries(prefs)) {
+    if (!pref || typeof pref !== "object" || typeof pref.enabled !== "boolean") {
+      delete prefs[id];
+      migrated = true;
+      continue;
+    }
+    if (typeof pref.smartEnabled !== "boolean") {
+      pref.smartEnabled = pref.enabled;
+      migrated = true;
+    }
+  }
+  if (migrated) setStoredJSON(STORAGE_KEYS.STATION_PREFS, prefs);
+  return prefs;
 }
 
 export function isStationEnabled(id: string): boolean {
@@ -197,7 +212,8 @@ export function setStationEnabled(id: string, enabled: boolean): void {
   const prefs = getStationPrefs();
   const fav = enabled ? state.favs.has(id) : false;
 
-  prefs[id] = { id, enabled, favorite: fav };
+  const smartEnabled = isStationSmartEnabled(id);
+  prefs[id] = { ...prefs[id], id, enabled, favorite: fav, smartEnabled };
   setStoredJSON(STORAGE_KEYS.STATION_PREFS, prefs);
 
   if (!enabled && state.favs.has(id)) {
@@ -216,8 +232,42 @@ export function setStationFavorite(id: string, favorite: boolean): void {
   setStoredJSON(STORAGE_KEYS.FAVS, Array.from(state.favs));
 
   const prefs = getStationPrefs();
-  prefs[id] = { id, enabled: isStationEnabled(id), favorite };
+  prefs[id] = { ...prefs[id], id, enabled: isStationEnabled(id), favorite, smartEnabled: isStationSmartEnabled(id) };
   setStoredJSON(STORAGE_KEYS.STATION_PREFS, prefs);
+}
+
+export function isStationSmartEnabled(id: string): boolean {
+  const prefs = getStationPrefs();
+  const explicit = prefs[id]?.smartEnabled;
+  if (typeof explicit === "boolean") return explicit;
+  const enabled = isStationEnabled(id);
+  prefs[id] = { id, enabled, favorite: state.favs.has(id), smartEnabled: enabled };
+  setStoredJSON(STORAGE_KEYS.STATION_PREFS, prefs);
+  return enabled;
+}
+
+export function setStationSmartEnabled(id: string, smartEnabled: boolean): void {
+  const prefs = getStationPrefs();
+  prefs[id] = { ...prefs[id], id, enabled: isStationEnabled(id), favorite: state.favs.has(id), smartEnabled };
+  setStoredJSON(STORAGE_KEYS.STATION_PREFS, prefs);
+}
+
+export function getSmartStations(): Station[] {
+  const stations = getAllKnownStations();
+  const prefs = getStationPrefs();
+  let initialized = false;
+  for (const station of stations) {
+    if (typeof prefs[station.id]?.smartEnabled === "boolean") continue;
+    const enabled = prefs[station.id]?.enabled ?? initialStationEnabled(station);
+    prefs[station.id] = { id: station.id, enabled, favorite: state.favs.has(station.id), smartEnabled: enabled };
+    initialized = true;
+  }
+  if (initialized) setStoredJSON(STORAGE_KEYS.STATION_PREFS, prefs);
+  return stations.filter((station) => prefs[station.id]?.smartEnabled);
+}
+
+function initialStationEnabled(station: Station): boolean {
+  return station.cat === "custom" || INIT_STATIONS.some((initial) => initial.id === station.id);
 }
 
 export function getAllKnownStations(): Station[] {
@@ -286,7 +336,9 @@ export function getAllKnownStations(): Station[] {
 }
 
 export function getEnabledStations(): Station[] {
-  return getAllKnownStations().filter((s) => isStationEnabled(s.id));
+  const stations = getAllKnownStations();
+  const prefs = getStationPrefs();
+  return stations.filter((station) => prefs[station.id]?.enabled ?? initialStationEnabled(station));
 }
 
 export function getOrderedStations(): Station[] {

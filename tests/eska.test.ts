@@ -201,16 +201,15 @@ describe("eskaProvider.fetch", () => {
     expect(transition.current?.isLiveBreak).toBeUndefined();
   });
 
-  it("uses REST during a synthetic jingle but characterizes jingle plus REST null as a break", async () => {
+  it("normalizes an explicit jingle as other break independently of stale REST", async () => {
     eska.startEskaSession(station.id);
     eska.readZprTag(jingleFragment, station.id);
 
     const withRest = await fetchResult(restSong);
-    expect(withRest.current).toMatchObject({ title: "Lonely Together" });
-    expect(withRest.current?.isLiveBreak).toBeUndefined();
+    expect(withRest.current).toMatchObject({ contentKind: "otherBreak", contentEvidence: "explicit" });
 
     const withoutRest = await fetchResult(restNull);
-    expect(withoutRest.current).toMatchObject({ title: "Przerwa / Reklamy", isLiveBreak: true });
+    expect(withoutRest.current).toMatchObject({ contentKind: "otherBreak", contentEvidence: "explicit" });
   });
 
   it("does not attach old HLS timing during either REST mismatch direction", async () => {

@@ -58,15 +58,14 @@ const mocks = vi.hoisted(() => {
 
   return {
     audio: new FakeAudio(),
-    detectBlacklistedUpcoming: vi.fn(),
-    detectUpcomingAdBreak: vi.fn(),
+    evaluateSmartListening: vi.fn(),
     eskaProvider,
     genericProvider,
     hlsInstances: [] as FakeHlsInstance[],
     hlsSupported: true,
     notifyState: vi.fn(),
     readZprTag: vi.fn(),
-    resetBlacklistWarningState: vi.fn(),
+    resetSmartListening: vi.fn(),
     rmfProvider,
     setHistoryLoadingState: vi.fn(),
     setPlaybackStatus: vi.fn(),
@@ -96,9 +95,12 @@ const state = vi.hoisted(
     favTracks: [],
     viewMode: "list",
     version: "test",
-    blacklistEnabled: true,
-    adSkipEnabled: false,
-    adSkipAutoReturnEnabled: true,
+    smartListening: {
+      version: 1,
+      enabled: false,
+      content: { advertisement: false, news: false, otherBreak: false },
+      preferences: [],
+    },
   }),
 );
 
@@ -138,10 +140,9 @@ vi.mock("hls.js", () => {
   return { default: FakeHls };
 });
 
-vi.mock("../src/blacklistWarning.js", () => ({
-  detectBlacklistedUpcoming: mocks.detectBlacklistedUpcoming,
-  detectUpcomingAdBreak: mocks.detectUpcomingAdBreak,
-  resetBlacklistWarningState: mocks.resetBlacklistWarningState,
+vi.mock("../src/smartListening.js", () => ({
+  evaluateSmartListening: mocks.evaluateSmartListening,
+  resetSmartListening: mocks.resetSmartListening,
 }));
 
 vi.mock("../src/catalog.js", () => ({ getOrderedStations: vi.fn(() => []) }));
@@ -164,6 +165,7 @@ vi.mock("../src/providers.js", () => ({
 }));
 vi.mock("../src/state.js", () => ({
   intervals,
+  getLiveTrackUpdatedAt: () => Date.now(),
   notifyState: mocks.notifyState,
   radioAudio: mocks.audio,
   setLiveTrack: (track: TrackInfo | null) => {
@@ -698,7 +700,7 @@ describe("listening recap integration", () => {
     const start = Date.now();
     player.selectStation(station(), {
       id: "known-ad",
-      kind: "adSkip",
+      kind: "advertisement",
       automatic: true,
       adEndsAt: start + 30_000,
       ...(starts === undefined ? {} : { adStartsAt: start + starts }),
@@ -727,7 +729,12 @@ describe("listening recap integration", () => {
 
   it.each(["mute", "zero", "waiting", "expired", "unrelated"])("bounds known-ad listening through %s", async (mode) => {
     const start = Date.now();
-    player.selectStation(station(), { id: "known-ad", kind: "adSkip", automatic: false, adEndsAt: start + 10_000 });
+    player.selectStation(station(), {
+      id: "known-ad",
+      kind: "advertisement",
+      automatic: false,
+      adEndsAt: start + 10_000,
+    });
     mocks.audio.dispatch("playing");
     vi.advanceTimersByTime(2000);
     mocks.audio.currentTime = 2;
@@ -782,7 +789,7 @@ describe("listening recap integration", () => {
     mocks.audio.currentTime = 4;
     player.selectStation(station({ id: "automatic", name: "Automatic Radio" }), {
       id: "ad",
-      kind: "adSkip",
+      kind: "advertisement",
       automatic: true,
     });
     mocks.audio.currentTime = 0;
@@ -803,16 +810,16 @@ describe("listening recap integration", () => {
   });
 
   it("records successful protective routes only once, and excludes failed playback", async () => {
-    player.selectStation(station(), { id: "protection-1", kind: "blacklist", automatic: true });
+    player.selectStation(station(), { id: "protection-1", kind: "negativeTrack", automatic: true });
     mocks.audio.dispatch("playing");
     mocks.audio.dispatch("playing");
     await vi.advanceTimersByTimeAsync(0);
     const { statisticsStore } = await import("../src/statisticsPlayback.js");
-    expect(statisticsStore.snapshot().allTime).toMatchObject({ blacklistAvoided: 1, detours: 1 });
+    expect(statisticsStore.snapshot().allTime).toMatchObject({ negativeMusicAvoided: 1, detours: 1 });
     mocks.audio.play.mockRejectedValueOnce(new Error("connection failed"));
-    player.selectStation(station(), { id: "protection-2", kind: "blacklist", automatic: true });
+    player.selectStation(station(), { id: "protection-2", kind: "negativeTrack", automatic: true });
     await settleMetadata();
-    expect(statisticsStore.snapshot().allTime.blacklistAvoided).toBe(1);
+    expect(statisticsStore.snapshot().allTime.negativeMusicAvoided).toBe(1);
   });
 
   it("records a distinct stream recovery after playing, and no same-URL retry", async () => {

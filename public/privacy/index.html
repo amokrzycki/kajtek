@@ -27,7 +27,7 @@
     <main class="legal-main">
       <article class="legal-document">
         <h1>Polityka prywatności</h1>
-        <p class="legal-updated">Ostatnia aktualizacja: 4 października 2026 r.</p>
+        <p class="legal-updated">Ostatnia aktualizacja: 5 października 2026 r.</p>
         <p class="legal-lead">
           Kajtek nie wymaga konta i nie wyświetla reklam. Nie wykorzystuje danych do profilowania ani reklamy
           behawioralnej. Połączenia z serwisem przechodzą przez Cloudflare. Przeglądarka łączy się też z
@@ -103,24 +103,43 @@
             <li><code>kajtek_case</code>: wybrany kolor obudowy i akcentu,</li>
             <li><code>kajtek_favs</code>: identyfikatory ulubionych stacji,</li>
             <li><code>kajtek_fav_tracks</code>: ulubione utwory wraz z nazwą stacji i datą dodania,</li>
-            <li><code>kajtek_station_prefs</code>: włączenie i status ulubionych stacji,</li>
+            <li><code>kajtek_station_prefs</code>: widoczność i status ulubionych stacji oraz niezależne pozwolenie <code>smartEnabled</code> na automatyczne przełączanie do danej stacji,</li>
             <li><code>kajtek_rmf_catalog</code>: zapisana kopia katalogu RMF i data pobrania,</li>
             <li><code>kajtek_eska_catalog</code>: zapisana kopia katalogu ESKA i data pobrania,</li>
             <li><code>kajtek_custom_stations</code>: nazwy i adresy strumieni dodanych przez użytkownika,</li>
             <li><code>kajtek_view_mode</code>: widok listy lub siatki,</li>
-            <li><code>kajtek_blacklist</code>: lista zablokowanych wykonawców i utworów,</li>
-            <li><code>kajtek_blacklist_enabled</code>: włączenie czarnej listy,</li>
-            <li><code>kajtek_ad_skip_enabled</code>: włączenie pomijania reklam,</li>
-            <li><code>kajtek_ad_skip_auto_return</code>: ustawienie automatycznego powrotu po reklamie,</li>
+            <li><code>kajtek_smart_listening</code>: włączenie Smart Listening, zasady pomijania reklam, wiadomości i innych rozpoznanych przerw oraz jawne preferencje „Preferuj” lub „Unikaj” dla artystów albo par wykonawca–tytuł; „Neutralnie” usuwa preferencję,</li>
             <li><code>kajtek_last_station</code>: identyfikator ostatnio wybranej stacji,</li>
             <li><code>kajtek_volume</code>: poziom głośności,</li>
-            <li><code>kajtek_statistics</code>: lokalne sumy czasu słuchania i pominiętych reklam, liczby ominięć czarnej listy i automatycznych objazdów, czas słuchania poszczególnych stacji wraz z ich identyfikatorami i nazwami, data rozpoczęcia oraz ostatnie identyfikatory działań zapobiegające podwójnemu liczeniu; bez nazw utworów i adresów stacji,</li>
+            <li><code>kajtek_statistics</code>: lokalne sumy czasu słuchania i zmierzonego czasu pominiętych reklam lub przerw według playlisty, osobne liczby ominiętych reklam, wiadomości, innych przerw i niechcianej muzyki oraz automatycznych objazdów; czasy słuchania stacji z ich identyfikatorami i nazwami, data rozpoczęcia oraz ostatnie identyfikatory działań zapobiegające podwójnemu liczeniu; bez nazw utworów, adresów stacji i szczegółowej historii zdarzeń,</li>
             <li><code>kajtek_last_seen_version</code>: ostatnio widziana wersja aplikacji.</li>
           </ul>
           <p>
             Te dane służą działaniu aplikacji, zapamiętywaniu ustawień i ograniczeniu pobierania katalogów.
             Nie służą reklamie ani profilowaniu. Pozostają w przeglądarce, dopóki nie wyczyścisz danych
             witryny lub aplikacja nie usunie albo nie zastąpi wpisu.
+          </p>
+          <p>
+            Zapisane gwiazdką utwory są zakładkami, a nie preferencjami Smart Listening. Konfiguracja i preferencje
+            służą wyborowi treści w tej przeglądarce i nie są przesyłane na serwer Kajtka.
+            Informacje o bieżącej i nadchodzącej treści oraz stan tymczasowego przełączenia pozostają w pamięci sesji.
+          </p>
+          <p>
+            Starsze wpisy <code>kajtek_blacklist</code>, <code>kajtek_blacklist_enabled</code>,
+            <code>kajtek_ad_skip_enabled</code> i <code>kajtek_ad_skip_auto_return</code> mogą pozostać po aktualizacji.
+            Dawna lista i ustawienia pomijania są źródłem migracji do jednej konfiguracji; historyczne wpisy
+            nie stanowią osobnych aktywnych ustawień. Każdy dawny zablokowany utwór staje się preferencją „Unikaj”
+            dla dokładnej pary wykonawca–tytuł. Jeśli dawna czarna lista była wyłączona, ale zawierała utwory,
+            Smart Listening zaczyna od stanu wyłączonego, aby nie uruchomić tych reguł bez wyboru użytkownika;
+            dotychczasowe ustawienie reklam pozostaje zapisane w zasadach treści.
+          </p>
+          <p>
+            Statystyki w wersji 3 zachowują wcześniejsze pomiary i identyfikatory działań. Dawne ominięcia
+            czarnej listy przechodzą do licznika niechcianej muzyki; nowe liczniki reklam, wiadomości i innych przerw
+            zaczynają od zera. Czas dla stacji zachowujemy, jeśli był już zapisany; nie odtwarzamy historii
+            słuchania z zakładek, ustawień ani wcześniejszych objazdów. Ominięcie liczymy dopiero po rozpoczęciu
+            zastępczego odtwarzania. Minuty pominiętych reklam i przerw obejmują wyłącznie odtwarzane, niewyciszone audio w znanym przedziale
+            reklamy lub przerwy według playlisty; inne treści i nieznana długość nie otrzymują zgadywanego czasu.
           </p>
           <p>Kod Kajtka nie używa <code>sessionStorage</code>, IndexedDB ani własnych cookies.</p>
         </section>
@@ -149,6 +168,11 @@
             Katalogi, ramówki i informacje o utworach RMF, ESKA/ZPR Media i Trójki są zwykle pobierane za
             pośrednictwem serwera Kajtka. Serwer używany do prac nad aplikacją przekazuje tylko dozwolone
             nagłówki i usuwa te, które ujawniają adres IP użytkownika.
+          </p>
+          <p>
+            „Co teraz gra?” i Smart Listening mogą pobierać informacje o wielu stacjach bez uruchamiania ich
+            strumieni audio. Korzystają ze wspólnych, tymczasowych danych; preferencje muzyczne nie są dołączane
+            do tych żądań. Pobieranie odbywa się tylko na potrzeby widoku lub działającego Smart Listening.
           </p>
           <p>
             Ustawienia serwera publicznego nie są dostępne w kodzie projektu. Nie można więc zagwarantować, że

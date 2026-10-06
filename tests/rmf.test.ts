@@ -112,7 +112,12 @@ describe("rmfProvider", () => {
     expect(playing?.all.at(-1)).toMatchObject({ isBreak: true, isPredicted: true, timestamp: gapStart + 180 });
 
     vi.setSystemTime(new Date((gapStart + 180) * 1000));
-    expect(rmfProvider.parse(lone, noFactsStation)?.current?.isLiveBreak).toBe(true);
+    expect(rmfProvider.parse(lone, noFactsStation)?.current).toMatchObject({
+      isLiveBreak: true,
+      isPredicted: true,
+      contentKind: "unknown",
+      contentEvidence: "inferred",
+    });
   });
 
   it("accepts length and lenght, sorts a copy, and preserves the input", () => {

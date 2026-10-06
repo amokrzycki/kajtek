@@ -3,7 +3,10 @@ import { STORAGE_KEYS } from "./consts.js";
 export interface StatisticsTotals {
   listeningMs: number;
   adSavedMs: number;
-  blacklistAvoided: number;
+  negativeMusicAvoided: number;
+  adsAvoided: number;
+  newsAvoided: number;
+  otherBreaksAvoided: number;
   detours: number;
 }
 
@@ -17,7 +20,7 @@ export interface StationListening extends ListeningStation {
 }
 
 interface StoredStatistics {
-  version: 2;
+  version: 3;
   startedAt: number;
   weekStart: number;
   allTime: StatisticsTotals;
@@ -39,9 +42,17 @@ export interface StatisticsSnapshot extends StoredStatistics {
 }
 
 type Storage = Pick<globalThis.Storage, "getItem" | "setItem">;
-type CountDelta = Partial<Pick<StatisticsTotals, "blacklistAvoided" | "detours">>;
+type CountDelta = Partial<Omit<StatisticsTotals, "listeningMs" | "adSavedMs">>;
 
-const emptyTotals = (): StatisticsTotals => ({ listeningMs: 0, adSavedMs: 0, blacklistAvoided: 0, detours: 0 });
+const emptyTotals = (): StatisticsTotals => ({
+  listeningMs: 0,
+  adSavedMs: 0,
+  negativeMusicAvoided: 0,
+  adsAvoided: 0,
+  newsAvoided: 0,
+  otherBreaksAvoided: 0,
+  detours: 0,
+});
 const validNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value) && value >= 0;
 
@@ -58,17 +69,32 @@ function nextWeek(at: number): number {
   return date.getTime();
 }
 
-function validTotals(value: unknown): value is StatisticsTotals {
-  if (!value || typeof value !== "object") return false;
-  const numbersValid = ["listeningMs", "adSavedMs", "blacklistAvoided", "detours"].every(
-    (key) => key in value && validNumber(Reflect.get(value, key)),
-  );
-  return (
-    numbersValid &&
-    Number.isSafeInteger(Reflect.get(value, "blacklistAvoided")) &&
-    Number.isSafeInteger(Reflect.get(value, "detours")) &&
-    Reflect.get(value, "adSavedMs") <= Reflect.get(value, "listeningMs")
-  );
+function decodeTotals(value: unknown, legacy: boolean): StatisticsTotals | null {
+  if (!value || typeof value !== "object") return null;
+  const listeningMs: unknown = Reflect.get(value, "listeningMs");
+  const adSavedMs: unknown = Reflect.get(value, "adSavedMs");
+  const negativeMusicAvoided: unknown = Reflect.get(value, legacy ? "blacklistAvoided" : "negativeMusicAvoided");
+  const adsAvoided: unknown = legacy ? 0 : Reflect.get(value, "adsAvoided");
+  const newsAvoided: unknown = legacy ? 0 : Reflect.get(value, "newsAvoided");
+  const otherBreaksAvoided: unknown = legacy ? 0 : Reflect.get(value, "otherBreaksAvoided");
+  const detours: unknown = Reflect.get(value, "detours");
+  if (
+    !validNumber(listeningMs) ||
+    !validNumber(adSavedMs) ||
+    adSavedMs > listeningMs ||
+    !validNumber(negativeMusicAvoided) ||
+    !Number.isSafeInteger(negativeMusicAvoided) ||
+    !validNumber(adsAvoided) ||
+    !Number.isSafeInteger(adsAvoided) ||
+    !validNumber(newsAvoided) ||
+    !Number.isSafeInteger(newsAvoided) ||
+    !validNumber(otherBreaksAvoided) ||
+    !Number.isSafeInteger(otherBreaksAvoided) ||
+    !validNumber(detours) ||
+    !Number.isSafeInteger(detours)
+  )
+    return null;
+  return { listeningMs, adSavedMs, negativeMusicAvoided, adsAvoided, newsAvoided, otherBreaksAvoided, detours };
 }
 
 function validStations(value: unknown): value is StationListening[] {
@@ -100,7 +126,7 @@ function decode(raw: string | null): StoredStatistics | null {
     if (!value || typeof value !== "object") return null;
     if (
       !("version" in value) ||
-      (value.version !== 1 && value.version !== 2) ||
+      (value.version !== 1 && value.version !== 2 && value.version !== 3) ||
       !("startedAt" in value) ||
       !validNumber(value.startedAt) ||
       !Number.isFinite(new Date(value.startedAt).getTime()) ||
@@ -108,17 +134,18 @@ function decode(raw: string | null): StoredStatistics | null {
       !validNumber(value.weekStart) ||
       !Number.isFinite(new Date(value.weekStart).getTime()) ||
       !("allTime" in value) ||
-      !validTotals(value.allTime) ||
       !("week" in value) ||
-      !validTotals(value.week) ||
       !("recentOperations" in value) ||
       !Array.isArray(value.recentOperations) ||
       !value.recentOperations.every((id: unknown) => typeof id === "string")
     )
       return null;
+    const allTime = decodeTotals(value.allTime, value.version !== 3);
+    const week = decodeTotals(value.week, value.version !== 3);
+    if (!allTime || !week) return null;
     let allTimeStations: StationListening[] = [];
     let weekStations: StationListening[] = [];
-    if (value.version === 2) {
+    if (value.version !== 1) {
       if (
         !("allTimeStations" in value) ||
         !validStations(value.allTimeStations) ||
@@ -130,11 +157,11 @@ function decode(raw: string | null): StoredStatistics | null {
       weekStations = value.weekStations.map((station) => ({ ...station }));
     }
     return {
-      version: 2,
+      version: 3,
       startedAt: value.startedAt,
       weekStart: value.weekStart,
-      allTime: { ...value.allTime },
-      week: { ...value.week },
+      allTime,
+      week,
       allTimeStations,
       weekStations,
       recentOperations: value.recentOperations.slice(-128),
@@ -147,7 +174,7 @@ function decode(raw: string | null): StoredStatistics | null {
 export function createStatisticsStore(storage: Storage, now = Date.now()) {
   let persistent = true;
   let data: StoredStatistics = {
-    version: 2,
+    version: 3,
     startedAt: now,
     weekStart: getWeekStart(now),
     allTime: emptyTotals(),
@@ -261,19 +288,20 @@ export function createStatisticsOperationId(): string {
 
 export interface ProtectiveRoute {
   id: string;
-  kind: "blacklist" | "adSkip";
+  kind: "advertisement" | "news" | "otherBreak" | "negativeTrack" | "negativeArtist" | "return";
   automatic: boolean;
   // Epoch ms bounds of a break with a known, bounded interval; only replacement audio inside it is saved time.
   adStartsAt?: number;
   adEndsAt?: number;
+  // A later temporary reroute can retain the original advertisement's measured interval.
+  originAdWindow?: { startsAt?: number; endsAt: number };
 }
 
 export class ListeningStatistics {
   private baseline: { media: number; wall: number } | null = null;
   private pending: ProtectiveRoute | null = null;
   private pendingRecovery: string | null = null;
-  private adStartsAt: number | null = null;
-  private adEndsAt: number | null = null;
+  private adWindows: { startsAt: number; endsAt: number }[] = [];
   private station: ListeningStation | undefined;
 
   constructor(private readonly store: Pick<StatisticsStore, "record" | "duration">) {}
@@ -287,12 +315,23 @@ export class ListeningStatistics {
     this.baseline = null;
     this.pending = route;
     this.pendingRecovery = null;
-    const endsAt = route?.adEndsAt ?? null;
-    const startsAt = route?.adStartsAt ?? null;
-    // An inverted window is bad provider data, not evidence.
-    const valid = endsAt !== null && (startsAt === null || startsAt < endsAt);
-    this.adStartsAt = valid ? startsAt : null;
-    this.adEndsAt = valid ? endsAt : null;
+    const windows =
+      route && route.kind !== "return"
+        ? [
+            route.originAdWindow,
+            route.kind === "advertisement" ? { startsAt: route.adStartsAt, endsAt: route.adEndsAt } : undefined,
+          ]
+        : [];
+    this.adWindows = windows.flatMap((window) => {
+      // Invalid bounds are bad provider data, not evidence.
+      if (
+        !window ||
+        !validNumber(window.endsAt) ||
+        (window.startsAt !== undefined && (!validNumber(window.startsAt) || window.startsAt >= window.endsAt))
+      )
+        return [];
+      return [{ startsAt: window.startsAt ?? -Infinity, endsAt: window.endsAt }];
+    });
   }
 
   recovery(from: string, to: string, _at: number): void {
@@ -301,20 +340,20 @@ export class ListeningStatistics {
   }
 
   playing(media: number, at: number): void {
-    if (this.adEndsAt !== null && at >= this.adEndsAt) {
-      this.adStartsAt = null;
-      this.adEndsAt = null;
-    }
+    this.adWindows = this.adWindows.filter((window) => at < window.endsAt);
     const pending = this.pending;
     const recovery = this.pendingRecovery;
     // Consume before committing: repeated `playing` after buffering is not another detour.
     this.pending = null;
     this.pendingRecovery = null;
-    if (pending)
+    if (pending && pending.kind !== "return")
       this.store.record(
         pending.id,
         {
-          blacklistAvoided: pending.kind === "blacklist" ? 1 : 0,
+          negativeMusicAvoided: pending.kind === "negativeTrack" || pending.kind === "negativeArtist" ? 1 : 0,
+          adsAvoided: pending.kind === "advertisement" ? 1 : 0,
+          newsAvoided: pending.kind === "news" ? 1 : 0,
+          otherBreaksAvoided: pending.kind === "otherBreak" ? 1 : 0,
           detours: pending.automatic ? 1 : 0,
         },
         at,
@@ -334,13 +373,15 @@ export class ListeningStatistics {
     const listening = Math.min(advanced, elapsed);
     if (listening <= 0) return;
     const start = at - listening;
-    const windowStart = this.adStartsAt ?? -Infinity;
-    const windowEnd = this.adEndsAt ?? -Infinity;
-    // Cut at the window edges so each piece is wholly inside (saved) or outside it.
-    const cuts = [start, windowStart, windowEnd, at].map((cut) => Math.min(Math.max(cut, start), at));
+    // Split at every edge; overlapping original/current windows credit the same audio only once.
+    const cuts = [start, at, ...this.adWindows.flatMap((window) => [window.startsAt, window.endsAt])]
+      .map((cut) => Math.min(Math.max(cut, start), at))
+      .sort((a, b) => a - b);
     cuts.reduce((from, to) => {
-      if (to > from)
-        this.store.duration(from, to, to - from, from >= windowStart && to <= windowEnd ? to - from : 0, this.station);
+      if (to > from) {
+        const saved = this.adWindows.some((window) => from >= window.startsAt && to <= window.endsAt);
+        this.store.duration(from, to, to - from, saved ? to - from : 0, this.station);
+      }
       return to;
     });
   }
@@ -358,7 +399,6 @@ export class ListeningStatistics {
 
   endRoute(): void {
     this.pending = null;
-    this.adStartsAt = null;
-    this.adEndsAt = null;
+    this.adWindows = [];
   }
 }

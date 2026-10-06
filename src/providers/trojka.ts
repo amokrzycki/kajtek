@@ -175,6 +175,8 @@ function buildUpcomingProgramItems(schedule: RamowkaItem[], nowMs: number): Trac
         artist: "",
         title: p.title,
         isBreak: true,
+        contentKind: "programme",
+        contentEvidence: "explicit",
         label: p.title,
         start: formatProgramTime(p.startTime),
         timestamp: startSec,
@@ -257,6 +259,10 @@ export const trojkaProvider: Provider = {
 
     return {
       current,
+      observedAt: Math.min(
+        trojkaScheduleCache?.fetchedAt ?? nowMs,
+        currentSong ? (trojkaPlaylistCache?.fetchedAt ?? nowMs) : (trojkaScheduleCache?.fetchedAt ?? nowMs),
+      ),
       all: [...pastSongs, ...buildUpcomingProgramItems(schedule, nowMs)],
     };
   },

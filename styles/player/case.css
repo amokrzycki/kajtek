@@ -103,7 +103,7 @@
 
 /* ——— ad-skip slide switch ——— */
 
-.adskip-switch {
+.smart-switch {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -118,13 +118,13 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.adskip-legend {
+.smart-legend {
   font-size: var(--k-fs-label);
   font-weight: 700;
   letter-spacing: 0.12em;
 }
 
-.adskip-slot {
+.smart-slot {
   position: relative;
   width: 44px;
   height: 20px;
@@ -135,7 +135,7 @@
     0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
-.adskip-knob {
+.smart-knob {
   position: absolute;
   top: 2px;
   left: 2px;
@@ -153,16 +153,16 @@
     box-shadow var(--k-tr-fast);
 }
 
-.adskip-switch[aria-checked="true"] .adskip-knob {
+.smart-switch[aria-checked="true"] .smart-knob {
   transform: translateX(20px);
 }
 
-.adskip-switch:active .adskip-knob {
+.smart-switch:active .smart-knob {
   box-shadow: var(--k-sh-inset);
   translate: 0 1px;
 }
 
-.adskip-pos {
+.smart-pos {
   display: flex;
   justify-content: space-between;
   gap: 0.6rem;
@@ -171,8 +171,8 @@
   letter-spacing: 0.04em;
 }
 
-.adskip-switch[aria-checked="true"] .adskip-pos-on,
-.adskip-switch[aria-checked="false"] .adskip-pos-off {
+.smart-switch[aria-checked="true"] .smart-pos-on,
+.smart-switch[aria-checked="false"] .smart-pos-off {
   color: var(--k-case-ink);
   font-weight: 800;
 }

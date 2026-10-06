@@ -1,7 +1,10 @@
+import { getStoredString, removeStoredItem, setStoredString } from "./utils.js";
+
 declare const APP_VERSION: string;
 
 import type { CaseSlug } from "./consts.js";
 import { CASES, DEFAULT_VERSION, STORAGE_KEYS } from "./consts.js";
+import { getSmartListeningConfig, subscribeSmartListeningConfig } from "./listeningPreferences.js";
 import type { AppState, FavTrack, TrackInfo } from "./types.js";
 import { getStoredJSON, setStoredJSON } from "./utils.js";
 
@@ -9,8 +12,8 @@ export function persistFavTracks(): void {
   setStoredJSON(STORAGE_KEYS.FAV_TRACKS, state.favTracks);
 }
 
-const storedCase = localStorage.getItem(STORAGE_KEYS.CASE);
-const storedTheme = localStorage.getItem(STORAGE_KEYS.THEME);
+const storedCase = getStoredString(STORAGE_KEYS.CASE);
+const storedTheme = getStoredString(STORAGE_KEYS.THEME);
 const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
 
 export const state: AppState = {
@@ -28,11 +31,9 @@ export const state: AppState = {
   showHistory: false,
   historyTab: "program",
   favTracks: getStoredJSON<FavTrack[]>(STORAGE_KEYS.FAV_TRACKS, [], Array.isArray),
-  viewMode: localStorage.getItem(STORAGE_KEYS.VIEW_MODE) === "grid" ? "grid" : "list",
+  viewMode: getStoredString(STORAGE_KEYS.VIEW_MODE) === "grid" ? "grid" : "list",
   version: typeof APP_VERSION !== "undefined" ? APP_VERSION : DEFAULT_VERSION,
-  blacklistEnabled: localStorage.getItem(STORAGE_KEYS.BLACKLIST_ENABLED) !== "false",
-  adSkipEnabled: localStorage.getItem(STORAGE_KEYS.AD_SKIP_ENABLED) !== "false",
-  adSkipAutoReturnEnabled: localStorage.getItem(STORAGE_KEYS.AD_SKIP_AUTO_RETURN) !== "false",
+  smartListening: getSmartListeningConfig(),
 };
 
 type StateListener = (state: AppState) => void;
@@ -50,14 +51,14 @@ export function notifyState(): void {
 }
 
 export function setTheme(dark: boolean | null): void {
-  if (dark === null) localStorage.removeItem(STORAGE_KEYS.THEME);
-  else localStorage.setItem(STORAGE_KEYS.THEME, dark ? "dark" : "light");
+  if (dark === null) removeStoredItem(STORAGE_KEYS.THEME);
+  else setStoredString(STORAGE_KEYS.THEME, dark ? "dark" : "light");
   state.dark = dark ?? systemTheme.matches;
   notifyState();
 }
 
 systemTheme.addEventListener("change", () => {
-  const theme = localStorage.getItem(STORAGE_KEYS.THEME);
+  const theme = getStoredString(STORAGE_KEYS.THEME);
   if (theme === "dark" || theme === "light") return;
   state.dark = systemTheme.matches;
   notifyState();
@@ -85,9 +86,9 @@ export type { AppState, TrackInfo };
 let liveTrackUpdatedAt = 0;
 const liveTrackListeners = new Set<() => void>();
 
-export function setLiveTrack(track: TrackInfo | null): void {
+export function setLiveTrack(track: TrackInfo | null, observedAt = Date.now()): void {
   state.liveTrack = track;
-  liveTrackUpdatedAt = Date.now();
+  liveTrackUpdatedAt = observedAt;
   liveTrackListeners.forEach((listener) => {
     listener();
   });
@@ -101,3 +102,8 @@ export function subscribeLiveTrack(listener: () => void): () => void {
   liveTrackListeners.add(listener);
   return () => liveTrackListeners.delete(listener);
 }
+
+subscribeSmartListeningConfig(() => {
+  state.smartListening = getSmartListeningConfig();
+  notifyState();
+});

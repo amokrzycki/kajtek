@@ -2,6 +2,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("../src/utils.js", () => ({
   getStoredJSON: (_key: string, fallback: unknown) => fallback,
+  getStoredString: (key: string) => localStorage.getItem(key),
+  setStoredString: (key: string, value: string) => localStorage.setItem(key, value),
+  removeStoredItem: (key: string) => localStorage.removeItem(key),
   setStoredJSON: vi.fn(),
 }));
 

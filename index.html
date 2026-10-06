@@ -165,15 +165,15 @@
               aria-keyshortcuts="Space"></button>
             <button
               type="button"
-              id="adskip-switch"
-              class="adskip-switch"
+              id="smart-switch"
+              class="smart-switch"
               role="switch"
               aria-checked="true"
-              aria-label="Pomijaj reklamy">
-              <span class="adskip-legend" aria-hidden="true">REKLAMY</span>
-              <span class="adskip-slot" aria-hidden="true"><span class="adskip-knob"></span></span>
-              <span class="adskip-pos" aria-hidden="true"
-                ><span class="adskip-pos-off">GRAJ</span><span class="adskip-pos-on">POMIŃ</span></span
+              aria-label="Smart Listening">
+              <span class="smart-legend" aria-hidden="true">SMART</span>
+              <span class="smart-slot" aria-hidden="true"><span class="smart-knob"></span></span>
+              <span class="smart-pos" aria-hidden="true"
+                ><span class="smart-pos-off">WYŁ.</span><span class="smart-pos-on">WŁ.</span></span
               >
             </button>
             <div class="np-branding" aria-hidden="true">
@@ -192,6 +192,11 @@
             </button>
           </div>
 
+          <div id="smart-warning" class="bl-warn">
+            <div class="bl-warn-clip">
+              <div id="smart-warning-content" class="bl-warn-content"></div>
+            </div>
+          </div>
           <div id="skip-status" class="sr-only" role="status"></div>
           <div id="history-panel" class="history-panel" inert>
             <div class="history-clip">
@@ -227,11 +232,6 @@
                   class="history-view active"
                   role="tabpanel"
                   aria-labelledby="history-tab-program">
-                  <div id="blacklist-warning" class="bl-warn">
-                    <div class="bl-warn-clip">
-                      <div id="blacklist-warning-content" class="bl-warn-content"></div>
-                    </div>
-                  </div>
                   <div id="history-empty" class="history-empty">Playlista pojawi się po wybraniu stacji…</div>
                   <div id="history-list"></div>
                 </div>

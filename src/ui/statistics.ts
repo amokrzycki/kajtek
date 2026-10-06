@@ -20,24 +20,25 @@ export function recapCopy(totals: StatisticsTotals, allTime: boolean) {
   const period = allTime ? "Od początku" : "W tym tygodniu";
   const minutes = Math.floor(totals.adSavedMs / 60_000);
   const saved = minutes > 0 ? `${minutes} min` : "mniej niż minutę";
-  const protectedPlayback = totals.blacklistAvoided > 0 || totals.detours > 0;
+  const avoided = totals.negativeMusicAvoided + totals.adsAvoided + totals.newsAvoided + totals.otherBreaksAvoided;
+  const protectedPlayback = avoided > 0 || totals.detours > 0;
   return {
     lead:
       totals.adSavedMs > 0
-        ? `${period} Kajtek oszczędził Ci ${saved} reklam.`
+        ? `${period} Kajtek oszczędził Ci ${saved} reklam lub przerw według playlisty.`
         : protectedPlayback
-          ? totals.blacklistAvoided > 0
-            ? `${period} Kajtek ominął ${totals.blacklistAvoided} ${plural(totals.blacklistAvoided, "utwór", "utwory", "utworów")} z Twojej czarnej listy.`
+          ? avoided > 0
+            ? `${period} Kajtek ominął ${avoided} ${plural(avoided, "niechciany fragment", "niechciane fragmenty", "niechcianych fragmentów")} radia.`
             : "Kajtek zadbał o ciągłość Twojego radia."
           : "Twoje radio. Kajtek czuwa nad resztą.",
     adNote:
       totals.adSavedMs > 0
         ? "Tyle czasu grało inne radio w trakcie reklam lub przerw o znanym czasie trwania."
-        : "Czas reklam pojawi się tutaj, gdy znamy czas trwania przerwy. Nie zgadujemy.",
-    blacklist:
-      totals.blacklistAvoided > 0
-        ? `Kajtek ominął ${totals.blacklistAvoided} ${plural(totals.blacklistAvoided, "utwór", "utwory", "utworów")} z Twojej czarnej listy.`
-        : "Żaden utwór z czarnej listy nie wymagał ominięcia.",
+        : "Czas reklam pojawi się tutaj po ominięciu przerwy o znanym czasie trwania. Nie zgadujemy.",
+    negativeMusic:
+      totals.negativeMusicAvoided > 0
+        ? `Kajtek ominął ${totals.negativeMusicAvoided} ${plural(totals.negativeMusicAvoided, "utwór", "utwory", "utworów")} z niechcianą muzyką.`
+        : "Niechciana muzyka nie wymagała ominięcia.",
     detours:
       totals.detours > 0
         ? `${totals.detours} ${plural(totals.detours, "automatyczny objazd", "automatyczne objazdy", "automatycznych objazdów")} — żeby ominąć przerwę lub odzyskać połączenie.`
@@ -72,8 +73,11 @@ export function initStatisticsUI(): void {
         <p class="recap-lead"></p>
         <p class="recap-empty"></p>
         <dl class="recap-metrics">
-          <div><dt>Zaoszczędzony czas reklam</dt><dd class="recap-ad-saved"></dd></div>
-          <div><dt>Ominięcia czarnej listy</dt><dd class="recap-blacklist"></dd></div>
+          <div><dt>Znany czas pominiętych reklam i przerw wg playlisty</dt><dd class="recap-ad-saved"></dd></div>
+          <div><dt>Ominięte reklamy</dt><dd class="recap-ads"></dd></div>
+          <div><dt>Ominięte wiadomości</dt><dd class="recap-news"></dd></div>
+          <div><dt>Inne przerwy</dt><dd class="recap-other-breaks"></dd></div>
+          <div><dt>Niechciana muzyka</dt><dd class="recap-negative-music"></dd></div>
           <div><dt>Automatyczne objazdy</dt><dd class="recap-detours"></dd></div>
           <div><dt>Czas słuchania</dt><dd class="recap-listening"></dd></div>
         </dl>
@@ -95,12 +99,14 @@ export function initStatisticsUI(): void {
                   anulowanie powrotu lub powrót kończą ten pomiar.
                 </p>
                 <p>
-                  Czarna lista: udane przełączenia z powodu zablokowanego utworu. Jeśli utwór już się zaczął, omijamy
-                  jego resztę. Przycisk „Przełącz teraz” też się liczy.
+                  Ominięcia: liczymy dopiero, gdy po zmianie stacji zacznie grać zastępcze audio. Osobno pokazujemy
+                  reklamy, wiadomości, inne wykrywalne przerwy oraz niechciane utwory i artystów. Jeśli fragment już
+                  się zaczął, omijamy jego resztę. Przycisk „Przełącz teraz” też się liczy. Ostrzeżenia, anulowane
+                  przełączenia i powroty nie zwiększają liczników.
                 </p>
                 <p>
-                  Objazdy: udane automatyczne zmiany stacji z powodu reklam lub czarnej listy oraz zmiany strumienia po
-                  awarii. Powrotów i ręcznych zmian nie doliczamy. Ominięty utwór może też być objazdem — te liczby
+                  Objazdy: udane automatyczne zmiany stacji z powodu treści wskazanych w inteligentnym słuchaniu oraz zmiany strumienia po
+                  awarii. Powrotów i ręcznych zmian nie doliczamy. Ominięty fragment może też być objazdem — te liczby
                   opisują te same działania z dwóch stron.
                 </p>
                 <p>
@@ -130,7 +136,10 @@ export function initStatisticsUI(): void {
     const copy = recapCopy(totals, allTime);
     setText(".recap-lead", copy.lead);
     setText(".recap-ad-saved", totals.adSavedMs > 0 ? formatListeningTime(totals.adSavedMs) : "Jeszcze bez pomiaru");
-    setText(".recap-blacklist", String(totals.blacklistAvoided));
+    setText(".recap-negative-music", String(totals.negativeMusicAvoided));
+    setText(".recap-ads", String(totals.adsAvoided));
+    setText(".recap-news", String(totals.newsAvoided));
+    setText(".recap-other-breaks", String(totals.otherBreaksAvoided));
     setText(".recap-detours", String(totals.detours));
     setText(".recap-listening", formatListeningTime(totals.listeningMs));
     setText(

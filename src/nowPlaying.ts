@@ -1,4 +1,4 @@
-import { isBlacklisted } from "./blacklist.js";
+import { getSmartListeningConfig, musicPreference } from "./listeningPreferences.js";
 import { fetchMetadata } from "./metadata.js";
 import type { ContentKind, FavTrack, PlaylistResult, Station, TrackInfo } from "./types.js";
 
@@ -12,21 +12,24 @@ export interface NowPlayingSnapshot {
   track: TrackInfo | null;
   kind: ContentKind;
   evidence: "explicit" | "inferred" | null;
-  flags: { blacklisted: boolean; favoriteArtist: boolean };
+  flags: { negativeMusic: boolean; positiveArtist: boolean; positiveTrack?: boolean };
   updatedAt: number | null;
   stale: boolean;
   error: boolean;
   loading: boolean;
   source: "player" | "passive";
+  upcoming?: TrackInfo[];
 }
 
 export interface ActiveMetadata {
   stationId: string;
-  track: TrackInfo;
+  track: TrackInfo | null;
   updatedAt: number;
+  upcoming?: TrackInfo[];
 }
 
 interface CacheEntry {
+  upcoming: TrackInfo[];
   identity: string;
   track: TrackInfo | null;
   updatedAt: number | null;
@@ -35,6 +38,10 @@ interface CacheEntry {
 }
 
 type FetchMetadata = (station: Station, signal: AbortSignal) => Promise<PlaylistResult | null>;
+
+export function timedUpcoming(tracks: TrackInfo[], now = Date.now()): TrackInfo[] {
+  return tracks.filter((track) => Number.isFinite(track.timestamp) && (track.timestamp ?? 0) * 1000 > now);
+}
 
 function stationIdentity(station: Station): string {
   return `${station.provider}:${station.apiBaseUrl ?? ""}`;
@@ -52,12 +59,12 @@ export function classifyContent(station: Station, track: TrackInfo | null): Cont
   return track.title.trim() ? "track" : "unknown";
 }
 
-export function deriveDiscoveryFlags(track: TrackInfo | null, kind: ContentKind, favorites: FavTrack[]) {
-  const artist = track?.artist.trim().toLowerCase() ?? "";
+export function deriveDiscoveryFlags(track: TrackInfo | null, kind: ContentKind, _favorites: FavTrack[]) {
+  const preference = track && kind === "track" ? musicPreference(track, getSmartListeningConfig().preferences) : null;
   return {
-    blacklisted: kind === "track" && isBlacklisted(track),
-    favoriteArtist:
-      kind === "track" && artist.length > 0 && favorites.some((fav) => fav.artist.trim().toLowerCase() === artist),
+    negativeMusic: preference?.negative ?? false,
+    positiveArtist: preference?.artist === "positive",
+    positiveTrack: preference?.exact === "positive",
   };
 }
 
@@ -95,7 +102,20 @@ export class NowPlayingCache {
             : null;
         const updatedAt = live?.updatedAt ?? cached?.updatedAt ?? null;
         const expired = updatedAt !== null && now - updatedAt >= NOW_PLAYING_MAX_AGE_MS;
-        const track = expired ? null : (live?.track ?? cached?.track ?? null);
+        const timeline = live?.upcoming ?? cached?.upcoming ?? [];
+        const timedCurrent = timeline
+          .filter(
+            (item) =>
+              !item.isPredicted &&
+              item.timestamp !== undefined &&
+              item.timestamp * 1000 <= now &&
+              item.endTimestamp != null &&
+              item.endTimestamp * 1000 > now,
+          )
+          .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))[0];
+        const observed = live?.track ?? cached?.track ?? null;
+        const ended = observed?.endTimestamp != null && observed.endTimestamp * 1000 <= now;
+        const track = expired ? null : (timedCurrent ?? (ended ? null : observed));
         const kind = classifyContent(station, track);
         return {
           station,
@@ -108,6 +128,14 @@ export class NowPlayingCache {
           error: !live && Boolean(cached?.error),
           loading: this.pending.has(station.id),
           source: live ? "player" : "passive",
+          upcoming: expired
+            ? []
+            : timedUpcoming(live?.upcoming ?? cached?.upcoming ?? [], now).map((item) => {
+                const contentKind = classifyContent(station, item);
+                const contentEvidence =
+                  item.contentEvidence ?? (contentKind === "advertisement" ? "inferred" : undefined);
+                return { ...item, contentKind, ...(contentEvidence ? { contentEvidence } : {}) };
+              }),
         };
       }),
     );
@@ -124,7 +152,8 @@ export class NowPlayingCache {
     const now = Date.now();
     const queue = stations.filter((station) => {
       if (!station.apiBaseUrl) return false;
-      if (active?.stationId === station.id && now - active.updatedAt < NOW_PLAYING_STALE_MS) return false;
+      if (active?.stationId === station.id && (!active.track || now - active.updatedAt < NOW_PLAYING_STALE_MS))
+        return false;
       const entry = this.cache.get(station.id);
       return !entry || entry.identity !== stationIdentity(station) || now - entry.attemptedAt >= NOW_PLAYING_TTL_MS;
     });
@@ -147,7 +176,8 @@ export class NowPlayingCache {
           this.cache.set(station.id, {
             identity,
             track: result.current,
-            updatedAt: fetchedAt,
+            upcoming: timedUpcoming(result.all, fetchedAt),
+            updatedAt: result.observedAt ?? fetchedAt,
             attemptedAt: fetchedAt,
             error: false,
           });
@@ -157,6 +187,7 @@ export class NowPlayingCache {
           this.cache.set(station.id, {
             identity,
             track: previous?.identity === identity ? previous.track : null,
+            upcoming: previous?.identity === identity ? previous.upcoming : [],
             updatedAt: previous?.identity === identity ? previous.updatedAt : null,
             attemptedAt: Date.now(),
             error: true,
@@ -174,6 +205,11 @@ export class NowPlayingCache {
     });
     this.onChange();
     return this.refreshPromise;
+  }
+
+  clear(): void {
+    this.cancel();
+    this.cache.clear();
   }
 
   cancel(): void {

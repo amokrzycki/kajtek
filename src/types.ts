@@ -1,4 +1,5 @@
 import type { CaseSlug } from "./consts.js";
+import type { SmartListeningConfig } from "./listeningPreferences.js";
 
 export interface Station {
   id: string;
@@ -21,6 +22,7 @@ export type StationPref = {
   id: string;
   enabled: boolean;
   favorite: boolean;
+  smartEnabled?: boolean;
 };
 
 export type CustomStation = {
@@ -106,7 +108,7 @@ export interface RawTrack {
   playlist?: RawTrack[];
 }
 
-export type ContentKind = "track" | "advertisement" | "news" | "programme" | "unknown";
+export type ContentKind = "track" | "advertisement" | "news" | "programme" | "otherBreak" | "unknown";
 
 export interface TrackInfo {
   artist: string;
@@ -156,12 +158,11 @@ export interface AppState {
   favTracks: FavTrack[];
   viewMode: "list" | "grid";
   version: string;
-  blacklistEnabled: boolean;
-  adSkipEnabled: boolean;
-  adSkipAutoReturnEnabled: boolean;
+  smartListening: SmartListeningConfig;
 }
 
 export interface PlaylistResult {
+  observedAt?: number;
   current: TrackInfo | null;
   all: TrackInfo[];
 }

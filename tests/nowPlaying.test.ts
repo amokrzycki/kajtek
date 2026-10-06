@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { addToBlacklist } from "../src/blacklist.js";
+
+const addNegativeTrack = (artist: string, title: string): void =>
+  setListeningPreference("track", artist, title, "negative");
+
+import { setListeningPreference } from "../src/listeningPreferences.js";
 import {
   classifyContent,
   deriveDiscoveryFlags,
@@ -57,7 +61,7 @@ describe("discovery classification and presentation", () => {
     track: { ...song, coverUrl: "/track.jpg" },
     kind: "track",
     evidence: null,
-    flags: { blacklisted: false, favoriteArtist: false },
+    flags: { negativeMusic: false, positiveArtist: false },
     updatedAt: null,
     stale: false,
     error: false,
@@ -138,19 +142,28 @@ describe("discovery classification and presentation", () => {
     expect(classifyContent(station, { artist: "", title: " " })).toBe("unknown");
   });
   it("uses exact existing artist AND title blacklist semantics, independently of affinity", () => {
-    addToBlacklist(" Artist ", " Song ");
+    addNegativeTrack(" Artist ", " Song ");
     expect(deriveDiscoveryFlags({ artist: "ARTIST", title: "song" }, "track", [favorite])).toEqual({
-      blacklisted: true,
-      favoriteArtist: true,
+      negativeMusic: true,
+      positiveArtist: false,
+      positiveTrack: false,
     });
-    expect(deriveDiscoveryFlags({ ...song, title: "Other" }, "track", [favorite]).blacklisted).toBe(false);
-    expect(deriveDiscoveryFlags(song, "programme", [favorite])).toEqual({ blacklisted: false, favoriteArtist: false });
+    expect(deriveDiscoveryFlags({ ...song, title: "Other" }, "track", [favorite]).negativeMusic).toBe(false);
+    expect(deriveDiscoveryFlags(song, "programme", [favorite])).toEqual({
+      negativeMusic: false,
+      positiveArtist: false,
+      positiveTrack: false,
+    });
   });
-  it("normalizes favorite artists conservatively, without splitting collaborations", () => {
-    expect(deriveDiscoveryFlags({ ...song, artist: " ARTIST " }, "track", [favorite]).favoriteArtist).toBe(true);
-    expect(deriveDiscoveryFlags({ ...song, artist: "Artist & Other" }, "track", [favorite]).favoriteArtist).toBe(false);
-    expect(deriveDiscoveryFlags({ ...song, artist: "Art-ist" }, "track", [favorite]).favoriteArtist).toBe(false);
-    expect(deriveDiscoveryFlags({ ...song, artist: "" }, "track", [favorite]).favoriteArtist).toBe(false);
+  it("normalizes explicitly preferred artists without reinterpreting bookmarks or splitting collaborations", () => {
+    expect(deriveDiscoveryFlags(song, "track", [favorite]).positiveArtist).toBe(false);
+    setListeningPreference("artist", "Artist", "", "positive");
+    expect(deriveDiscoveryFlags({ ...song, artist: " ARTIST " }, "track", [favorite]).positiveArtist).toBe(true);
+    expect(deriveDiscoveryFlags({ ...song, artist: "Artist & Other" }, "track", [favorite]).positiveArtist).toBe(false);
+    expect(deriveDiscoveryFlags({ ...song, artist: "Art-ist" }, "track", [favorite]).positiveArtist).toBe(false);
+    expect(deriveDiscoveryFlags({ ...song, artist: "" }, "track", [favorite]).positiveArtist).toBe(false);
+    setListeningPreference("track", "Artist", "Song", "positive");
+    expect(deriveDiscoveryFlags(song, "track", []).positiveTrack).toBe(true);
   });
   it("orders songs then other content then unknown, with stable catalog ties", async () => {
     const stations = ["a", "b", "c", "d"].map((id) => ({ ...station, id }));
@@ -307,5 +320,55 @@ describe("passive cache", () => {
     await cache.refresh([custom]);
     expect(fetcher).not.toHaveBeenCalled();
     expect(cache.snapshots([custom], [])[0]).toMatchObject({ kind: "unknown", error: false });
+  });
+});
+
+describe("normalized policy snapshots", () => {
+  it("retains timed future evidence but excludes past entries and untimed guesses", async () => {
+    const upcoming = { artist: "Next", title: "Song", timestamp: 110 };
+    const cache = new NowPlayingCache(vi.fn(), async () => ({
+      current: song,
+      all: [{ ...song, timestamp: 90 }, upcoming, { ...song, order: 1 }],
+    }));
+    await cache.refresh([station]);
+    expect(cache.snapshots([station], [])[0]?.upcoming).toEqual([{ ...upcoming, contentKind: "track" }]);
+  });
+  it("normalizes bounded RMF gaps while keeping speculative future breaks unknown", async () => {
+    const gap = { artist: "", title: "", isBreak: true, timestamp: 110, endTimestamp: 120 };
+    const predicted = { ...gap, timestamp: 130, isPredicted: true };
+    const cache = new NowPlayingCache(vi.fn(), async () => ({ current: song, all: [gap, predicted] }));
+    await cache.refresh([station]);
+    expect(cache.snapshots([station], [])[0]?.upcoming).toMatchObject([
+      { contentKind: "advertisement", contentEvidence: "inferred" },
+      { contentKind: "unknown", isPredicted: true },
+    ]);
+  });
+  it("never reports an ended track as safe while waiting for the next refresh", async () => {
+    const cache = new NowPlayingCache(vi.fn(), async () => ({ current: { ...song, endTimestamp: 105 }, all: [] }));
+    await cache.refresh([station]);
+    vi.advanceTimersByTime(5_000);
+    expect(cache.snapshots([station], [])[0]).toMatchObject({ track: null, kind: "unknown", stale: false });
+  });
+  it("advances reliable bounded timeline content without manufacturing a new observation", async () => {
+    const gap = { artist: "", title: "", isBreak: true, timestamp: 105, endTimestamp: 120 };
+    const cache = new NowPlayingCache(vi.fn(), async () => ({ current: { ...song, endTimestamp: 105 }, all: [gap] }));
+    await cache.refresh([station]);
+    vi.advanceTimersByTime(5_000);
+    expect(cache.snapshots([station], [])[0]).toMatchObject({
+      kind: "advertisement",
+      evidence: "inferred",
+      updatedAt: 100_000,
+    });
+  });
+  it("does not refetch an active stream still awaiting its first metadata", async () => {
+    const fetcher = vi.fn(async () => result());
+    const cache = new NowPlayingCache(vi.fn(), fetcher);
+    await cache.refresh([station], { stationId: station.id, track: null, updatedAt: 0 });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+  it("uses provider observation time instead of refreshing stale cached source evidence", async () => {
+    const cache = new NowPlayingCache(vi.fn(), async () => ({ current: song, all: [], observedAt: 60_000 }));
+    await cache.refresh([station]);
+    expect(cache.snapshots([station], [])[0]).toMatchObject({ updatedAt: 60_000, stale: true });
   });
 });

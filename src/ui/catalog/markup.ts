@@ -26,7 +26,7 @@ export const CATALOG_MODAL_HTML = `
           <div class="k-modal-actions-row">
             <button type="button" id="catalog-refresh-btn" class="btn-secondary">Odśwież listę</button>
             <button type="button" id="catalog-custom-toggle-btn" class="btn-secondary" aria-expanded="false" aria-controls="catalog-custom-form-wrap">Dodaj własną stację</button>
-            <button type="button" id="open-blacklist-btn" class="btn-secondary">Czarna lista utworów</button>
+            <button type="button" id="open-smart-listening-btn" class="btn-secondary">Smart Listening</button>
           </div>
           <div id="catalog-custom-form-wrap" class="k-custom-form-wrap">
             <div class="k-custom-form-inner">

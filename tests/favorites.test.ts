@@ -19,9 +19,12 @@ const state = vi.hoisted(
     favTracks: [],
     viewMode: "list",
     version: "test",
-    blacklistEnabled: true,
-    adSkipEnabled: false,
-    adSkipAutoReturnEnabled: true,
+    smartListening: {
+      version: 1,
+      enabled: false,
+      content: { advertisement: false, news: false, otherBreak: false },
+      preferences: [],
+    },
   }),
 );
 

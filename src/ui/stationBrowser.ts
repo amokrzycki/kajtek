@@ -1,9 +1,10 @@
 import { getEnabledStations } from "../catalog.js";
 import { STORAGE_KEYS } from "../consts.js";
 import { ICONS } from "../icons.js";
-import { type ActiveMetadata, NOW_PLAYING_TTL_MS, NowPlayingCache } from "../nowPlaying.js";
-import { getLiveTrackUpdatedAt, notifyState, state, subscribeLiveTrack, subscribeState } from "../state.js";
+import { notifyState, state, subscribeState } from "../state.js";
+import { sharedSnapshots } from "../stationSnapshots.js";
 import type { Station } from "../types.js";
+import { setStoredString } from "../utils.js";
 import { createBrowserTransition } from "./browserTransition.js";
 import { openCatalogModal } from "./catalog/modal.js";
 import { els } from "./elements.js";
@@ -25,50 +26,34 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
   let active = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let stationKey = "";
-  let lifecycle = 0;
   let lastActivationAt = -Infinity;
-
-  const activeMetadata = (): ActiveMetadata | null =>
-    state.playing && state.station && state.liveTrack
-      ? {
-          stationId: state.station.id,
-          track: state.liveTrack,
-          updatedAt: getLiveTrackUpdatedAt(),
-        }
-      : null;
 
   const render = () => {
     if (!active || document.hidden) return;
     const stations = getEnabledStations();
-    const snapshots = cache.snapshots(stations, state.favTracks, activeMetadata());
+    const snapshots = sharedSnapshots.snapshots(stations);
     const useful = snapshots.filter((snapshot) => snapshot.kind !== "unknown").length;
     const pending = snapshots.filter((snapshot) => snapshot.loading).length;
     status.textContent =
       stations.length === 0
         ? "Brak włączonych stacji"
-        : `${useful} z ${stations.length} stacji podaje treść${cache.refreshing ? ` · sprawdzanie ${pending}…` : " · odświeżanie co ok. 15\u00a0s"}`;
-    empty.hidden = stations.length > 0 && (useful > 0 || cache.refreshing);
+        : `${useful} z ${stations.length} stacji podaje treść${sharedSnapshots.refreshing ? ` · sprawdzanie ${pending}…` : " · odświeżanie co ok. 15\u00a0s"}`;
+    empty.hidden = stations.length > 0 && (useful > 0 || sharedSnapshots.refreshing);
     emptyText.textContent =
       stations.length === 0
         ? "Włącz stacje w katalogu, aby sprawdzić, co gra."
         : "Teraz brak danych o treści. Możesz wybrać stację i posłuchać lub zmienić listę w katalogu.";
     renderNowPlaying(list, snapshots, state.station?.id, onSelect);
   };
-  const cache = new NowPlayingCache(render);
   const stop = () => {
-    lifecycle++;
     if (timer !== null) clearTimeout(timer);
     timer = null;
-    cache.cancel();
+    sharedSnapshots.setDemand("discovery", []);
   };
   const poll = async () => {
     if (!active || document.hidden) return;
-    const generation = lifecycle;
-    await cache.refresh(getEnabledStations(), activeMetadata());
-    if (generation !== lifecycle || !active || document.hidden) return;
-    timer = setTimeout(() => {
-      void poll();
-    }, NOW_PLAYING_TTL_MS);
+    sharedSnapshots.setDemand("discovery", getEnabledStations());
+    await sharedSnapshots.refresh();
   };
   const switchMode = (now: boolean) => {
     if (active === now) return;
@@ -122,7 +107,7 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
     button.innerHTML = button.dataset.view === "list" ? ICONS.viewList : ICONS.viewGrid;
     button.onclick = () => {
       state.viewMode = button.dataset.view === "grid" ? "grid" : "list";
-      localStorage.setItem(STORAGE_KEYS.VIEW_MODE, state.viewMode);
+      setStoredString(STORAGE_KEYS.VIEW_MODE, state.viewMode);
       notifyState();
     };
     button.onkeydown = (event) => {
@@ -156,14 +141,14 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
   window.addEventListener("pagehide", stop);
   window.addEventListener("pageshow", visibility);
   const unsubscribe = subscribeState(update);
-  const unsubscribeLive = subscribeLiveTrack(render);
+  const unsubscribeSnapshots = sharedSnapshots.subscribe(render);
   update();
   return () => {
     active = false;
     transition.cancel();
     stop();
     unsubscribe();
-    unsubscribeLive();
+    unsubscribeSnapshots();
     document.removeEventListener("visibilitychange", visibility);
     window.removeEventListener("pagehide", stop);
     window.removeEventListener("pageshow", visibility);

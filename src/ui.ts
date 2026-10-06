@@ -1,17 +1,18 @@
-import { isBlacklisted } from "./blacklist.js";
 import { getEnabledStations } from "./catalog.js";
 import { STORAGE_KEYS } from "./consts.js";
 import { isVolAnimating } from "./controls.js";
 import { ICONS } from "./icons.js";
+import { getSmartListeningConfig, musicPreference } from "./listeningPreferences.js";
+import { classifyContent } from "./nowPlaying.js";
 import { genericProvider, getProvider } from "./providers.js";
 import { state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
-import { renderBlacklistWarning } from "./ui/blacklist/warning.js";
 import { els, initVolumeControlUI, initVU, renderVolLadder } from "./ui/elements.js";
 import { applyHistoryTabVisibility, isTrackFavorited, renderFavoritesUI } from "./ui/favorites.js";
 import { setHistoryLoadingState, triggerHistorySlideIn, updateHistoryUI } from "./ui/history.js";
+import { renderSmartListeningWarning } from "./ui/smartListening/warning.js";
 import { renderStationList } from "./ui/stations.js";
-import { triggerFade } from "./utils.js";
+import { setStoredString, triggerFade } from "./utils.js";
 import { startVisualizer, stopVisualizer } from "./visualizer.js";
 
 const ART_V: Record<string, string> = {
@@ -151,7 +152,7 @@ export function updateAlbumArt(coverUrl: string | undefined, track: TrackInfo | 
     if (label) label.style.opacity = "";
   }
 
-  if (track) {
+  if (track && state.station && classifyContent(state.station, track) === "track") {
     els.npFavStar.hidden = false;
     els.npFavStar.innerHTML = ICONS.star(isTrackFavorited(track));
     els.npFavStar.classList.toggle("on", isTrackFavorited(track));
@@ -159,9 +160,9 @@ export function updateAlbumArt(coverUrl: string | undefined, track: TrackInfo | 
     els.npFavStar.setAttribute("aria-label", `Ulubiony utwór: ${track.artist} – ${track.title}`);
     els.npBlockBtn.hidden = false;
     els.npBlockBtn.innerHTML = ICONS.ban;
-    els.npBlockBtn.classList.toggle("on", isBlacklisted(track));
-    els.npBlockBtn.setAttribute("aria-pressed", String(isBlacklisted(track)));
-    els.npBlockBtn.setAttribute("aria-label", `Czarna lista: ${track.artist} – ${track.title}`);
+    els.npBlockBtn.classList.toggle("on", musicPreference(track, getSmartListeningConfig().preferences).negative);
+    els.npBlockBtn.removeAttribute("aria-pressed");
+    els.npBlockBtn.setAttribute("aria-label", `Preferencje słuchania: ${track.artist} – ${track.title}`);
   } else {
     els.npFavStar.hidden = true;
     els.npBlockBtn.hidden = true;
@@ -246,7 +247,7 @@ export function updateUI(
   }
 
   updateSleepUI();
-  els.adSkipSwitch.setAttribute("aria-checked", String(state.adSkipEnabled));
+  els.smartListeningSwitch.setAttribute("aria-checked", String(state.smartListening.enabled));
 
   const isGeneric = Boolean(state.station && getProvider(state.station) === genericProvider);
   if (isGeneric && state.showHistory) {
@@ -260,7 +261,7 @@ export function updateUI(
   els.historyPanel.classList.toggle("open", willOpenHistory);
   els.historyPanel.inert = !willOpenHistory;
   updateHistoryUI();
-  renderBlacklistWarning();
+  renderSmartListeningWarning();
   renderFavoritesUI();
   applyHistoryTabVisibility();
 
@@ -307,5 +308,5 @@ function applyTheme(): void {
 
 function applyCase(): void {
   document.documentElement.dataset.case = state.case;
-  localStorage.setItem(STORAGE_KEYS.CASE, state.case);
+  setStoredString(STORAGE_KEYS.CASE, state.case);
 }

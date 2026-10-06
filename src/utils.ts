@@ -75,20 +75,48 @@ export function renderStationThumbHtml(
   return `<img src="${escapeHtml(coverUrl)}" alt="" class="${thumbClass}" decoding="async" loading="${options.loading ?? "eager"}"${fallback} onerror="if(this.dataset.fallbackSrc){const src=this.dataset.fallbackSrc;delete this.dataset.fallbackSrc;this.src=src;}else{this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';}" /><div class="${placeholderClass}" style="display:none;">${initial}</div>`;
 }
 
+const sessionStorageFallback = new Map<string, string>();
+const failedStorageWrites = new Set<string>();
+export function getStoredString(key: string): string | null {
+  if (failedStorageWrites.has(key)) return sessionStorageFallback.get(key) ?? null;
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return sessionStorageFallback.get(key) ?? null;
+  }
+}
+export function setStoredString(key: string, value: string): void {
+  sessionStorageFallback.set(key, value);
+  try {
+    localStorage.setItem(key, value);
+    failedStorageWrites.delete(key);
+  } catch {
+    failedStorageWrites.add(key);
+    /* Keep settings for this session. */
+  }
+}
+export function removeStoredItem(key: string): void {
+  sessionStorageFallback.delete(key);
+  try {
+    localStorage.removeItem(key);
+    failedStorageWrites.delete(key);
+  } catch {
+    failedStorageWrites.add(key);
+    /* Storage may be unavailable. */
+  }
+}
 export function getStoredJSON<T>(key: string, fallback: T, validate?: (value: unknown) => boolean): T {
   try {
-    const raw = localStorage.getItem(key);
+    const raw = getStoredString(key);
     if (!raw) return fallback;
-    const parsed = JSON.parse(raw);
-    if (validate && !validate(parsed)) return fallback;
-    return parsed as T;
-  } catch (_) {
+    const parsed: unknown = JSON.parse(raw);
+    return validate && !validate(parsed) ? fallback : (parsed as T);
+  } catch {
     return fallback;
   }
 }
-
 export function setStoredJSON(key: string, value: unknown): void {
-  localStorage.setItem(key, JSON.stringify(value));
+  setStoredString(key, JSON.stringify(value));
 }
 
 export function withinRateLimit(
