@@ -382,10 +382,10 @@ export function selectStation(s: Station, protection: ProtectiveRoute | null = n
   delete s._consecutiveFailures;
   delete s._apiFailed;
   state.playing = true;
+  state.history = [];
   setLiveTrack(null);
   pendingStationSlideIn = true;
   failoverTimestamps = [];
-  state.history = [];
   startEskaSession(s.id);
   setHistoryLoadingState(true);
   setPlaybackStatus("Łączenie…");

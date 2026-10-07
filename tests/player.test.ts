@@ -109,6 +109,8 @@ const intervals = vi.hoisted(() => ({
   track: null as ReturnType<typeof setInterval> | number | null,
 }));
 
+const liveTrackListeners = vi.hoisted(() => new Set<() => void>());
+
 const fetchMock = vi.fn<typeof fetch>();
 
 vi.mock("hls.js", () => {
@@ -170,6 +172,9 @@ vi.mock("../src/state.js", () => ({
   radioAudio: mocks.audio,
   setLiveTrack: (track: TrackInfo | null) => {
     state.liveTrack = track;
+    liveTrackListeners.forEach((listener) => {
+      listener();
+    });
   },
   state,
 }));
@@ -246,6 +251,7 @@ beforeEach(async () => {
   state.playing = false;
   state.liveTrack = null;
   state.history = [];
+  liveTrackListeners.clear();
   state.showHistory = false;
   intervals.track = null;
   player = await import("../src/player.js");
@@ -600,6 +606,18 @@ describe("playback state and cleanup", () => {
 });
 
 describe("RMF station metadata", () => {
+  it("clears the previous station timeline before metadata listeners observe a selection", () => {
+    state.station = station({ id: "old" });
+    state.history = [{ artist: "Previous", title: "Song", timestamp: 1, endTimestamp: 2 }];
+    const observed: TrackInfo[][] = [];
+    liveTrackListeners.add(() => observed.push([...state.history]));
+
+    player.selectStation(station({ id: "new" }));
+
+    expect(observed.length).toBeGreaterThan(0);
+    expect(observed.every((history) => history.length === 0)).toBe(true);
+  });
+
   it.each([
     [
       "a string",

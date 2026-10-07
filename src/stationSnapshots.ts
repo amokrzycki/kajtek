@@ -1,12 +1,11 @@
 import { fetchMetadata } from "./metadata.js";
 import { type ActiveMetadata, NOW_PLAYING_TTL_MS, NowPlayingCache, type NowPlayingSnapshot } from "./nowPlaying.js";
 import { getLiveTrackUpdatedAt, state, subscribeLiveTrack, subscribeState } from "./state.js";
-import type { FavTrack, PlaylistResult, Station } from "./types.js";
+import type { PlaylistResult, Station } from "./types.js";
 
 interface MonitorOptions {
   fetcher?: (station: Station, signal: AbortSignal) => Promise<PlaylistResult | null>;
   activeMetadata?: () => ActiveMetadata | null;
-  favorites?: () => FavTrack[];
   subscribeActive?: (listener: () => void) => () => void;
 }
 
@@ -55,7 +54,7 @@ export class StationSnapshotMonitor {
   }
 
   snapshots(stations: Station[]): NowPlayingSnapshot[] {
-    return this.cache.snapshots(stations, this.options.favorites?.() ?? [], this.options.activeMetadata?.() ?? null);
+    return this.cache.snapshots(stations, this.options.activeMetadata?.() ?? null);
   }
 
   subscribe(listener: () => void): () => void {
@@ -114,7 +113,6 @@ export const sharedSnapshots = new StationSnapshotMonitor({
           upcoming: state.history,
         }
       : null,
-  favorites: () => state.favTracks,
   subscribeActive: (listener) => {
     const unsubscribeState = subscribeState(listener);
     const unsubscribeLive = subscribeLiveTrack(listener);

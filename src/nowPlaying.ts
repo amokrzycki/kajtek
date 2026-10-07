@@ -1,6 +1,6 @@
 import { getSmartListeningConfig, musicPreference } from "./listeningPreferences.js";
 import { fetchMetadata } from "./metadata.js";
-import type { ContentKind, FavTrack, PlaylistResult, Station, TrackInfo } from "./types.js";
+import type { ContentKind, PlaylistResult, Station, TrackInfo } from "./types.js";
 
 export const NOW_PLAYING_TTL_MS = 15_000;
 export const NOW_PLAYING_STALE_MS = 30_000;
@@ -59,7 +59,7 @@ export function classifyContent(station: Station, track: TrackInfo | null): Cont
   return track.title.trim() ? "track" : "unknown";
 }
 
-export function deriveDiscoveryFlags(track: TrackInfo | null, kind: ContentKind, _favorites: FavTrack[]) {
+export function deriveDiscoveryFlags(track: TrackInfo | null, kind: ContentKind) {
   const preference = track && kind === "track" ? musicPreference(track, getSmartListeningConfig().preferences) : null;
   return {
     negativeMusic: preference?.negative ?? false,
@@ -89,7 +89,7 @@ export class NowPlayingCache {
     private readonly fetcher: FetchMetadata = (station, signal) => fetchMetadata(station, { passive: true, signal }),
   ) {}
 
-  snapshots(stations: Station[], favorites: FavTrack[], active: ActiveMetadata | null = null): NowPlayingSnapshot[] {
+  snapshots(stations: Station[], active: ActiveMetadata | null = null): NowPlayingSnapshot[] {
     const now = Date.now();
     return orderSnapshots(
       stations.map((station): NowPlayingSnapshot => {
@@ -122,7 +122,7 @@ export class NowPlayingCache {
           track,
           kind,
           evidence: track?.contentEvidence ?? (kind === "advertisement" ? "inferred" : null),
-          flags: deriveDiscoveryFlags(track, kind, favorites),
+          flags: deriveDiscoveryFlags(track, kind),
           updatedAt,
           stale: updatedAt !== null && (now - updatedAt >= NOW_PLAYING_STALE_MS || (!live && Boolean(cached?.error))),
           error: !live && Boolean(cached?.error),

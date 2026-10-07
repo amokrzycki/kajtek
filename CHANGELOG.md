@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.13.0
+## 0.14.0
 
 Smart Listening łączy zasady słuchania w jednym miejscu: wybiera odpowiednią stację na czas niechcianej treści i czeka na bezpieczny powrót.
 
@@ -12,6 +12,20 @@ Smart Listening łączy zasady słuchania w jednym miejscu: wybiera odpowiednią
 - „Co teraz gra?” i Smart Listening korzystają ze wspólnych informacji o stacjach. Oznaczenia pokazują jawne preferencje muzyczne i starsze dane. Przerwy RMF pozostają oznaczone jako wnioskowane z playlisty; niepewne zapowiedzi i brak tytułu ESKA nie stają się potwierdzonymi reklamami.
 - Przycisk „Statystyki” w nagłówku pokazuje osobno ominięte reklamy, wiadomości, inne przerwy i niechcianą muzykę, automatyczne objazdy, czas słuchania oraz do pięciu najdłużej słuchanych stacji. Czas reklam i przerw według playlisty mierzymy tylko w znanym przedziale podczas odtwarzania zastępczego audio. Nieznanej długości nie przeliczamy na minuty.
 - Dotychczasowe statystyki, czasy stacji i ustawienia pozostają zachowane lokalnie. Dawne ominięcia czarnej listy przechodzą do niechcianej muzyki; nowych liczników nie odtwarzamy z dawnych objazdów ani zakładek.
+- Naprawiono automatyczny powrót do Trójki oraz ostrzeżenia Smart Listening, które po ręcznej zmianie stacji mogły dotyczyć poprzednio słuchanego utworu.
+- Ramówka i playlista Trójki odświeżają się teraz co 15 sekund, więc bieżący utwór i audycja pojawiają się szybciej.
+- Zaktualizowano politykę prywatności o Smart Listening, preferencje muzyczne i nowe liczniki statystyk.
+
+## 0.13.0
+
+Kajtek zbiera statystyki odtwarzania, które możesz sprawdzić w ustawieniach. Pomijanie reklam działa stabilniej.
+
+- Przycisk „Statystyki”, obok pomocy, motywu i ustawień, otwiera podsumowanie czasu pominiętych reklam o znanej długości, utworów ominiętych dzięki czarnej liście, automatycznych przełączeń i czasu słuchania. Dane od teraz zapisują się lokalnie. Możesz przeglądać statystyki z tego tygodnia lub z całego okresu. Lista do pięciu najczęściej słuchanych stacji uwzględnia rzeczywisty czas słuchania. Dotychczasowe statystyki zostają zachowane, a czas dla poszczególnych stacji jest liczony od tej aktualizacji.
+- Przyciski „Przełącz teraz” i „Zostań mimo to” nie znikają spod kursora podczas odliczania. Ręczne przełączenie działa niezależnie od limitu automatycznych przełączeń.
+- „Co teraz gra?” pokazuje aktualne utwory i audycje na włączonych stacjach, z okładką utworu lub obrazkiem stacji. Widok listy i kafelków jest wspólny dla obu zakładek, a przełączanie między nimi ma krótkie, płynne przejście. Kliknij treść, aby wybrać stację w istniejącym odtwarzaczu. Małe oznaczenia pokazują czarną listę, wykonawców z ulubionych utworów oraz starsze dane; dotychczasowa lista i katalog stacji pozostają dostępne.
+- Po przełączeniu Kajtek wraca na poprzednią stację, gdy reklama faktycznie się skończy. Jeśli jej długość jest nieznana, czeka 3 minuty lub do końca bloku reklamowego.
+- Czas pominiętych reklam liczy się też dla przerw RMF z zaplanowanym początkiem i końcem w playliście, wyłącznie w ich trakcie. Przerwy bez znanego końca nadal nie są przeliczane na minuty.
+- Odrzucone ostrzeżenie o reklamie nie pojawia się ponownie, gdy zacznie się blok reklamowy.
 - Przywrócono aktualny utwór, historię i zapowiedzi audycji Trójki po przebudowie strony Polskiego Radia. Gdy playlista nie podaje bieżącego utworu, Kajtek pokazuje tytuł audycji.
 
 ## 0.12.1

@@ -1,15 +1,14 @@
-import { getSmartListeningConfig, musicPreference } from "../listeningPreferences.js";
-
-const isNegativelyPreferred = (track: TrackInfo): boolean =>
-  musicPreference(track, getSmartListeningConfig().preferences).negative;
-
 import { TIMERS } from "../consts.js";
 import { ICONS } from "../icons.js";
+import { getSmartListeningConfig, musicPreference } from "../listeningPreferences.js";
 import { state } from "../state.js";
 import type { TrackInfo } from "../types.js";
 import { escapeHtml, formatDuration, getTrackKey } from "../utils.js";
 import { els } from "./elements.js";
 import { isTrackFavorited } from "./favorites.js";
+
+const isNegativelyPreferred = (track: TrackInfo): boolean =>
+  musicPreference(track, getSmartListeningConfig().preferences).negative;
 
 let slideTimer: number | undefined;
 let clearTimer: number | undefined;

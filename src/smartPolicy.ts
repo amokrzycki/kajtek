@@ -115,9 +115,11 @@ export function rankCandidates(
   excludeId: string,
   favorites = new Set<string>(),
   similar = new Set<string>(),
-  catalogOrder = snapshots.map((snapshot) => snapshot.station.id),
+  catalogOrder?: string[],
 ) {
-  const order = new Map(catalogOrder.map((id, index) => [id, index]));
+  const order = new Map(
+    (catalogOrder ?? snapshots.map((snapshot) => snapshot.station.id)).map((id, index) => [id, index]),
+  );
   return snapshots
     .filter((snapshot) => snapshot.station.id !== excludeId)
     .map((snapshot) => ({

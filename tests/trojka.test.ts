@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { SmartRouteController, type SmartRouteInput } from "../src/smartRoute.js";
 import type { PlaylistResult, Station } from "../src/types.js";
 import playlist from "./fixtures/trojka/playlista.json";
 import schedule from "./fixtures/trojka/ramowka.json";
@@ -190,9 +191,65 @@ describe("Trójka transport and metadata", () => {
 });
 
 describe("Trójka caches", () => {
-  it("refreshes both sources at 60,000 ms, but not 59,999 ms", async () => {
+  it.each(["song", "programme"])("provides distinct fresh %s observations for automatic return", async (kind) => {
+    if (kind === "programme") respond(playlistUrl, { data: [] });
+    const route = new SmartRouteController();
+    const replacement = { ...station, id: "replacement", name: "Replacement" };
+    const config: SmartRouteInput["config"] = {
+      version: 1,
+      enabled: true,
+      content: { advertisement: true, news: false, otherBreak: false },
+      preferences: [],
+    };
+    const initial = await result();
+    const snapshot = {
+      station,
+      track: { artist: "Trójka", title: "Reklamy", contentKind: "advertisement" as const },
+      kind: "advertisement" as const,
+      evidence: "explicit" as const,
+      updatedAt: Date.now(),
+      stale: false,
+      error: false,
+    };
+    const input: SmartRouteInput = {
+      now: Date.now(),
+      enabled: true,
+      playing: true,
+      station,
+      config,
+      pool: [station, replacement],
+      snapshots: [snapshot],
+    };
+    route.step(input);
+    vi.advanceTimersByTime(5_000);
+    expect(route.step({ ...input, now: Date.now() })?.destination).toEqual(replacement);
+    const safeInput = (data: PlaylistResult): SmartRouteInput => ({
+      ...input,
+      now: Date.now(),
+      station: replacement,
+      snapshots: [
+        {
+          ...snapshot,
+          track: data.current,
+          kind: data.current?.contentKind ?? "track",
+          evidence: null,
+          updatedAt: data.observedAt ?? null,
+        },
+      ],
+    });
+    vi.advanceTimersByTime(5_000);
+    expect(route.step(safeInput(initial))).toBeNull();
+    vi.advanceTimersByTime(5_000);
+    expect(route.step(safeInput(await result()))).toMatchObject({
+      destination: station,
+      automatic: true,
+      returning: true,
+    });
+  });
+
+  it("refreshes both sources at 15,000 ms, but not 14,999 ms", async () => {
     await result();
-    vi.advanceTimersByTime(59_999);
+    vi.advanceTimersByTime(14_999);
     await result();
     expect(fetchMock).toHaveBeenCalledTimes(2);
     const program = activeProgram();
