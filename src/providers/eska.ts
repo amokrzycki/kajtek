@@ -63,7 +63,7 @@ export function readZprTag(frag: { tagList: string[][]; programDateTime: number 
   // Short transition segments carry an empty title, so hold the previous block for a moment rather than flickering. But empty blocks also run for minutes on live/talk programming and there the last song's time must not stick to whatever REST reports next, drop it and let REST stand alone
   if (!tag.data?.title) {
     if (!zprState || Date.now() - zprState.updatedAt <= ZPR_EMPTY_GRACE_MS) {
-      // Hold the timing so the row doesn't flicker, but stop asserting the old block is an ad, ESKA runs REKLAMA -> JINGLE -> untitled, and a stale "ad" would fire Ad Skip after the fact
+      // Hold the timing so the row doesn't flicker, but stop asserting the old block is an ad, ESKA runs REKLAMA -> JINGLE -> untitled, and a stale "ad" would trigger Smart Listening after the fact
       if (zprState) zprState.titleEmpty = true;
       return false;
     }
@@ -110,7 +110,7 @@ function getZprState(stationId: string): ZprState | null {
 }
 
 const SESSION_PASTS_MAX = 3;
-// ESKA always answers with pasts: [], so we keep our own for the session. A map rather than a single slot because Ad Skip hops A -> B -> A and the history has to survive the return trip
+// ESKA always answers with pasts: [], so we keep our own for the session. A map rather than a single slot because Smart Listening hops A -> B -> A and the history has to survive the return trip
 const sessionPasts = new Map<string, TrackInfo[]>();
 const lastSeen = new Map<string, TrackInfo>();
 let playingStationId: string | null = null;
@@ -196,11 +196,11 @@ export const eskaProvider: Provider = {
       };
     }
 
-    // Only the playing station has an HLS session, candidate polling (blacklistWarning) and ad-break-ended polling both hit stations that don't, and must fall back to REST alone.
+    // Only the playing station has an HLS session, passive Smart Listening/discovery polling hits stations that don't, and must fall back to REST alone.
     const zpr = getZprState(station.id);
     const kind = zpr ? classifyZpr(zpr.title) : null;
 
-    // A real signal, replacing the old "current == null means ads" guess. Jingles are ~7s station idents, treating them as breaks would make Ad Skip switch stations over an ident. An "ad" held over from the grace window doesn't count, only a block the tag is still naming.
+    // Empty transition tags cannot assert the previously named block.
     const breakTrack: TrackInfo = { artist: station.name, title: DEFAULT_BREAK_LABEL, isLiveBreak: true };
     let current: TrackInfo;
     if (kind === "ad" && zpr && !zpr.titleEmpty) {
@@ -209,6 +209,14 @@ export const eskaProvider: Provider = {
         contentKind: "advertisement",
         contentEvidence: "explicit",
         ...(zpr.adEndsAt === null ? {} : { adEndsAt: zpr.adEndsAt }),
+      };
+    } else if (kind === "jingle" && zpr && !zpr.titleEmpty) {
+      current = {
+        artist: station.name,
+        title: "Jingle",
+        isLiveBreak: true,
+        contentKind: "otherBreak",
+        contentEvidence: "explicit",
       };
     } else if (data.current) {
       current = toTrackInfo(data.current, 0);

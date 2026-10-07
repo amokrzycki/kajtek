@@ -19,9 +19,32 @@ vi.mock("../src/ui/modal.js", () => ({
   bindModalDismiss: mocks.dismiss,
 }));
 
-const totals = { listeningMs: 0, adSavedMs: 0, blacklistAvoided: 0, detours: 0 };
+const totals = {
+  listeningMs: 0,
+  adSavedMs: 0,
+  negativeMusicAvoided: 0,
+  adsAvoided: 0,
+  newsAvoided: 0,
+  otherBreaksAvoided: 0,
+  detours: 0,
+};
 
 describe("recap presentation", () => {
+  it("reports successful content avoidance without claiming measured minutes", () => {
+    const copy = recapCopy(
+      { ...totals, adsAvoided: 2, newsAvoided: 1, otherBreaksAvoided: 1, negativeMusicAvoided: 3 },
+      false,
+    );
+    expect(copy.empty).toBe(false);
+    expect(copy.lead).toContain("7");
+    expect(copy.lead).not.toContain("oszczędził");
+    expect(copy.adNote).toContain("znany");
+  });
+
+  it("qualifies saved time because playlist breaks are not confirmed advertisements", () => {
+    const copy = recapCopy({ ...totals, listeningMs: 60_000, adSavedMs: 60_000 }, false);
+    expect(copy.lead).toContain("przerw według playlisty");
+  });
   it("formats station listening durations without zero-minute entries", () => {
     expect(formatListeningTime(1000)).toBe("mniej niż minuta");
     expect(formatListeningTime(4 * 3_600_000 + 12 * 60_000)).toBe("4 godz. 12 min");
@@ -98,7 +121,10 @@ beforeEach(() => {
     ".recap-lead",
     ".recap-body",
     ".recap-ad-saved",
-    ".recap-blacklist",
+    ".recap-negative-music",
+    ".recap-ads",
+    ".recap-news",
+    ".recap-other-breaks",
     ".recap-detours",
     ".recap-listening",
     ".recap-empty",
@@ -162,6 +188,10 @@ describe("statistics surface", () => {
     trigger.click();
     expect(modal.nodes.get(".recap-stations-empty")?.classes.has("hidden")).toBe(false);
     expect(modal.nodes.get(".recap-empty")?.textContent).toContain("Wybierz stację");
+    expect(modal.innerHTML).toContain("Ominięte reklamy");
+    expect(modal.innerHTML).toContain("Ominięte wiadomości");
+    expect(modal.innerHTML).toContain("Inne przerwy");
+    expect(modal.innerHTML).toContain("Niechciana muzyka");
     for (let index = 0; index < 7; index++)
       store.duration(now, now + 1000, 1000, 0, { id: String(index), name: "<img src=x>" });
     all.click();

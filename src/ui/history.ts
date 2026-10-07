@@ -1,11 +1,14 @@
-import { isBlacklisted } from "../blacklist.js";
 import { TIMERS } from "../consts.js";
 import { ICONS } from "../icons.js";
+import { getSmartListeningConfig, musicPreference } from "../listeningPreferences.js";
 import { state } from "../state.js";
 import type { TrackInfo } from "../types.js";
 import { escapeHtml, formatDuration, getTrackKey } from "../utils.js";
 import { els } from "./elements.js";
 import { isTrackFavorited } from "./favorites.js";
+
+const isNegativelyPreferred = (track: TrackInfo): boolean =>
+  musicPreference(track, getSmartListeningConfig().preferences).negative;
 
 let slideTimer: number | undefined;
 let clearTimer: number | undefined;
@@ -82,7 +85,7 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
     <div class="pl-actions">
       <span class="pl-dur">${durStr}</span>
       <button type="button" class="sc-star pl-fav-star${isTrackFavorited(t) ? " on" : ""}" data-key="${escapeHtml(getTrackKey(t))}" aria-label="${isTrackFavorited(t) ? "Usuń z ulubionych" : "Dodaj do ulubionych"}: ${escapeHtml(t.artist)} – ${escapeHtml(t.title)}">${ICONS.star(isTrackFavorited(t))}</button>
-      <button type="button" class="sc-star pl-block-btn${isBlacklisted(t) ? " on" : ""}" data-artist="${escapeHtml(t.artist)}" data-title="${escapeHtml(t.title)}" aria-label="${isBlacklisted(t) ? "Odblokuj utwór" : "Zablokuj utwór"}: ${escapeHtml(t.artist)} – ${escapeHtml(t.title)}" title="${isBlacklisted(t) ? "Odblokuj utwór" : "Zablokuj utwór"}">${ICONS.ban}</button>
+      <button type="button" class="sc-star pl-block-btn${isNegativelyPreferred(t) ? " on" : ""}" data-artist="${escapeHtml(t.artist)}" data-title="${escapeHtml(t.title)}" aria-label="Preferencje słuchania: ${escapeHtml(t.artist)} – ${escapeHtml(t.title)}" title="Preferencje słuchania">${ICONS.ban}</button>
     </div>
   `;
 }
@@ -161,7 +164,7 @@ function buildHistorySignature(renderedItems: ClassifiedItem[]): string {
       isNext,
       isPast,
       isTrackFavorited(t),
-      t.isBreak ? false : isBlacklisted(t),
+      t.isBreak ? false : isNegativelyPreferred(t),
     ]),
   );
 }

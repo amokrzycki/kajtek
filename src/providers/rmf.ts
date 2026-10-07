@@ -43,6 +43,8 @@ function buildTrackList(sorted: RawTrack[], station?: Station | null): TrackInfo
               artist: "",
               title: "",
               isBreak: true,
+              contentKind: isFactsBreak ? "news" : "advertisement",
+              contentEvidence: "inferred",
               start: breakStartStr,
               timestamp: endTs,
               endTimestamp: nextItem.timestamp,
@@ -124,13 +126,17 @@ function resolveActiveTrack(
         : currentActive.label || DEFAULT_BREAK_LABEL;
 
       return {
+        ...currentActive,
         artist: station?.name || "Radio",
         title: label,
         isLiveBreak: true,
-        isFacts: factsInfo.isFacts,
+        isFacts: currentActive.contentKind === "news",
+        contentKind: currentActive.contentKind ?? "advertisement",
+        contentEvidence: "inferred",
       };
     }
     return {
+      ...currentActive,
       artist: currentActive.artist,
       title: currentActive.title,
       coverUrl: currentActive.coverUrl || "",
@@ -144,7 +150,10 @@ function resolveActiveTrack(
       artist: station?.name || "Radio",
       title: breakTitle,
       isLiveBreak: true,
-      isFacts: factsInfo.isFacts,
+      isFacts: false,
+      isPredicted: true,
+      contentKind: "unknown",
+      contentEvidence: "inferred",
     };
   }
 

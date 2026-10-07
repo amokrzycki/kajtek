@@ -175,6 +175,8 @@ function buildUpcomingProgramItems(schedule: RamowkaItem[], nowMs: number): Trac
         artist: "",
         title: p.title,
         isBreak: true,
+        contentKind: "programme",
+        contentEvidence: "explicit",
         label: p.title,
         start: formatProgramTime(p.startTime),
         timestamp: startSec,
@@ -231,10 +233,8 @@ export const trojkaProvider: Provider = {
       .sort((a, b) => (a.timestamp ?? 0) - (b.timestamp ?? 0));
 
     const lastSong = startedSongs[startedSongs.length - 1] || null;
-    // Last song is only trusted as "still probably playing" within one playlist-poll's worth of
-    // slack past its own end — beyond that, playlist is just stale and we genuinely don't know
-    // the song, so fall through to the program-title fallback below instead of showing it forever.
-    const stalenessToleranceSec = TROJKA_PLAYLIST_REFRESH_MS / 1000;
+    // The playlist can lag by a minute; this song-end tolerance is independent of cache revalidation.
+    const stalenessToleranceSec = 60;
     const currentSong =
       startedSongs.find((t) => t.endTimestamp != null && nowSec < t.endTimestamp) ||
       (lastSong?.endTimestamp && nowSec - lastSong.endTimestamp <= stalenessToleranceSec ? lastSong : null);
@@ -257,6 +257,10 @@ export const trojkaProvider: Provider = {
 
     return {
       current,
+      observedAt: Math.min(
+        trojkaScheduleCache?.fetchedAt ?? nowMs,
+        currentSong ? (trojkaPlaylistCache?.fetchedAt ?? nowMs) : (trojkaScheduleCache?.fetchedAt ?? nowMs),
+      ),
       all: [...pastSongs, ...buildUpcomingProgramItems(schedule, nowMs)],
     };
   },

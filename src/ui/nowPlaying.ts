@@ -42,8 +42,9 @@ function snapshotFields(snapshot: NowPlayingSnapshot, selected: boolean) {
   if (kind === "news") badges.push("wiadomości");
   if (kind === "programme") badges.push("audycja");
   if (kind === "unknown") badges.push("brak danych");
-  if (flags.blacklisted) badges.push("czarna lista");
-  if (flags.favoriteArtist) badges.push("♥ artysta");
+  if (flags.negativeMusic) badges.push("niechciana muzyka");
+  if (flags.positiveArtist) badges.push("lubiany artysta");
+  if (flags.positiveTrack) badges.push("lubiany utwór");
   if (selected) badges.push("wybrana stacja");
   if (stale) badges.push("starsze dane");
   if (error) badges.push("błąd danych");
@@ -76,7 +77,8 @@ function artworkHtml(snapshot: NowPlayingSnapshot, index: number): string {
 function badgesHtml(badges: string[]): string {
   return badges
     .map(
-      (badge) => `<span${badge === "czarna lista" ? ' class="discovery-blacklist"' : ""}>${escapeHtml(badge)}</span>`,
+      (badge) =>
+        `<span${badge === "niechciana muzyka" ? ' class="discovery-negative"' : ""}>${escapeHtml(badge)}</span>`,
     )
     .join("");
 }
@@ -166,7 +168,7 @@ export function renderNowPlaying(
     button.setAttribute("aria-label", snapshotLabel(snapshot));
     button.setAttribute("aria-pressed", String(selected));
     button.classList.toggle("active", selected);
-    button.classList.toggle("is-blacklisted", snapshot.flags.blacklisted);
+    button.classList.toggle("is-negativeMusic", snapshot.flags.negativeMusic);
     reconcileSnapshot(button, snapshot, selected, index);
     if (list.children[index] !== row) list.insertBefore(row, list.children[index] ?? null);
     existing.delete(snapshot.station.id);

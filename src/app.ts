@@ -1,17 +1,16 @@
-import { addToBlacklist, isBlacklisted, normalizeTrackKey, removeFromBlacklist } from "./blacklist.js";
-import {
-  cancelAdSkipAutoReturn,
-  dismissBlacklistWarning,
-  returnToPreviousStation,
-  switchBlacklistCandidateNow,
-  undoBlacklistBlock,
-} from "./blacklistWarning.js";
 import { getAllKnownStations, getOrderedStations } from "./catalog.js";
 import { checkForNewChangelog, latestChangelog } from "./changelog.js";
 import { STORAGE_KEYS } from "./consts.js";
-import { setAdSkipEnabled, setSleepTimer, toggleFav, toggleMute, updateVolume } from "./controls.js";
+import { setSleepTimer, setSmartListeningEnabled, toggleFav, toggleMute, updateVolume } from "./controls.js";
 import { currentTrack, selectStation, togglePlay } from "./player.js";
 import { genericProvider, getProvider } from "./providers.js";
+import {
+  cancelSmartReturn,
+  initSmartListening,
+  returnSmartManually,
+  staySmartAnyway,
+  switchSmartNow,
+} from "./smartListening.js";
 import { notifyState, setTheme, state, subscribeState } from "./state.js";
 import type { Station } from "./types.js";
 import { openCatalogModal } from "./ui/catalog/modal.js";
@@ -20,6 +19,7 @@ import { removeFavTrackByKey } from "./ui/favorites.js";
 import { openOnboardingModal, shouldShowOnboarding } from "./ui/onboarding/modal.js";
 import { openSettingsModal } from "./ui/settings/modal.js";
 import { openShortcutsModal } from "./ui/shortcuts/modal.js";
+import { openSmartListeningModal } from "./ui/smartListening/modal.js";
 import { initStationBrowser } from "./ui/stationBrowser.js";
 import { initStatisticsUI } from "./ui/statistics.js";
 import {
@@ -31,14 +31,14 @@ import {
   triggerHistorySlideIn,
   updateUI,
 } from "./ui.js";
-import { getTrackKey } from "./utils.js";
+import { getStoredString, getTrackKey, setStoredString } from "./utils.js";
 
 function refresh() {
   updateUI(currentTrack(), selectRememberedStation, toggleFav);
 }
 
 function selectRememberedStation(station: Station): void {
-  localStorage.setItem(STORAGE_KEYS.LAST_STATION, station.id);
+  setStoredString(STORAGE_KEYS.LAST_STATION, station.id);
   selectStation(station);
 }
 
@@ -114,7 +114,7 @@ function attachEvents() {
     els.playBtn.focus();
   });
 
-  els.adSkipSwitch.addEventListener("click", () => setAdSkipEnabled(!state.adSkipEnabled));
+  els.smartListeningSwitch.addEventListener("click", () => setSmartListeningEnabled(!state.smartListening.enabled));
 
   els.historyToggleBtn.addEventListener("click", () => {
     if (state.station && getProvider(state.station) === genericProvider) {
@@ -161,11 +161,7 @@ function attachEvents() {
       const artist = blockBtn.getAttribute("data-artist") || "";
       const title = blockBtn.getAttribute("data-title") || "";
       if (!artist || !title) return;
-      if (isBlacklisted({ artist, title })) {
-        removeFromBlacklist(normalizeTrackKey(artist, title));
-      } else {
-        addToBlacklist(artist, title);
-      }
+      openSmartListeningModal({ artist, title });
       notifyState();
     }
   });
@@ -178,21 +174,16 @@ function attachEvents() {
   els.npBlockBtn.addEventListener("click", () => {
     const track = currentTrack();
     if (!track) return;
-    if (isBlacklisted(track)) {
-      removeFromBlacklist(normalizeTrackKey(track.artist, track.title));
-    } else {
-      addToBlacklist(track.artist, track.title);
-    }
+    openSmartListeningModal(track);
     notifyState();
   });
 
-  els.blacklistWarning.addEventListener("click", (e: Event) => {
+  els.smartWarning.addEventListener("click", (e: Event) => {
     const target = e.target as HTMLElement;
-    if (target.closest(".bl-warn-switch")) switchBlacklistCandidateNow();
-    else if (target.closest(".bl-warn-play-anyway")) dismissBlacklistWarning();
-    else if (target.closest(".bl-warn-unblock")) undoBlacklistBlock();
-    else if (target.closest(".bl-warn-revert")) returnToPreviousStation();
-    else if (target.closest(".bl-warn-cancel-return")) cancelAdSkipAutoReturn();
+    if (target.closest(".bl-warn-switch")) switchSmartNow();
+    else if (target.closest(".bl-warn-play-anyway")) staySmartAnyway();
+    else if (target.closest(".bl-warn-revert")) returnSmartManually();
+    else if (target.closest(".bl-warn-cancel-return")) cancelSmartReturn();
   });
 
   els.favoritesList.addEventListener("click", (e: Event) => {
@@ -216,7 +207,7 @@ function attachEvents() {
 
 function init() {
   const isFirstVisit = shouldShowOnboarding();
-  const lastStationId = localStorage.getItem(STORAGE_KEYS.LAST_STATION);
+  const lastStationId = getStoredString(STORAGE_KEYS.LAST_STATION);
   state.station = getAllKnownStations().find((station) => station.id === lastStationId) ?? null;
 
   setVersion();
@@ -227,6 +218,7 @@ function init() {
   initStatisticsUI();
   subscribeState(refresh);
   initStationBrowser(selectRememberedStation);
+  initSmartListening();
   refresh();
 
   const newEntries = checkForNewChangelog();

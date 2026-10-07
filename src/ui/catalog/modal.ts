@@ -1,8 +1,8 @@
 import { getAllKnownStations, getCustomStations, getStoredRmfCatalog } from "../../catalog.js";
 import type { Station } from "../../types.js";
 import { escapeHtml } from "../../utils.js";
-import { openBlacklistModal } from "../blacklist/modal.js";
 import { animateTabSwitch, bindModalDismiss, closeModal, openModal } from "../modal.js";
+import { openSmartListeningModal } from "../smartListening/modal.js";
 import { handleCustomStationSubmit } from "./form.js";
 import { CATALOG_MODAL_HTML } from "./markup.js";
 import { formatDate, getErrorMessage, refreshCatalog } from "./refresh.js";
@@ -79,10 +79,11 @@ function createModalElements(): void {
   const closeBtn = modalEl.querySelector("#catalog-modal-close");
   closeBtn?.addEventListener("click", closeCatalogModal);
 
-  const blacklistBtn = modalEl.querySelector("#open-blacklist-btn");
-  blacklistBtn?.addEventListener("click", () => {
+  const smartBtn = modalEl.querySelector("#open-smart-listening-btn");
+  smartBtn?.addEventListener("click", () => {
+    const restoreFocus = previousActiveElement;
     closeCatalogModal();
-    openBlacklistModal();
+    openSmartListeningModal(undefined, restoreFocus);
   });
 
   const searchInput = modalEl.querySelector<HTMLInputElement>("#catalog-search-input");

@@ -1,6 +1,7 @@
 import { setStationFavorite } from "./catalog.js";
 import { STORAGE_KEYS } from "./consts.js";
 import { ICONS } from "./icons.js";
+import { updateSmartListeningConfig } from "./listeningPreferences.js";
 import { intervals, notifyState, radioAudio, state } from "./state.js";
 import { els, renderVolLadder, updateMuteAccessibility, updateSleepUI } from "./ui.js";
 import { isIOS, setStoredJSON } from "./utils.js";
@@ -153,10 +154,8 @@ export function cancelSleepTimer(): void {
   notifyState();
 }
 
-export function setAdSkipEnabled(enabled: boolean): void {
-  state.adSkipEnabled = enabled;
-  setStoredJSON(STORAGE_KEYS.AD_SKIP_ENABLED, enabled);
-  notifyState();
+export function setSmartListeningEnabled(enabled: boolean): void {
+  updateSmartListeningConfig({ enabled });
 }
 
 export function toggleFav(id: string): void {

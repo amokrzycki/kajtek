@@ -1,5 +1,21 @@
 # Changelog
 
+## 0.14.0
+
+Smart Listening łączy zasady słuchania w jednym miejscu: wybiera odpowiednią stację na czas niechcianej treści i czeka na bezpieczny powrót.
+
+- W ustawieniach znajdziesz jedną konfigurację Smart Listening: stacje do przełączania, treści do pomijania i preferencje muzyczne. Przełącznik SMART na obudowie włącza całość. Pula stacji jest niezależna od ich widoczności i ulubionych; na początku przejmuje dotychczasowy wybór.
+- Wybierz „Preferuj”, „Neutralnie” lub „Unikaj” dla artysty albo konkretnego utworu. Niechciana muzyka wywołuje pominięcie; preferowana pomaga wybrać stację dopiero wtedy, gdy trzeba coś ominąć. Kajtek nie przeskakuje sam za ulubionymi utworami. Gwiazdki nadal służą zakładkom, a dotychczasowa czarna lista przechodzi do preferencji „Unikaj”.
+- Reklamy zachowują dotychczasowe ustawienie. Wiadomości i inne rozpoznane przerwy możesz wybrać osobno w zasadach treści. Audycje pozostają do słuchania, a brak danych nie oznacza reklamy.
+- Powrót wymaga świeżych danych potwierdzających odpowiednią treść na pierwotnej stacji. Kajtek sprawdza ją ponownie i nie wraca w ciemno po trzech minutach ani po samym upływie czasu reklamy. Ręczna zmiana stacji, wyłączenie Smart Listening lub „Zostań tutaj” kończy objazd; pauza wstrzymuje automatyczne przełączanie.
+- Komunikat pominięcia jest widoczny także przy zamkniętej PLAYLIŚCIE. Przyciski „Przełącz teraz” i „Zostań mimo to” zachowują miejsce podczas odliczania; gdy brakuje odpowiedniej stacji, Kajtek pokazuje oczekiwanie.
+- „Co teraz gra?” i Smart Listening korzystają ze wspólnych informacji o stacjach. Oznaczenia pokazują jawne preferencje muzyczne i starsze dane. Przerwy RMF pozostają oznaczone jako wnioskowane z playlisty; niepewne zapowiedzi i brak tytułu ESKA nie stają się potwierdzonymi reklamami.
+- Przycisk „Statystyki” w nagłówku pokazuje osobno ominięte reklamy, wiadomości, inne przerwy i niechcianą muzykę, automatyczne objazdy, czas słuchania oraz do pięciu najdłużej słuchanych stacji. Czas reklam i przerw według playlisty mierzymy tylko w znanym przedziale podczas odtwarzania zastępczego audio. Nieznanej długości nie przeliczamy na minuty.
+- Dotychczasowe statystyki, czasy stacji i ustawienia pozostają zachowane lokalnie. Dawne ominięcia czarnej listy przechodzą do niechcianej muzyki; nowych liczników nie odtwarzamy z dawnych objazdów ani zakładek.
+- Naprawiono automatyczny powrót do Trójki oraz ostrzeżenia Smart Listening, które po ręcznej zmianie stacji mogły dotyczyć poprzednio słuchanego utworu.
+- Ramówka i playlista Trójki odświeżają się teraz co 15 sekund, więc bieżący utwór i audycja pojawiają się szybciej.
+- Zaktualizowano politykę prywatności o Smart Listening, preferencje muzyczne i nowe liczniki statystyk.
+
 ## 0.13.0
 
 Kajtek zbiera statystyki odtwarzania, które możesz sprawdzić w ustawieniach. Pomijanie reklam działa stabilniej.

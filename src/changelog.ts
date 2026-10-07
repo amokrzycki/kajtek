@@ -1,6 +1,7 @@
 import rawChangelog from "../CHANGELOG.md";
 import { STORAGE_KEYS } from "./consts.js";
 import { state } from "./state.js";
+import { getStoredString, setStoredString } from "./utils.js";
 
 export interface ChangelogEntry {
   version: string;
@@ -49,7 +50,7 @@ const RETURNING_USER_SIGNAL_KEYS = Object.values(STORAGE_KEYS).filter(
 );
 
 function isReturningUser(): boolean {
-  return RETURNING_USER_SIGNAL_KEYS.some((key) => localStorage.getItem(key) !== null);
+  return RETURNING_USER_SIGNAL_KEYS.some((key) => getStoredString(key) !== null);
 }
 
 export function latestChangelog(): ChangelogEntry[] {
@@ -57,10 +58,10 @@ export function latestChangelog(): ChangelogEntry[] {
 }
 
 export function checkForNewChangelog(): ChangelogEntry[] | null {
-  const lastSeen = localStorage.getItem(STORAGE_KEYS.LAST_SEEN_VERSION);
+  const lastSeen = getStoredString(STORAGE_KEYS.LAST_SEEN_VERSION);
 
   const returning = isReturningUser();
-  localStorage.setItem(STORAGE_KEYS.LAST_SEEN_VERSION, state.version);
+  setStoredString(STORAGE_KEYS.LAST_SEEN_VERSION, state.version);
 
   if (lastSeen === state.version) return null;
   // unknown history (no lastSeen at all) — announce only the latest release, not

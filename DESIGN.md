@@ -12,9 +12,9 @@ colors:
   paper-bg-inset: "#d2cdc3"
   paper-bg-deep: "#c4bfb4"
   ink: "#272320"
-  ink-2: "#554e49"
-  ink-muted: "#5f5a54"
-  ink-faint: "#6b665f"
+  ink-2: "#4c4641"
+  ink-muted: "#56504a"
+  ink-faint: "#5b5650"
   ink-disabled: "#8d8880"
   led-live: "#15803d"
   led-next: "#b45309"
@@ -115,7 +115,7 @@ components:
 
 **Creative North Star: "The Unitra PS-101 Reissue"**
 
-KAJTEK is not "retro-inspired" in the abstract — it is a literal, part-by-part digital reissue of one specific object: the Unitra PS-101, a PRL-era (Polish People's Republic) cassette tape player. Every zone of the interface maps to a physical part of that machine: a red bakelite case with side buttons, a dark glass display window with tape-counter styling, spinning tape reels with visible sprocket hubs, a VU meter with an LED-style level ladder, and a control strip with a mechanical play button and branding plate ("UNITRA zrk · STEREO · CASSETTE PLAYER PS 101"). The system does not decorate a generic music-player layout with retro colors — the layout itself *is* the cassette deck, and the underlying app (station catalog, ad-skip, blacklist) lives inside it like tape running through the mechanism.
+KAJTEK is not "retro-inspired" in the abstract — it is a literal, part-by-part digital reissue of one specific object: the Unitra PS-101, a PRL-era (Polish People's Republic) cassette tape player. Every zone of the interface maps to a physical part of that machine: a red bakelite case with side buttons, a dark glass display window with tape-counter styling, spinning tape reels with visible sprocket hubs, a VU meter with an LED-style level ladder, and a control strip with a mechanical play button and branding plate ("UNITRA zrk · STEREO · CASSETTE PLAYER PS 101"). The system does not decorate a generic music-player layout with retro colors — the layout itself *is* the cassette deck, and the underlying app (station catalog, Smart Listening) lives inside it like tape running through the mechanism.
 
 The base palette is warm, worn paper — cream/beige surfaces with soft warm-gray text — punctuated by a single insistent bakelite red. That red is swappable: six named case-shell colors (red, green, yellow, blue, pink, black) let a user pick a different plastic shell, Walkman-style, without changing the machine underneath. The display window never follows the room: it's always a dark glass well, regardless of light/dark theme, and only the plastic around it decides its tint — a real cassette deck's window doesn't change with the lighting, but it is moulded with the shell.
 
@@ -156,7 +156,7 @@ Case gradients (`--k-case`, 180°, lit top → shaded base) are literal per shel
 ### Hardware Colors (untokenised)
 Literals that live in component CSS or `variables.css` rather than a `--k-*` token. They are deliberate depictions of physical parts, not drift, and are documented here so new work reuses them instead of inventing neighbors.
 - **VU ladder** (`--k-vol-1..3`, light theme): green `#4ade80 → #16a34a`, amber `#fbbf24 → #d97706`, red `#f87171 → #dc2626`. Dark theme swaps to flat `#4ade80`, `#ffeb3b`, `#ef5a4a`.
-- **Warning Amber** (`#f59e0b`, as `rgba(245, 158, 11, 0.12–0.6)` tints): blacklist warning banner and blacklisted-track rows in the history playlist — the same hue as Next Amber, used only as translucent fill, border and glow.
+- **Warning Amber** (`#f59e0b`, as `rgba(245, 158, 11, 0.12–0.6)` tints): Smart Listening warning banner and negative-music rows in the history playlist — the same hue as Next Amber, used only as translucent fill, border and glow.
 - **Brand plate** (`linear-gradient(180deg, #f8f8fa, #e2e2e8 50%, #d4d4dc)`): the brushed-metal UNITRA strip, cool grey by design against the warm paper.
 - **Tape and reel** (`#5a3726` → `#2a1810` radial wound tape, `#38322b` spokes, `#000000` alternating hub teeth): the cassette reels inside the glass.
 - **Scrim blacks** (`rgba(0, 0, 0, α)`, α 0.18 – 0.9): modal backdrop (0.65), history panel backdrop (0.5), artwork and reel vignettes (0.45–0.6), display text-shadow (0.8–0.9), stripe and card hairline shading (0.18–0.28). Always neutral black; never tinted.
@@ -274,7 +274,7 @@ The collapsible panel below the deck contains PLAYLISTA and favorites. `.history
 - **Shell:** centered overlay with blur backdrop, `--k-r` radius, scale+translateY entrance (0.94 → 1, 12px → 0) — never a slide-from-edge.
 - **Header:** title in display font, close button as a bare oversized "×", optional "last updated" byline.
 - **Toolbar/tabs:** underline-style active tab (2px accent border-bottom), search + view-toggle controls in a shared toolbar row.
-- **Expandable forms** (custom station, blacklist entry): animate via `grid-template-rows: 0fr → 1fr`, never `max-height` or `display` toggling.
+- **Expandable forms** (custom station, music preference): animate via `grid-template-rows: 0fr → 1fr`, never `max-height` or `display` toggling.
 
 ### Navigation (Header)
 Flat, no background — brand wordmark left, two icon-only round key-buttons right (dark-mode toggle with animated sun/moon swap, settings gear that spins 150° on open). Same raised-key shadow language as the rest of the app; the header is not a separate visual register.
@@ -299,13 +299,15 @@ Flat, no background — brand wordmark left, two icon-only round key-buttons rig
 
 - **Własna stacja** describes a station added by the listener. **WŁASNE** labels the catalog tab containing these stations. Use **adres strumienia** for its playback URL.
 - **PLAYLISTA** labels the panel of past, current, and upcoming tracks or broadcasts supplied by the station.
-- **Ponów** retries failed playback; **Wstaw aktualny utwór** fills the blacklist form without submitting it.
+- **Ponów** retries failed playback. **Smart Listening** names the single protective-listening configuration; the deck’s **SMART** switch controls its master state. **Preferuj**, **Neutralnie** and **Unikaj** describe explicit artist/track preferences; saved stars remain bookmarks.
+
+Smart Listening uses the incumbent modal, switch, form and paper-panel vocabulary. Keep its station pool, content policy and music preferences progressively disclosed inside one configuration. The protective status remains visible beside playback when PLAYLISTA is closed. Use the existing amber warning treatment for reasons, the existing text hierarchy for temporary/original station identity, and stable action buttons through countdown updates. A return status describes waiting for fresh suitable content; it must not imply that a timer alone proves a safe return.
 
 ### Station discovery browser
 
 STACJE and CO TERAZ GRA? are sibling mechanical keys above the station area. The selected key uses the existing inset shadow and 1px push; Katalog stacji remains below the keys in both modes. One shared list/grid control and saved preference apply to both surfaces. The player stays in place above this area.
 
-Discovery lists use compact artwork at the left, artist/title in the middle, and secondary station/status metadata at the right; on mobile, metadata moves beneath the artist/title. Discovery grids use wider cards than station grids, with a prominent 4:3 artwork recess above the text and secondary metadata separated by a hairline. Columns fill the available space at a minimum usable width of 240px; narrow screens use one column. Selected cards use the Push-In Rule and an accent border. Only the blacklist badge takes warning emphasis, not the whole card or unrelated statuses.
+Discovery lists use compact artwork at the left, artist/title in the middle, and secondary station/status metadata at the right; on mobile, metadata moves beneath the artist/title. Discovery grids use wider cards than station grids, with a prominent 4:3 artwork recess above the text and secondary metadata separated by a hairline. Columns fill the available space at a minimum usable width of 240px; narrow screens use one column. Selected cards use the Push-In Rule and an accent border. Only the negative-music badge takes warning emphasis, not the whole card or unrelated statuses.
 
 Artwork is decorative context: actual track covers take priority for songs, followed by station artwork and a deterministic station initial. News, programmes, advertisements and unknown content use station artwork rather than a previous song cover. Failed covers follow the same fallback chain. Station imagery is never labelled as album art. Artwork recesses keep their dimensions while loading; grid images fit inside the recess without cropping.
 

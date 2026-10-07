@@ -1,5 +1,6 @@
 import { STORAGE_KEYS } from "../../consts.js";
 import { ICONS } from "../../icons.js";
+import { getStoredString } from "../../utils.js";
 import { bindModalDismiss, closeModal, openModal } from "../modal.js";
 
 const FEATURES: { icon: string; title: string; desc: string }[] = [
@@ -28,7 +29,7 @@ const FEATURES: { icon: string; title: string; desc: string }[] = [
 let modalEl: HTMLElement | null = null;
 
 export function shouldShowOnboarding(): boolean {
-  return Object.values(STORAGE_KEYS).every((key) => localStorage.getItem(key) === null);
+  return Object.values(STORAGE_KEYS).every((key) => getStoredString(key) === null);
 }
 
 function featureHtml(f: { icon: string; title: string; desc: string }): string {

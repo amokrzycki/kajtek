@@ -1,5 +1,4 @@
 import type Hls from "hls.js";
-import { detectBlacklistedUpcoming, detectUpcomingAdBreak, resetBlacklistWarningState } from "./blacklistWarning.js";
 import { getOrderedStations } from "./catalog.js";
 import { API_ENDPOINTS, DEFAULT_BREAK_LABEL, MAX_CONSECUTIVE_FAILURES, SWITCH_RATE_LIMIT, TIMERS } from "./consts.js";
 import { applyAudioVolume } from "./controls.js";
@@ -7,8 +6,9 @@ import { fetchMetadata, parseJsonFromRes } from "./metadata.js";
 import { readZprTag, startEskaSession } from "./providers/eska.js";
 import { rmfProvider } from "./providers/rmf.js";
 import { trojkaProvider } from "./providers/trojka.js";
-import { genericProvider, getFactsInfo, getProvider } from "./providers.js";
-import { intervals, notifyState, radioAudio, setLiveTrack, state } from "./state.js";
+import { genericProvider, getProvider } from "./providers.js";
+import { evaluateSmartListening, resetSmartListening } from "./smartListening.js";
+import { getLiveTrackUpdatedAt, intervals, notifyState, radioAudio, setLiveTrack, state } from "./state.js";
 import type { ProtectiveRoute } from "./statistics.js";
 import { bindListeningStatistics, listeningStatistics } from "./statisticsPlayback.js";
 import type { Station, TrackInfo } from "./types.js";
@@ -21,7 +21,7 @@ import {
   updateHistoryUI,
   updateNowPlayingTrack,
 } from "./ui.js";
-import { getFactsLabel, resolveProtocolRelativeUrl, withinRateLimit } from "./utils.js";
+import { resolveProtocolRelativeUrl, withinRateLimit } from "./utils.js";
 
 bindListeningStatistics(radioAudio);
 
@@ -283,46 +283,31 @@ function checkRealtimeTrackState() {
 
   let evaluated: TrackInfo | null = null;
   if (activeItem) {
-    if (activeItem.isBreak) {
-      const factsInfo = getFactsInfo(state.station, nowSec);
-      let label = activeItem.label || DEFAULT_BREAK_LABEL;
-
-      if (factsInfo.isFacts) {
-        label = getFactsLabel(factsInfo.targetHourStr);
-      }
-
-      evaluated = {
-        artist: state.station.name,
-        title: label,
-        isLiveBreak: true,
-        isFacts: factsInfo.isFacts,
-      };
-    } else {
-      evaluated = {
-        artist: activeItem.artist,
-        title: activeItem.title,
-        coverUrl: activeItem.coverUrl || "",
-      };
-    }
+    evaluated = activeItem.isBreak
+      ? {
+          ...activeItem,
+          artist: state.station.name,
+          title: activeItem.label || DEFAULT_BREAK_LABEL,
+          isLiveBreak: true,
+          isFacts: activeItem.contentKind === "news",
+        }
+      : { ...activeItem, contentKind: "track" };
   } else {
     const curTrack = state.history.find((t) => t.order === 0) || state.history[0];
     if (curTrack?.endTimestamp && nowSec >= curTrack.endTimestamp) {
-      const factsInfo = getFactsInfo(state.station, nowSec);
-      let label = DEFAULT_BREAK_LABEL;
-      if (factsInfo.isFacts) {
-        label = getFactsLabel(factsInfo.targetHourStr);
-      }
       evaluated = {
         artist: state.station.name,
-        title: label,
+        title: DEFAULT_BREAK_LABEL,
         isLiveBreak: true,
-        isFacts: factsInfo.isFacts,
+        isPredicted: true,
+        contentKind: "unknown",
+        contentEvidence: "inferred",
       };
     }
   }
 
   if (evaluated && (state.liveTrack?.artist !== evaluated.artist || state.liveTrack?.title !== evaluated.title)) {
-    setLiveTrack(evaluated);
+    setLiveTrack(evaluated, getLiveTrackUpdatedAt());
     updateNowPlayingTrack(state.liveTrack);
     updateAlbumArt(resolveAlbumCoverUrl(state.liveTrack, state.station), state.liveTrack);
   }
@@ -336,19 +321,18 @@ async function refreshTrackInfo() {
   if (state.station.apiBaseUrl) {
     const targetId = state.station.id;
     const data = await fetchPlaylist(state.station);
-    if (state.station?.id !== targetId) return;
+    if (state.station?.id !== targetId || !state.playing) return;
 
     if (data?.current) {
-      setLiveTrack(data.current);
       state.history = data.all || [];
+      setLiveTrack(data.current, data.observedAt ?? Date.now());
       checkRealtimeTrackState();
       updateNowPlayingTrack(state.liveTrack);
       updateAlbumArt(resolveAlbumCoverUrl(state.liveTrack, state.station), state.liveTrack);
       const doFullSlide = pendingStationSlideIn;
       pendingStationSlideIn = false;
       updateHistoryUI(doFullSlide);
-      detectBlacklistedUpcoming();
-      detectUpcomingAdBreak();
+      evaluateSmartListening();
     }
   } else {
     setLiveTrack(null);
@@ -381,7 +365,8 @@ export function currentTrack(): TrackInfo | null {
   return state.liveTrack;
 }
 
-export function selectStation(s: Station, protection: ProtectiveRoute | null = null) {
+export function selectStation(s: Station, protection: ProtectiveRoute | null = null, smart = false) {
+  if (!smart) resetSmartListening();
   listeningStatistics.suspend(
     radioAudio.currentTime,
     Date.now(),
@@ -397,10 +382,10 @@ export function selectStation(s: Station, protection: ProtectiveRoute | null = n
   delete s._consecutiveFailures;
   delete s._apiFailed;
   state.playing = true;
+  state.history = [];
   setLiveTrack(null);
   pendingStationSlideIn = true;
   failoverTimestamps = [];
-  resetBlacklistWarningState();
   startEskaSession(s.id);
   setHistoryLoadingState(true);
   setPlaybackStatus("Łączenie…");

@@ -1,0 +1,275 @@
+.k-smart-modal {
+  max-width: 680px;
+  min-width: 0;
+}
+
+.k-smart-modal .k-modal-title {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.k-smart-body {
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: var(--k-s3);
+  color: var(--k-text);
+  font-size: var(--k-fs-body);
+  caret-color: var(--k-accent-text);
+  scrollbar-color: var(--k-border-3) var(--k-bg);
+}
+
+.k-smart-body > .k-settings-row {
+  flex-wrap: wrap;
+}
+
+.k-smart-body .k-settings-row-text {
+  flex: 1 1 12ch;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.k-smart-body .search-input-wrap {
+  min-width: 0;
+}
+
+.k-smart-body ::selection {
+  background: var(--k-accent);
+  color: #fff;
+}
+
+.k-smart-help,
+.k-smart-empty {
+  margin: var(--k-s2) 0;
+  font-size: var(--k-fs-data);
+  line-height: 1.6;
+  color: var(--k-text-2);
+  overflow-wrap: anywhere;
+}
+
+.k-smart-empty {
+  padding-block: var(--k-s2);
+}
+
+.k-smart-section {
+  border-top: 1px solid var(--k-border);
+}
+
+.k-smart-section > summary {
+  display: flex;
+  align-items: center;
+  gap: var(--k-s1);
+  min-height: 48px;
+  padding-block: var(--k-s2);
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+}
+
+.k-smart-section > summary::-webkit-details-marker {
+  display: none;
+}
+
+.k-smart-section > summary > span:first-child {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.k-smart-summary-count {
+  color: var(--k-text-muted);
+  font-size: var(--k-fs-data);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.k-smart-chevron {
+  display: flex;
+  color: var(--k-text-muted);
+  transition: transform var(--k-tr);
+}
+
+.k-smart-section[open] .k-smart-chevron {
+  transform: rotate(90deg);
+}
+
+.k-smart-section-body {
+  padding-bottom: var(--k-s3);
+}
+
+.k-smart-section-body > .k-smart-help:first-child {
+  margin-top: 0;
+}
+
+.k-smart-station-list {
+  max-height: 280px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: var(--k-border-3) var(--k-bg);
+}
+
+.k-smart-rule {
+  display: flex;
+  align-items: center;
+  gap: var(--k-s2);
+  min-height: 44px;
+  padding: var(--k-s1);
+  cursor: pointer;
+  border-radius: var(--k-rb);
+}
+
+.k-smart-rule input {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin: 0;
+  accent-color: var(--k-accent);
+}
+
+.k-smart-rule span {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.k-smart-rule:has(input:checked) {
+  background: var(--k-accent-dim);
+}
+
+.k-smart-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--k-s2);
+}
+
+.k-smart-form .k-field {
+  min-width: 0;
+}
+
+.k-smart-body .k-input:not([type="search"]) {
+  padding-left: 0.6rem;
+}
+
+.k-smart-body .k-input,
+.k-smart-body .btn-primary,
+.k-smart-body .btn-secondary {
+  min-height: 44px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.k-smart-body .btn-primary,
+.k-smart-body .btn-secondary {
+  overflow-wrap: anywhere;
+}
+
+.k-smart-form-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--k-s1);
+}
+
+.k-smart-preference-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto 44px;
+  align-items: center;
+  gap: var(--k-s1);
+  padding-block: var(--k-s2);
+  border-top: 1px solid var(--k-border);
+}
+
+.k-smart-saved > summary {
+  min-height: 44px;
+  padding-block: var(--k-s2);
+  cursor: pointer;
+  color: var(--k-accent-text);
+}
+
+.k-smart-preference-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+
+.k-smart-preference-info span {
+  color: var(--k-text-2);
+  font-size: var(--k-fs-data);
+}
+
+.k-smart-preference-row .k-input {
+  width: auto;
+  font-size: var(--k-fs-data);
+}
+
+.k-smart-preference-row .btn-delete-custom {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.k-smart-body .btn-primary,
+.k-smart-body .btn-secondary {
+  box-shadow: var(--k-sh-btn);
+  transition:
+    background var(--k-tr),
+    border-color var(--k-tr),
+    box-shadow var(--k-tr-fast),
+    transform var(--k-tr-fast);
+}
+
+.k-smart-body .btn-primary:active,
+.k-smart-body .btn-secondary:active {
+  box-shadow: var(--k-sh-inset);
+  transform: translateY(1px);
+}
+
+.k-smart-body :is(summary, button, select, input:not(.catalog-checkbox)):focus-visible {
+  outline: 2px solid var(--k-focus);
+  outline-offset: 2px;
+}
+
+.k-smart-body [hidden] {
+  display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .k-smart-rule:hover {
+    background: var(--k-bg-panel);
+  }
+
+  .k-smart-section > summary:hover {
+    color: var(--k-accent-text);
+  }
+}
+
+@media (max-width: 480px) {
+  .k-smart-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .k-smart-preference-row {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .k-smart-preference-info {
+    flex: 1 0 100%;
+  }
+
+  .k-smart-preference-row .k-input {
+    flex: 1 1 100px;
+    width: auto;
+    min-width: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .k-smart-chevron,
+  .k-smart-body .btn-primary,
+  .k-smart-body .btn-secondary {
+    transition: none;
+  }
+}

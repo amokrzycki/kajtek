@@ -1,12 +1,15 @@
-import { getBlacklist } from "../../blacklist.js";
 import type { CaseSlug } from "../../consts.js";
 import { STORAGE_KEYS } from "../../consts.js";
-import { setAdSkipEnabled } from "../../controls.js";
 import { ICONS } from "../../icons.js";
+import {
+  getSmartListeningConfig,
+  subscribeSmartListeningConfig,
+  updateSmartListeningConfig,
+} from "../../listeningPreferences.js";
 import { notifyState, setTheme, state } from "../../state.js";
-import { setStoredJSON } from "../../utils.js";
-import { openBlacklistModal } from "../blacklist/modal.js";
+import { getStoredString } from "../../utils.js";
 import { bindModalDismiss, closeModal, openModal } from "../modal.js";
+import { openSmartListeningModal } from "../smartListening/modal.js";
 
 const CASE_SWATCHES: { slug: CaseSlug; label: string }[] = [
   { slug: "red", label: "Czerwony" },
@@ -19,6 +22,7 @@ const CASE_SWATCHES: { slug: CaseSlug; label: string }[] = [
 
 let modalEl: HTMLElement | null = null;
 let previousActiveElement: HTMLElement | null = null;
+let unsubscribe: (() => void) | undefined;
 
 export function openSettingsModal(): void {
   previousActiveElement = document.activeElement as HTMLElement | null;
@@ -26,17 +30,19 @@ export function openSettingsModal(): void {
   if (!modalEl) {
     createModalElements();
   } else {
-    syncBlacklistToggle();
-    syncAdSkipToggle();
+    syncSmartListening();
     syncCaseSwatches();
-    syncBlacklistCount();
     syncSystemThemeToggle();
   }
+  unsubscribe?.();
+  unsubscribe = subscribeSmartListeningConfig(syncSmartListening);
   if (modalEl) openModal(modalEl);
 }
 
 export function closeSettingsModal(): void {
   if (!modalEl) return;
+  unsubscribe?.();
+  unsubscribe = undefined;
   closeModal(modalEl, previousActiveElement);
   previousActiveElement = null;
 }
@@ -86,47 +92,18 @@ function createModalElements(): void {
         </div>
 
         <div class="k-settings-group">
-          <div class="k-settings-label">Reklamy</div>
+          <div class="k-settings-label">Smart Listening</div>
           <div class="k-settings-row">
             <div class="k-settings-row-text">
-              <span>Pomijaj reklamy</span>
-              <span class="k-settings-row-sub">Automatyczne wykrywanie i pomijanie reklam</span>
+              <span>Włącz Smart Listening</span>
+              <span id="settings-smart-help" class="k-settings-row-sub">Omijaj wybrane treści i wracaj, gdy znów można słuchać</span>
             </div>
-            <label class="catalog-toggle-switch" id="settings-adskip-switch">
-              <input type="checkbox" id="settings-adskip-toggle" class="catalog-checkbox" aria-label="Pomijaj reklamy" />
+            <label class="catalog-toggle-switch">
+              <input type="checkbox" id="settings-smart-toggle" class="catalog-checkbox" aria-label="Włącz Smart Listening" aria-describedby="settings-smart-help" />
             </label>
           </div>
-          <div class="k-settings-row">
-            <div class="k-settings-row-text">
-              <span>Automatyczny powrót po reklamie</span>
-              <span id="settings-adskip-autoreturn-help" class="k-settings-row-sub">Wróć na poprzednią stację, gdy blok reklamowy się skończy</span>
-            </div>
-            <label class="catalog-toggle-switch" id="settings-adskip-autoreturn-switch">
-              <input
-                type="checkbox"
-                id="settings-adskip-autoreturn-toggle"
-                class="catalog-checkbox"
-                aria-label="Automatyczny powrót po reklamie"
-                aria-describedby="settings-adskip-autoreturn-help"
-              />
-            </label>
-          </div>
-        </div>
-
-        <div class="k-settings-group">
-          <div class="k-settings-label">Czarna lista</div>
-          <div class="k-settings-row">
-            <div class="k-settings-row-text">
-              <span>Włącz czarną listę</span>
-              <span class="k-settings-row-sub">Pomijaj automatycznie zablokowane utwory podczas odtwarzania</span>
-            </div>
-            <label class="catalog-toggle-switch" id="settings-blacklist-switch">
-              <input type="checkbox" id="settings-blacklist-toggle" class="catalog-checkbox" aria-label="Włącz czarną listę" />
-            </label>
-          </div>
-          <button type="button" id="settings-blacklist-manage" class="k-settings-link">
-            <span>Zablokowane utwory</span>
-            <span class="k-settings-link-count" id="settings-blacklist-count"></span>
+          <button type="button" id="settings-smart-configure" class="k-settings-link">
+            <span>Skonfiguruj stacje i preferencje</span>
             <span class="k-settings-link-chevron" aria-hidden="true">${ICONS.chevron}</span>
           </button>
         </div>
@@ -141,26 +118,13 @@ function createModalElements(): void {
     setTheme((e.target as HTMLInputElement).checked ? null : state.dark);
   });
   modalEl.querySelector("#settings-modal-close")?.addEventListener("click", closeSettingsModal);
-  modalEl.querySelector("#settings-blacklist-manage")?.addEventListener("click", () => {
+  modalEl.querySelector("#settings-smart-configure")?.addEventListener("click", () => {
+    const restoreFocus = previousActiveElement;
     closeSettingsModal();
-    openBlacklistModal();
+    openSmartListeningModal(undefined, restoreFocus);
   });
-
-  modalEl.querySelector<HTMLInputElement>("#settings-blacklist-toggle")?.addEventListener("change", (e) => {
-    state.blacklistEnabled = (e.target as HTMLInputElement).checked;
-    setStoredJSON(STORAGE_KEYS.BLACKLIST_ENABLED, state.blacklistEnabled);
-    notifyState();
-  });
-
-  modalEl.querySelector<HTMLInputElement>("#settings-adskip-toggle")?.addEventListener("change", (e) => {
-    setAdSkipEnabled((e.target as HTMLInputElement).checked);
-    syncAdSkipToggle();
-  });
-
-  modalEl.querySelector<HTMLInputElement>("#settings-adskip-autoreturn-toggle")?.addEventListener("change", (e) => {
-    state.adSkipAutoReturnEnabled = (e.target as HTMLInputElement).checked;
-    setStoredJSON(STORAGE_KEYS.AD_SKIP_AUTO_RETURN, state.adSkipAutoReturnEnabled);
-    notifyState();
+  modalEl.querySelector<HTMLInputElement>("#settings-smart-toggle")?.addEventListener("change", (e) => {
+    updateSmartListeningConfig({ enabled: (e.target as HTMLInputElement).checked });
   });
 
   modalEl.querySelector(".k-settings-swatches")?.addEventListener("click", (e) => {
@@ -171,16 +135,14 @@ function createModalElements(): void {
     syncCaseSwatches();
   });
 
-  syncBlacklistToggle();
-  syncAdSkipToggle();
+  syncSmartListening();
   syncCaseSwatches();
-  syncBlacklistCount();
   syncSystemThemeToggle();
 }
 
 function syncSystemThemeToggle(): void {
   const toggle = modalEl?.querySelector<HTMLInputElement>("#settings-system-theme-toggle");
-  const theme = localStorage.getItem(STORAGE_KEYS.THEME);
+  const theme = getStoredString(STORAGE_KEYS.THEME);
   if (toggle) toggle.checked = theme !== "dark" && theme !== "light";
 }
 
@@ -190,39 +152,13 @@ function syncCaseSwatches(): void {
   });
 }
 
-function syncBlacklistCount(): void {
-  const el = modalEl?.querySelector("#settings-blacklist-count");
-  if (el) el.textContent = String(getBlacklist().length);
-}
-
-function syncBlacklistToggle(): void {
-  const toggle = modalEl?.querySelector<HTMLInputElement>("#settings-blacklist-toggle");
-  const label = modalEl?.querySelector<HTMLLabelElement>("#settings-blacklist-switch");
-  if (!toggle || !label) return;
-  toggle.checked = state.blacklistEnabled;
-  label.title = state.blacklistEnabled ? "Wyłącz czarną listę" : "Włącz czarną listę";
-}
-
-function syncAdSkipToggle(): void {
-  const toggle = modalEl?.querySelector<HTMLInputElement>("#settings-adskip-toggle");
-  const label = modalEl?.querySelector<HTMLLabelElement>("#settings-adskip-switch");
-  if (toggle && label) {
-    toggle.checked = state.adSkipEnabled;
-    label.title = state.adSkipEnabled ? "Wyłącz pomijanie reklam" : "Włącz pomijanie reklam";
-  }
-
-  const autoReturnToggle = modalEl?.querySelector<HTMLInputElement>("#settings-adskip-autoreturn-toggle");
-  const autoReturnLabel = modalEl?.querySelector<HTMLLabelElement>("#settings-adskip-autoreturn-switch");
-  const autoReturnHelp = modalEl?.querySelector<HTMLElement>("#settings-adskip-autoreturn-help");
-  if (!autoReturnToggle || !autoReturnLabel || !autoReturnHelp) return;
-  autoReturnToggle.checked = state.adSkipAutoReturnEnabled;
-  autoReturnToggle.disabled = !state.adSkipEnabled;
-  autoReturnHelp.textContent = state.adSkipEnabled
-    ? "Wróć na poprzednią stację, gdy blok reklamowy się skończy"
-    : "Najpierw włącz pomijanie reklam";
-  autoReturnLabel.title = !state.adSkipEnabled
-    ? "Najpierw włącz pomijanie reklam"
-    : state.adSkipAutoReturnEnabled
-      ? "Wyłącz automatyczny powrót"
-      : "Włącz automatyczny powrót";
+function syncSmartListening(): void {
+  const config = getSmartListeningConfig();
+  const toggle = modalEl?.querySelector<HTMLInputElement>("#settings-smart-toggle");
+  const help = modalEl?.querySelector<HTMLElement>("#settings-smart-help");
+  if (toggle) toggle.checked = config.enabled;
+  if (help)
+    help.textContent = config.enabled
+      ? "Omijaj wybrane treści i wracaj, gdy znów można słuchać"
+      : "Automatyczne przełączanie wyłączone. Możesz nadal zmieniać preferencje.";
 }

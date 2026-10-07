@@ -197,3 +197,18 @@
   color: var(--k-disp-accent);
   white-space: nowrap;
 }
+
+#smart-warning.open {
+  margin: var(--k-s2) var(--k-s3);
+  padding: var(--k-s3);
+  border-radius: var(--k-rc);
+  background: var(--k-disp-well);
+  color: var(--k-disp-text);
+}
+#smart-warning .bl-warn-title,
+#smart-warning .bl-warn-sub {
+  overflow-wrap: anywhere;
+}
+#smart-warning .bl-warn-actions {
+  flex-wrap: wrap;
+}
