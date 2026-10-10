@@ -976,7 +976,6 @@ describe("metadata failure boundaries", () => {
       const { getStationRuntime } = await import("../src/player.js");
       const runtime = getStationRuntime(target);
       runtime.consecutiveFailures = 99;
-      runtime.apiFailed = true;
       const result = {
         current: { artist: "Restored", title: "Song", coverUrl: "/cover.png" },
         all: [{ artist: "Next", title: "Song" }],
@@ -992,7 +991,6 @@ describe("metadata failure boundaries", () => {
       expect(state.history).toEqual(result.all);
       expect(mocks.metadataState).toBe("ready");
       expect(runtime.consecutiveFailures).toBe(99);
-      expect(runtime.apiFailed).toBe(true);
       expect(mocks.audio.play).not.toHaveBeenCalled();
       expect(mocks.audio.src).toBe("");
       expect(state.playing).toBe(false);

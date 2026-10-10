@@ -383,41 +383,13 @@ describe("Station Runtime Ownership (F5)", () => {
 
       const runtime = getStationRuntime(station);
       runtime.consecutiveFailures = 5;
-      runtime.apiFailed = true;
 
       clearStationRuntime(station.id);
 
       const runtime2 = getStationRuntime(station);
       expect(runtime2.consecutiveFailures).toBeUndefined();
-      expect(runtime2.apiFailed).toBeUndefined();
       // Stream state should remain undefined until actual resolution occurs
       expect(runtime2.streams).toBeUndefined();
-    });
-
-    it("invalidates entire runtime when explicitly requested", async () => {
-      const { getStationRuntime, invalidateStationRuntime } = await import("../src/player.js");
-
-      const station: Station = {
-        id: "test",
-        name: "Test",
-        short: "TST",
-        cat: "test",
-        provider: "generic",
-        stream: "https://stream.mp3",
-      };
-
-      const runtime1 = getStationRuntime(station);
-      runtime1.streams = ["https://resolved.mp3"];
-      runtime1.currentStreamIndex = 1;
-      runtime1.streamsFetched = true;
-
-      invalidateStationRuntime(station.id);
-
-      const runtime2 = getStationRuntime(station);
-      // All state should be cleared
-      expect(runtime2.streams).toBeUndefined();
-      expect(runtime2.currentStreamIndex).toBeUndefined();
-      expect(runtime2.streamsFetched).toBeUndefined();
     });
   });
 

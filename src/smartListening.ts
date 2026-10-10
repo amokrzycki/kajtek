@@ -48,9 +48,7 @@ function requiredStations(): Station[] {
   return stations;
 }
 
-function input(): SmartRouteInput {
-  const pool = getSmartStations();
-  const stations = requiredStations();
+function input(pool: Station[], stations: Station[]): SmartRouteInput {
   const catalog = getStoredRmfCatalog()?.stations ?? [];
   const origin = route.status?.originStation ?? state.station;
   const raw = catalog.find(
@@ -101,6 +99,7 @@ export function evaluateSmartListening(): void {
   try {
     const active = state.smartListening.enabled && state.playing && state.station;
     const stations = active ? requiredStations() : [];
+    const pool = getSmartStations();
     sharedSnapshots.setDemand("smart", stations);
     if (active && sharedSnapshots.refreshingFor(stations)) return;
     const previous = JSON.stringify(route.status);
@@ -109,7 +108,7 @@ export function evaluateSmartListening(): void {
       originAdWindow = undefined;
     }
     if (!active) pendingManualSwitch = false;
-    const next = input();
+    const next = input(pool, stations);
     execute(pendingManualSwitch ? route.switchNow(next) : route.step(next));
     pendingManualSwitch = false;
     if (previous !== JSON.stringify(route.status)) notifyState();
@@ -131,7 +130,8 @@ export function switchSmartNow(): void {
     notifyState();
     return;
   }
-  execute(route.switchNow(input()));
+  const pool = getSmartStations();
+  execute(route.switchNow(input(pool, stations)));
   notifyState();
 }
 export function staySmartAnyway(): void {

@@ -61,7 +61,7 @@ export function getStoredRmfCatalog(): RmfCatalogCache | null {
     STORAGE_KEYS.RMF_CATALOG_CACHE,
     null,
     (v) =>
-      typeof (v as Partial<RmfCatalogCache>)?.fetchedAt === "number" &&
+      Number.isFinite((v as Partial<RmfCatalogCache>)?.fetchedAt) &&
       Array.isArray((v as Partial<RmfCatalogCache>)?.stations),
   );
   if (!cache) return null;
@@ -93,7 +93,7 @@ export function getStoredEskaCatalog(): EskaCatalogCache | null {
     STORAGE_KEYS.ESKA_CATALOG_CACHE,
     null,
     (v) =>
-      typeof (v as Partial<EskaCatalogCache>)?.fetchedAt === "number" &&
+      Number.isFinite((v as Partial<EskaCatalogCache>)?.fetchedAt) &&
       Array.isArray((v as Partial<EskaCatalogCache>)?.stations),
   );
   if (!cache) return null;

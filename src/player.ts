@@ -44,7 +44,6 @@ interface StationRuntime {
   streamsFetched?: boolean;
   coverFetched?: boolean;
   consecutiveFailures?: number;
-  apiFailed?: boolean;
   // Configuration fingerprint for invalidation detection
   configFingerprint: {
     stream: string;
@@ -111,18 +110,14 @@ export function clearStationRuntime(stationId: string): void {
   if (runtime) {
     // Clear failure state but preserve stream resolution
     delete runtime.consecutiveFailures;
-    delete runtime.apiFailed;
   }
-}
-
-export function invalidateStationRuntime(stationId: string): void {
-  stationRuntimeStore.delete(stationId);
 }
 
 let failoverTimestamps: number[] = [];
 let hlsInstance: Hls | null = null;
 let playbackRequestId = 0;
 let pendingHlsRequestId: number | null = null;
+let pendingPlayRequestId: number | null = null;
 
 function setPlaybackStatus(message: string, status: PlaybackState = "connecting"): void {
   setPlaybackState(status);
@@ -197,6 +192,7 @@ async function attachHlsStream(url: string, requestId: number): Promise<void> {
 async function playStreamUrl(url: string | undefined): Promise<void> {
   if (!url) return;
   const requestId = ++playbackRequestId;
+  pendingPlayRequestId = requestId;
   destroyHls();
   radioAudio.crossOrigin = getProvider(state.station) === rmfProvider ? "use-credentials" : "anonymous";
   if (isHlsStream(url)) {
@@ -209,9 +205,13 @@ async function playStreamUrl(url: string | undefined): Promise<void> {
   } else {
     radioAudio.src = url;
   }
-  if (requestId !== playbackRequestId || !state.playing) return;
+  if (requestId !== playbackRequestId || !state.playing) {
+    if (pendingPlayRequestId === requestId) pendingPlayRequestId = null;
+    return;
+  }
   applyAudioVolume();
   radioAudio.play().catch((error: unknown) => {
+    if (pendingPlayRequestId === requestId) pendingPlayRequestId = null;
     if (requestId !== playbackRequestId || !state.playing) return;
     if (error instanceof DOMException && error.name === "AbortError") return;
     listeningStatistics.stop(
@@ -226,6 +226,7 @@ async function playStreamUrl(url: string | undefined): Promise<void> {
     notifyState();
     renderPlaybackStatus("Nie udało się włączyć stacji. Ponów lub wybierz inną.");
   });
+  if (pendingPlayRequestId === requestId) pendingPlayRequestId = null;
 }
 
 function handleAudioFailover() {
@@ -301,7 +302,12 @@ radioAudio.addEventListener("playing", () => {
   renderPlaybackStatus("Na żywo");
 });
 radioAudio.addEventListener("pause", () => {
-  if (!radioAudio.paused || (state.playing && pendingHlsRequestId === playbackRequestId)) return;
+  if (
+    !radioAudio.paused ||
+    pendingPlayRequestId === playbackRequestId ||
+    (state.playing && pendingHlsRequestId === playbackRequestId)
+  )
+    return;
   stopTrackRotation();
   const failed = getPlaybackState() === "failed";
   if (!failed) setPlaybackState("paused");
