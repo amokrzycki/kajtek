@@ -36,6 +36,89 @@ import { resolveProtocolRelativeUrl, withinRateLimit } from "./utils.js";
 
 bindListeningStatistics(radioAudio);
 
+// F5: Player-owned runtime store keyed by stable station identity.
+// Separates transient playback state from catalog station definitions.
+interface StationRuntime {
+  streams?: string[];
+  currentStreamIndex?: number;
+  streamsFetched?: boolean;
+  coverFetched?: boolean;
+  consecutiveFailures?: number;
+  apiFailed?: boolean;
+  // Configuration fingerprint for invalidation detection
+  configFingerprint: {
+    stream: string;
+    apiBaseUrl?: string;
+    initialStreams?: string[];
+  };
+}
+
+const stationRuntimeStore = new Map<string, StationRuntime>();
+
+function arraysEqual(a?: string[], b?: string[]): boolean {
+  if (!a && !b) return true;
+  if (!a || !b) return false;
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+export function getStationRuntime(station: Station): StationRuntime {
+  const existing = stationRuntimeStore.get(station.id);
+
+  // Check if configuration changed
+  if (existing) {
+    const configChanged =
+      existing.configFingerprint.stream !== station.stream ||
+      existing.configFingerprint.apiBaseUrl !== station.apiBaseUrl ||
+      !arraysEqual(existing.configFingerprint.initialStreams, station._streams);
+
+    if (configChanged) {
+      stationRuntimeStore.delete(station.id);
+    }
+  }
+
+  let runtime = stationRuntimeStore.get(station.id);
+  if (!runtime) {
+    const configFingerprint: StationRuntime["configFingerprint"] = {
+      stream: station.stream,
+    };
+    if (station.apiBaseUrl !== undefined) {
+      configFingerprint.apiBaseUrl = station.apiBaseUrl;
+    }
+    if (station._streams !== undefined) {
+      configFingerprint.initialStreams = station._streams;
+    }
+
+    runtime = {
+      configFingerprint,
+    };
+    // Only seed streams if catalog provides initial configuration
+    if (station._streams) {
+      runtime.streams = [...station._streams];
+    }
+    stationRuntimeStore.set(station.id, runtime);
+    return runtime;
+  }
+
+  return runtime;
+}
+
+export function clearStationRuntime(stationId: string): void {
+  const runtime = stationRuntimeStore.get(stationId);
+  if (runtime) {
+    // Clear failure state but preserve stream resolution
+    delete runtime.consecutiveFailures;
+    delete runtime.apiFailed;
+  }
+}
+
+export function invalidateStationRuntime(stationId: string): void {
+  stationRuntimeStore.delete(stationId);
+}
+
 let failoverTimestamps: number[] = [];
 let hlsInstance: Hls | null = null;
 let playbackRequestId = 0;
@@ -47,8 +130,9 @@ function setPlaybackStatus(message: string, status: PlaybackState = "connecting"
 }
 
 function getCurrentStreamUrl(station: Station): string {
-  const streams = station._streams || [station.stream];
-  return streams[station._currentStreamIndex || 0] || station.stream;
+  const runtime = getStationRuntime(station);
+  const streams = runtime.streams || [station.stream];
+  return streams[runtime.currentStreamIndex || 0] || station.stream;
 }
 
 function destroyHls(): void {
@@ -150,7 +234,8 @@ function handleAudioFailover() {
   const rateLimit = withinRateLimit(failoverTimestamps, SWITCH_RATE_LIMIT.WINDOW_MS, SWITCH_RATE_LIMIT.MAX);
   failoverTimestamps = rateLimit.timestamps;
 
-  const streams = state.station._streams || [state.station.stream];
+  const runtime = getStationRuntime(state.station);
+  const streams = runtime.streams || [state.station.stream];
 
   if (rateLimit.limited) {
     listeningStatistics.stop(
@@ -173,7 +258,7 @@ function handleAudioFailover() {
     return;
   }
 
-  const currentIdx = state.station._currentStreamIndex || 0;
+  const currentIdx = runtime.currentStreamIndex || 0;
   const nextIdx = (currentIdx + 1) % streams.length;
   listeningStatistics.suspend(
     radioAudio.currentTime,
@@ -186,7 +271,7 @@ function handleAudioFailover() {
     streams[nextIdx] ?? state.station.stream,
     Date.now(),
   );
-  state.station._currentStreamIndex = nextIdx;
+  runtime.currentStreamIndex = nextIdx;
   setPlaybackStatus("Zmiana strumienia…");
   playStreamUrl(streams[nextIdx]);
 }
@@ -253,22 +338,23 @@ async function ensureStationMetadata(station: Station) {
   if (!station.apiBaseUrl || getProvider(station) !== rmfProvider) return;
 
   const stationBaseUrl = station.apiBaseUrl;
+  const runtime = getStationRuntime(station);
 
-  if (!station._streamsFetched) {
-    station._streamsFetched = true;
+  if (!runtime.streamsFetched) {
+    runtime.streamsFetched = true;
     try {
       const res = await fetch(`${stationBaseUrl}/streams`, { signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS) });
       const data = (await parseJsonFromRes(res)) as { playlistMp3?: { item_mp3?: string | string[] } } | null;
       const rawMp3 = data?.playlistMp3?.item_mp3;
       const mp3Urls = Array.isArray(rawMp3) ? rawMp3 : rawMp3 ? [rawMp3] : [];
-      station._streams = Array.from(new Set([station.stream, ...mp3Urls]));
+      runtime.streams = Array.from(new Set([station.stream, ...mp3Urls]));
     } catch (_) {
-      station._streams = [station.stream];
+      runtime.streams = [station.stream];
     }
   }
 
-  if (!station._coverFetched) {
-    station._coverFetched = true;
+  if (!runtime.coverFetched) {
+    runtime.coverFetched = true;
     try {
       const res = await fetch(stationBaseUrl, { signal: AbortSignal.timeout(TIMERS.FETCH_TIMEOUT_MS) });
       const data = (await parseJsonFromRes(res)) as { img?: unknown } | null;
@@ -286,20 +372,21 @@ async function ensureStationMetadata(station: Station) {
 }
 
 export async function fetchPlaylist(station: Station, signal?: AbortSignal) {
-  if (!station?.apiBaseUrl || (station._consecutiveFailures || 0) > MAX_CONSECUTIVE_FAILURES) return null;
+  const runtime = getStationRuntime(station);
+  if (!station?.apiBaseUrl || (runtime.consecutiveFailures || 0) > MAX_CONSECUTIVE_FAILURES) return null;
 
   try {
     const parsed = await fetchMetadata(station, signal ? { signal } : {});
 
     if (parsed) {
-      station._consecutiveFailures = 0;
+      runtime.consecutiveFailures = 0;
       return parsed;
     }
   } catch (_) {
     // Ignore network or parse failures
   }
 
-  if (!signal?.aborted) station._consecutiveFailures = (station._consecutiveFailures || 0) + 1;
+  if (!signal?.aborted) runtime.consecutiveFailures = (runtime.consecutiveFailures || 0) + 1;
   return null;
 }
 
@@ -442,8 +529,7 @@ export function selectStation(s: Station, protection: ProtectiveRoute | null = n
   listeningStatistics.route(protection, Date.now());
   listeningStatistics.selectStation(s);
   state.station = s;
-  delete s._consecutiveFailures;
-  delete s._apiFailed;
+  clearStationRuntime(s.id);
   state.playing = true;
   setPlaybackState("connecting");
   state.history = [];

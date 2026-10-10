@@ -316,15 +316,17 @@ describe("HLS recovery", () => {
     player.selectStation(target);
     await settlePlayback();
     const hls = latestHls();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     for (let attempt = 0; attempt < 3; attempt++) {
       hls.emit("error", { fatal: true, type, details: "fixture" });
     }
     expect(hls[recoveryMethod]).toHaveBeenCalledTimes(3);
-    expect(target._currentStreamIndex).toBeUndefined();
+    expect(runtime.currentStreamIndex).toBeUndefined();
 
     hls.emit("error", { fatal: true, type, details: "fixture" });
-    expect(target._currentStreamIndex).toBe(1);
+    expect(runtime.currentStreamIndex).toBe(1);
     expect(mocks.audio.src).toBe("https://example.test/backup.mp3");
     expect(hls.destroy).toHaveBeenCalledOnce();
   });
@@ -337,6 +339,8 @@ describe("HLS recovery", () => {
     player.selectStation(target);
     await settlePlayback();
     const hls = latestHls();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     for (let attempt = 0; attempt < 3; attempt++) {
       hls.emit("error", { fatal: true, type: "networkError" });
@@ -345,7 +349,7 @@ describe("HLS recovery", () => {
     hls.emit("error", { fatal: true, type: "networkError" });
 
     expect(hls.startLoad).toHaveBeenCalledTimes(4);
-    expect(target._currentStreamIndex).toBeUndefined();
+    expect(runtime.currentStreamIndex).toBeUndefined();
   });
 
   it("ignores non-fatal HLS errors", async () => {
@@ -353,12 +357,14 @@ describe("HLS recovery", () => {
     player.selectStation(target);
     await settlePlayback();
     const hls = latestHls();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     hls.emit("error", { fatal: false, type: "networkError" });
 
     expect(hls.startLoad).not.toHaveBeenCalled();
     expect(hls.recoverMediaError).not.toHaveBeenCalled();
-    expect(target._currentStreamIndex).toBeUndefined();
+    expect(runtime.currentStreamIndex).toBeUndefined();
   });
 
   it("fails over immediately for an unknown fatal HLS error", async () => {
@@ -369,12 +375,14 @@ describe("HLS recovery", () => {
     player.selectStation(target);
     await settlePlayback();
     const hls = latestHls();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     hls.emit("error", { fatal: true, type: "otherError" });
 
     expect(hls.startLoad).not.toHaveBeenCalled();
     expect(hls.recoverMediaError).not.toHaveBeenCalled();
-    expect(target._currentStreamIndex).toBe(1);
+    expect(runtime.currentStreamIndex).toBe(1);
   });
 
   it("refreshes once for a changed ZPR block and ignores its stale result", async () => {
@@ -420,19 +428,21 @@ describe("HLS recovery", () => {
 });
 
 describe("stream failover", () => {
-  it("rotates streams modulo their length and stops on the fourth switch in 30 seconds", () => {
+  it("rotates streams modulo their length and stops on the fourth switch in 30 seconds", async () => {
     const target = station({
       _streams: ["https://example.test/one.mp3", "https://example.test/two.mp3", "https://example.test/three.mp3"],
     });
     player.selectStation(target);
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     mocks.audio.dispatch("error");
-    expect(target._currentStreamIndex).toBe(1);
+    expect(runtime.currentStreamIndex).toBe(1);
     expect(mocks.audio.src).toContain("two.mp3");
     mocks.audio.dispatch("error");
-    expect(target._currentStreamIndex).toBe(2);
+    expect(runtime.currentStreamIndex).toBe(2);
     mocks.audio.dispatch("error");
-    expect(target._currentStreamIndex).toBe(0);
+    expect(runtime.currentStreamIndex).toBe(0);
     expect(mocks.audio.src).toContain("one.mp3");
 
     mocks.audio.dispatch("error");
@@ -457,7 +467,7 @@ describe("stream failover", () => {
     expect(mocks.audio.play).toHaveBeenCalledTimes(4);
   });
 
-  it("expires a switch exactly on the rolling-window boundary", () => {
+  it("expires a switch exactly on the rolling-window boundary", async () => {
     const target = station({ _streams: ["https://example.test/one.mp3", "https://example.test/two.mp3"] });
     player.selectStation(target);
 
@@ -474,7 +484,7 @@ describe("stream failover", () => {
     expect(state.playing).toBe(false);
   });
 
-  it("resets the audio failover limit when a station is selected", () => {
+  it("resets the audio failover limit when a station is selected", async () => {
     const first = station({ _streams: ["https://example.test/a.mp3", "https://example.test/b.mp3"] });
     player.selectStation(first);
     for (let attempt = 0; attempt < 3; attempt++) mocks.audio.dispatch("error");
@@ -484,14 +494,16 @@ describe("stream failover", () => {
       _streams: ["https://example.test/c.mp3", "https://example.test/d.mp3"],
     });
     player.selectStation(second);
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(second);
     mocks.audio.dispatch("error");
 
     expect(state.playing).toBe(true);
-    expect(second._currentStreamIndex).toBe(1);
+    expect(runtime.currentStreamIndex).toBe(1);
     expect(mocks.audio.src).toContain("d.mp3");
   });
 
-  it("characterizes playing as not resetting the rolling failover limit", () => {
+  it("characterizes playing as not resetting the rolling failover limit", async () => {
     const target = station({ _streams: ["https://example.test/one.mp3", "https://example.test/two.mp3"] });
     player.selectStation(target);
     for (let attempt = 0; attempt < 3; attempt++) mocks.audio.dispatch("error");
@@ -510,24 +522,28 @@ describe("stream failover", () => {
     });
     player.selectStation(target);
     await settlePlayback();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     mocks.audio.dispatch("waiting");
     mocks.audio.dispatch("stalled");
     mocks.audio.dispatch("error");
 
-    expect(target._currentStreamIndex).toBeUndefined();
+    expect(runtime.currentStreamIndex).toBeUndefined();
     expect(mocks.setPlaybackStatus).toHaveBeenCalledWith("Buforowanie…");
     expect(mocks.playbackState).toBe("buffering");
   });
 
-  it("keeps waiting passive but fails over on stalled audio without hls.js", () => {
+  it("keeps waiting passive but fails over on stalled audio without hls.js", async () => {
     const target = station({ _streams: ["https://example.test/one.mp3", "https://example.test/two.mp3"] });
     player.selectStation(target);
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     mocks.audio.dispatch("waiting");
-    expect(target._currentStreamIndex).toBeUndefined();
+    expect(runtime.currentStreamIndex).toBeUndefined();
     mocks.audio.dispatch("stalled");
-    expect(target._currentStreamIndex).toBe(1);
+    expect(runtime.currentStreamIndex).toBe(1);
   });
 });
 
@@ -611,11 +627,13 @@ describe("playback state and cleanup", () => {
     });
     player.selectStation(replacement);
     await settlePlayback();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(replacement);
 
     mocks.audio.dispatch("error");
 
     expect(mocks.hlsInstances).toHaveLength(0);
-    expect(replacement._currentStreamIndex).toBe(1);
+    expect(runtime.currentStreamIndex).toBe(1);
     expect(mocks.audio.src).toBe("https://example.test/backup.mp3");
   });
 
@@ -868,8 +886,10 @@ describe("RMF station metadata", () => {
 
     player.selectStation(target);
     await settleMetadata();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
-    expect(target._streams).toEqual(expected);
+    expect(runtime.streams).toEqual(expected);
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/rmf/stations/101/streams",
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
@@ -885,8 +905,10 @@ describe("RMF station metadata", () => {
 
     player.selectStation(target);
     await settleMetadata();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
-    expect(target._streams).toEqual([target.stream]);
+    expect(runtime.streams).toEqual([target.stream]);
   });
 });
 
@@ -905,10 +927,12 @@ describe("metadata failure boundaries", () => {
     player.togglePlay();
     finish({ current: { artist: "Cancelled", title: "Old" }, all: [] });
     await settleMetadata();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
     expect(state.playing).toBe(false);
     expect(state.liveTrack?.title).toBe("Visible");
     expect(mocks.metadataState).toBe("ready");
-    expect(target._consecutiveFailures).toBeUndefined();
+    expect(runtime.consecutiveFailures).toBeUndefined();
     expect(mocks.evaluateSmartListening).not.toHaveBeenCalled();
     expect(mocks.eskaProvider.fetch.mock.calls[1]?.[1]?.passive).toBe(true);
   });
@@ -948,7 +972,11 @@ describe("metadata failure boundaries", () => {
   it.each(["rmf", "eska"] as const)(
     "loads restored %s metadata without playback or health changes",
     async (provider) => {
-      const target = station({ provider, apiBaseUrl: "/playlist", _consecutiveFailures: 99, _apiFailed: true });
+      const target = station({ provider, apiBaseUrl: "/playlist" });
+      const { getStationRuntime } = await import("../src/player.js");
+      const runtime = getStationRuntime(target);
+      runtime.consecutiveFailures = 99;
+      runtime.apiFailed = true;
       const result = {
         current: { artist: "Restored", title: "Song", coverUrl: "/cover.png" },
         all: [{ artist: "Next", title: "Song" }],
@@ -963,8 +991,8 @@ describe("metadata failure boundaries", () => {
       expect(state.liveTrack).toEqual(result.current);
       expect(state.history).toEqual(result.all);
       expect(mocks.metadataState).toBe("ready");
-      expect(target._consecutiveFailures).toBe(99);
-      expect(target._apiFailed).toBe(true);
+      expect(runtime.consecutiveFailures).toBe(99);
+      expect(runtime.apiFailed).toBe(true);
       expect(mocks.audio.play).not.toHaveBeenCalled();
       expect(mocks.audio.src).toBe("");
       expect(state.playing).toBe(false);
@@ -1018,9 +1046,11 @@ describe("metadata failure boundaries", () => {
     state.liveTrack = oldTrack;
 
     await expect(player.fetchPlaylist(target)).resolves.toBeNull();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     expect(timeoutSpy).toHaveBeenCalledWith(3500);
-    expect(target._consecutiveFailures).toBe(1);
+    expect(runtime.consecutiveFailures).toBe(1);
     expect(state.liveTrack).toBe(oldTrack);
     expect(mocks.updateNowPlayingTrack).not.toHaveBeenCalled();
   });
@@ -1029,9 +1059,11 @@ describe("metadata failure boundaries", () => {
     const target = station({ apiBaseUrl: "/playlist" });
 
     for (let attempt = 0; attempt < 7; attempt++) await player.fetchPlaylist(target);
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     expect(fetchMock).toHaveBeenCalledTimes(6);
-    expect(target._consecutiveFailures).toBe(6);
+    expect(runtime.consecutiveFailures).toBe(6);
   });
 });
 

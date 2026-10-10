@@ -15,9 +15,6 @@ const station: Station = {
   cat: "test",
   stream: "https://example.test/audio",
   apiBaseUrl: "/api/eska",
-  _consecutiveFailures: 99,
-  _apiFailed: true,
-  _currentStreamIndex: 1,
   _streams: ["one", "two"],
 };
 const fetchMock = vi.fn<typeof fetch>();
