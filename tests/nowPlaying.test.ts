@@ -325,6 +325,107 @@ describe("passive cache", () => {
 });
 
 describe("normalized policy snapshots", () => {
+  it.each([
+    { label: "advertisement", track: { artist: "", title: "Ad", contentKind: "advertisement" } },
+    { label: "negative music", track: song },
+  ] satisfies { label: string; track: TrackInfo }[])(
+    "preserves fresh active unknown content over cached $label",
+    async ({ track }) => {
+      addNegativeTrack(song.artist, song.title);
+      const cache = new NowPlayingCache(vi.fn(), async () => result(track));
+      await cache.refresh([station]);
+      vi.setSystemTime(145_000);
+      expect(cache.snapshots([station])[0]).toMatchObject({ updatedAt: 100_000, stale: true, source: "passive" });
+      expect(
+        cache.snapshots([station], { stationId: station.id, track: null, updatedAt: 145_000, upcoming: [] })[0],
+      ).toMatchObject({
+        track: null,
+        kind: "unknown",
+        evidence: null,
+        flags: { negativeMusic: false, positiveArtist: false, positiveTrack: false },
+        updatedAt: 145_000,
+        stale: false,
+        source: "player",
+        upcoming: [],
+      });
+    },
+  );
+  it("keeps valid passive fallback when no matching active observation exists", async () => {
+    const cache = new NowPlayingCache(vi.fn(), async () => result());
+    await cache.refresh([station]);
+    vi.setSystemTime(110_000);
+    for (const active of [null, { stationId: "other", track: null, updatedAt: 110_000, upcoming: [] }]) {
+      expect(cache.snapshots([station], active)[0]).toMatchObject({
+        track: song,
+        updatedAt: 100_000,
+        source: "passive",
+        stale: false,
+      });
+    }
+  });
+  it("uses non-null active content even when a passive observation is newer", async () => {
+    const cache = new NowPlayingCache(vi.fn(), async () => result());
+    await cache.refresh([station]);
+    const activeTrack = { ...song, title: "Active" };
+    expect(
+      cache.snapshots([station], { stationId: station.id, track: activeTrack, updatedAt: 95_000, upcoming: [] })[0],
+    ).toMatchObject({ track: activeTrack, updatedAt: 95_000, source: "player", stale: false });
+  });
+  it.each([
+    { updatedAt: 110_000, track: null, source: "player" },
+    { updatedAt: 90_000, track: song, source: "passive" },
+  ])("preserves stale observation precedence for active timestamp $updatedAt", async (expected) => {
+    const cache = new NowPlayingCache(vi.fn(), async () => result());
+    await cache.refresh([station]);
+    vi.setSystemTime(145_000);
+    expect(
+      cache.snapshots([station], {
+        stationId: station.id,
+        track: null,
+        updatedAt: expected.updatedAt,
+        upcoming: [],
+      })[0],
+    ).toMatchObject({
+      track: expected.track,
+      updatedAt: expected.source === "player" ? 110_000 : 100_000,
+      source: expected.source,
+      stale: true,
+    });
+  });
+  it("does not borrow a passive timeline when the selected active observation omits it", async () => {
+    const gap: TrackInfo = { artist: "", title: "Ad", contentKind: "advertisement", timestamp: 140, endTimestamp: 155 };
+    const cache = new NowPlayingCache(vi.fn(), async () => ({
+      current: song,
+      all: [gap, { ...gap, timestamp: 155, endTimestamp: 165 }],
+    }));
+    await cache.refresh([station]);
+    vi.setSystemTime(145_000);
+    expect(cache.snapshots([station], { stationId: station.id, track: null, updatedAt: 145_000 })[0]).toMatchObject({
+      track: null,
+      kind: "unknown",
+      upcoming: [],
+      updatedAt: 145_000,
+      source: "player",
+      stale: false,
+    });
+  });
+  it("advances bounded active timeline content from an unknown track without refreshing provenance", () => {
+    const gap = { artist: "", title: "", isBreak: true, timestamp: 105, endTimestamp: 120 };
+    const cache = new NowPlayingCache(vi.fn());
+    const active = { stationId: station.id, track: null, updatedAt: 100_000, upcoming: [gap] };
+    expect(cache.snapshots([station], active)[0]?.track).toBeNull();
+    vi.setSystemTime(105_000);
+    expect(cache.snapshots([station], active)[0]).toMatchObject({
+      track: gap,
+      kind: "advertisement",
+      evidence: "inferred",
+      updatedAt: 100_000,
+      source: "player",
+      stale: false,
+    });
+    vi.setSystemTime(120_000);
+    expect(cache.snapshots([station], active)[0]).toMatchObject({ track: null, kind: "unknown", updatedAt: 100_000 });
+  });
   it("retains timed future evidence but excludes past entries and untimed guesses", async () => {
     const upcoming = { artist: "Next", title: "Song", timestamp: 110 };
     const cache = new NowPlayingCache(vi.fn(), async () => ({

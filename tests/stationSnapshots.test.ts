@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { PlaylistResult, Station } from "../src/types.js";
+import { getSmartListeningConfig, setListeningPreference } from "../src/listeningPreferences.js";
+import type { ActiveMetadata } from "../src/nowPlaying.js";
+import { evaluateSnapshot } from "../src/smartPolicy.js";
+import { SmartRouteController } from "../src/smartRoute.js";
+import type { PlaylistResult, Station, TrackInfo } from "../src/types.js";
 
 vi.mock("../src/state.js", () => ({
   state: { playing: false, station: null, liveTrack: null, history: [], favTracks: [] },
@@ -34,6 +38,50 @@ afterEach(() => {
 });
 
 describe("shared station snapshot demand", () => {
+  it.each([
+    { reason: "advertisement", track: { artist: "", title: "Ad", contentKind: "advertisement" } },
+    { reason: "negativeTrack", track: { artist: "Artist", title: "Blocked" } },
+  ] satisfies { reason: string; track: TrackInfo }[])(
+    "does not authorize a detour from cached $reason after fresh active unknown metadata",
+    async ({ reason, track }) => {
+      setListeningPreference("track", "Artist", "Blocked", "negative");
+      const config = getSmartListeningConfig();
+      const alternative = { ...station, id: "b" };
+      const stations = [station, alternative];
+      let active: ActiveMetadata | null = null;
+      monitor = new StationSnapshotMonitor({
+        fetcher: async (s) => ({ current: s.id === station.id ? track : result.current, all: [] }),
+        activeMetadata: () => active,
+      });
+      monitor.setDemand("smart", stations);
+      await monitor.refresh();
+      const cached = monitor.snapshots(stations).find((s) => s.station.id === station.id);
+      expect(evaluateSnapshot(cached, config, 100_000)).toMatchObject({
+        eligibility: "rejected",
+        trigger: { reason },
+      });
+      vi.setSystemTime(145_000);
+      expect(
+        evaluateSnapshot(
+          monitor.snapshots(stations).find((s) => s.station.id === station.id),
+          config,
+          145_000,
+        ),
+      ).toMatchObject({ eligibility: "fallback", trigger: null });
+      active = { stationId: station.id, track: null, updatedAt: 145_000, upcoming: [] };
+      const route = new SmartRouteController();
+      for (const now of [145_000, 150_001]) {
+        vi.setSystemTime(now);
+        const snapshots = monitor.snapshots(stations);
+        const current = snapshots.find((s) => s.station.id === station.id);
+        expect.soft(evaluateSnapshot(current, config, now)).toMatchObject({ eligibility: "fallback", trigger: null });
+        expect
+          .soft(route.step({ now, enabled: true, playing: true, station, config, snapshots, pool: stations }))
+          .toBeNull();
+      }
+      expect.soft(route.status).toBeNull();
+    },
+  );
   it("shares one TTL refresh for overlapping consumers and continues after discovery closes", async () => {
     const fetcher = vi.fn(async () => result);
     monitor = new StationSnapshotMonitor({ fetcher });

@@ -11,6 +11,7 @@ Smart Listening przełącza stację na czas reklam, wiadomości lub niechcianej 
 - Po odświeżeniu strony zobaczysz, co gra na zapamiętanej stacji, bez uruchamiania dźwięku. "Co teraz gra?" pokazuje preferencje muzyczne i oznacza starsze informacje.
 - Zapisane utwory możesz wyszukać w YouTube. Ulubione działają też na własnych stacjach.
 - Naprawiono powrót do Trójki i ostrzeżenia dotyczące poprzedniego utworu. Informacje o utworach i audycjach Trójki odświeżają się szybciej.
+- Brak bieżących metadanych nie powoduje już przełączenia Smart Listening na podstawie starych reklam lub niechcianych utworów z pamięci podręcznej.
 - Poprawiono czytelność playlisty, przyciski i obsługę klawiaturą. Katalog lepiej działa na małych ekranach i przy powiększeniu strony, a wyłącznik czasowy ma na telefonie osobny rząd przycisków.
 - Pomoc wyjaśnia Smart Listening i prowadzi do ustawień. Zaktualizowano też politykę prywatności.
 
