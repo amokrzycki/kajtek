@@ -327,8 +327,14 @@ describe("station browser wiring and lifecycle", () => {
     cancelStationLayoutTransition();
   });
 
-  it("captures discovery geometry before layout changes, resizes and cancels rapid toggles", async () => {
+  it("matches deferred station translation in both discovery directions without animating refreshes", async () => {
     window.matchMedia = vi.fn().mockReturnValue({ matches: false });
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      frames.push(callback);
+      return frames.length;
+    });
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
     cleanup = initStationBrowser(vi.fn());
     element("browser-now").click();
     await vi.advanceTimersByTimeAsync(0);
@@ -339,17 +345,48 @@ describe("station browser wiring and lifecycle", () => {
         ? { left: 100, top: 200, width: 240, height: 360 }
         : { left: 0, top: 100, width: 800, height: 96 };
     element("station-view-toggle").children[0]?.click();
-    expect(row.animate).toHaveBeenCalledWith(
-      expect.arrayContaining([expect.objectContaining({ transform: "translate(100px, 100px) scale(0.3, 3.75)" })]),
-      expect.objectContaining({ duration: 280 }),
-    );
+    expect(row.animate).not.toHaveBeenCalled();
+    frames.at(-1)?.(0);
+    expect(row.animate).toHaveBeenCalledWith([{ transform: "translate(100px, 100px)" }, { transform: "none" }], {
+      duration: 280,
+      easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+    });
     const previous = animations.at(-1);
     element("station-view-toggle").children[1]?.click();
     expect(previous?.cancel).toHaveBeenCalled();
+    frames.at(-1)?.(0);
+    expect(row.animate).toHaveBeenLastCalledWith([{ transform: "translate(-100px, -100px)" }, { transform: "none" }], {
+      duration: 280,
+      easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+    });
+    previous?.finish();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(row.style.zIndex).toBe("10");
     expect(element("discovery-list").children[0]).toBe(row);
     const count = row.animate.mock.calls.length;
     await vi.advanceTimersByTimeAsync(15_000);
     expect(row.animate).toHaveBeenCalledTimes(count);
+    expect(frames).toHaveLength(2);
+    row.animate.mockClear();
+    element("station-view-toggle").children[0]?.click();
+    const obsoleteFrame = frames.at(-1);
+    element("station-view-toggle").children[1]?.click();
+    expect(cancelAnimationFrame).toHaveBeenCalled();
+    obsoleteFrame?.(0);
+    frames.at(-1)?.(0);
+    expect(row.animate).not.toHaveBeenCalled();
+    element("station-view-toggle").children[0]?.click();
+    const hiddenFrame = frames.at(-1);
+    element("browser-stations").click();
+    hiddenFrame?.(0);
+    expect(row.animate).not.toHaveBeenCalled();
+    expect(row.style.zIndex).toBe("");
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true });
+    element("browser-now").click();
+    const frameCount = frames.length;
+    element("station-view-toggle").children[1]?.click();
+    expect(frames).toHaveLength(frameCount);
+    expect(row.animate).not.toHaveBeenCalled();
   });
   it("replaces animations on rapid switches and keeps only the final panel interactive", async () => {
     window.matchMedia = vi.fn().mockReturnValue({ matches: false });

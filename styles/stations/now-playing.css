@@ -86,6 +86,8 @@
 
 .discovery-list {
   list-style: none;
+  overflow: clip;
+  overflow-clip-margin: 1px;
   display: grid;
   gap: var(--k-s2);
   padding: 4px;

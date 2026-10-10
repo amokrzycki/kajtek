@@ -2,26 +2,17 @@
 
 ## 0.14.0
 
-Smart Listening łączy zasady słuchania w jednym miejscu: wybiera odpowiednią stację na czas niechcianej treści i czeka na bezpieczny powrót.
+Smart Listening przełącza stację na czas reklam, wiadomości lub niechcianej muzyki i wraca, gdy znów jest czego słuchać.
 
-- W ustawieniach znajdziesz jedną konfigurację Smart Listening: stacje do przełączania, treści do pomijania i preferencje muzyczne. Przełącznik SMART na obudowie włącza całość. Pula stacji jest niezależna od ich widoczności i ulubionych; na początku przejmuje dotychczasowy wybór.
-- Wybierz „Preferuj”, „Neutralnie” lub „Unikaj” dla artysty albo konkretnego utworu. Niechciana muzyka wywołuje pominięcie; preferowana pomaga wybrać stację dopiero wtedy, gdy trzeba coś ominąć. Kajtek nie przeskakuje sam za ulubionymi utworami. Gwiazdki nadal służą zakładkom, a dotychczasowa czarna lista przechodzi do preferencji „Unikaj”.
-- Artysta i tytuł w playliście oraz ulubionych znów tworzą zwartą frazę bez sztucznych odstępów.
-- Po odświeżeniu strony zapamiętana stacja pobiera bieżącą treść i dostępną playlistę bez włączania dźwięku. Sprawdzanie, brak danych i błąd pobierania mają osobne komunikaty.
-- Wyrównano typografię playlisty i ulubionych, dodano wyszukiwanie zapisanych utworów w YouTube.
-- Uporządkowano przyciski przeglądania stacji i wyrównano wysokość katalogu z przełącznikiem widoku. Na telefonach wyłącznik czasowy ma własny rząd czterech równych klawiszy pod głośnością.
-- Reklamy zachowują dotychczasowe ustawienie. Wiadomości i inne rozpoznane przerwy możesz wybrać osobno w zasadach treści. Audycje pozostają do słuchania, a brak danych nie oznacza reklamy.
-- Powrót wymaga świeżych danych potwierdzających odpowiednią treść na pierwotnej stacji. Kajtek sprawdza ją ponownie i nie wraca w ciemno po trzech minutach ani po samym upływie czasu reklamy. Ręczna zmiana stacji, wyłączenie Smart Listening lub „Zostań tutaj” kończy objazd; pauza wstrzymuje automatyczne przełączanie.
-- Komunikat pominięcia jest widoczny także przy zamkniętej PLAYLIŚCIE. Przyciski „Przełącz teraz” i „Zostań mimo to” zachowują miejsce podczas odliczania; gdy brakuje odpowiedniej stacji, Kajtek pokazuje oczekiwanie.
-- „Co teraz gra?” i Smart Listening korzystają ze wspólnych informacji o stacjach. Oznaczenia pokazują jawne preferencje muzyczne i starsze dane. Przerwy RMF pozostają oznaczone jako wnioskowane z playlisty; niepewne zapowiedzi i brak tytułu ESKA nie stają się potwierdzonymi reklamami.
-- Przycisk „Statystyki” w nagłówku pokazuje osobno ominięte reklamy, wiadomości, inne przerwy i niechcianą muzykę, automatyczne objazdy, czas słuchania oraz do pięciu najdłużej słuchanych stacji. Czas reklam i przerw według playlisty mierzymy tylko w znanym przedziale podczas odtwarzania zastępczego audio. Nieznanej długości nie przeliczamy na minuty.
-- Dotychczasowe statystyki, czasy stacji i ustawienia pozostają zachowane lokalnie. Dawne ominięcia czarnej listy przechodzą do niechcianej muzyki; nowych liczników nie odtwarzamy z dawnych objazdów ani zakładek.
-- Naprawiono automatyczny powrót do Trójki oraz ostrzeżenia Smart Listening, które po ręcznej zmianie stacji mogły dotyczyć poprzednio słuchanego utworu.
-- Ramówka i playlista Trójki odświeżają się teraz co 15 sekund, więc bieżący utwór i audycja pojawiają się szybciej.
-- Zaktualizowano politykę prywatności o Smart Listening, preferencje muzyczne i nowe liczniki statystyk.
-- Katalog pozostaje dostępny na małych ekranach i po powiększeniu strony, a głośność i wyłącznik nie zasłaniają odtwarzania. Ulubione utwory są dostępne także na własnych stacjach.
-- Poprawiono kontrast przycisków we wszystkich obudowach, obsługę zakładek klawiaturą, nazwy podglądu stacji i zachowanie fokusu w ulubionych. Komunikaty Smart Listening rozróżniają pauzę, łączenie i błąd; starsze informacje o treści mają osobne oznaczenie, a błędne okładki korzystają z zastępczej grafiki.
-- Pomoc wyjaśnia aktualne zasady Smart Listening i prowadzi do konfiguracji. Przyciski w oknach i wybór obudowy reagują jak pozostałe klawisze Kajtka.
+- W ustawieniach wybierzesz stacje zastępcze i treści do pomijania. Całość włączysz przełącznikiem SMART na obudowie.
+- Dla artystów i utworów ustawisz "Preferuj", "Neutralnie" lub "Unikaj". Preferencje pomagają wybrać stację przy pomijaniu treści. Czarna lista staje się listą "Unikaj", a gwiazdki nadal zapisują ulubione.
+- Kajtek wraca dopiero po sprawdzeniu, co gra na poprzedniej stacji. Ręczna zmiana stacji lub "Zostań tutaj" kończy automatyczny powrót, a pauza wstrzymuje przełączanie. Ostrzeżenia widać także przy zamkniętej playliście.
+- Statystyki rozróżniają pominięte reklamy, wiadomości, inne przerwy i niechcianą muzykę. Pokazują też czas słuchania i najczęściej słuchane stacje. Dotychczasowe dane i ustawienia zostają zachowane.
+- Po odświeżeniu strony zobaczysz, co gra na zapamiętanej stacji, bez uruchamiania dźwięku. "Co teraz gra?" pokazuje preferencje muzyczne i oznacza starsze informacje.
+- Zapisane utwory możesz wyszukać w YouTube. Ulubione działają też na własnych stacjach.
+- Naprawiono powrót do Trójki i ostrzeżenia dotyczące poprzedniego utworu. Informacje o utworach i audycjach Trójki odświeżają się szybciej.
+- Poprawiono czytelność playlisty, przyciski i obsługę klawiaturą. Katalog lepiej działa na małych ekranach i przy powiększeniu strony, a wyłącznik czasowy ma na telefonie osobny rząd przycisków.
+- Pomoc wyjaśnia Smart Listening i prowadzi do ustawień. Zaktualizowano też politykę prywatności.
 
 ## 0.13.0
 
