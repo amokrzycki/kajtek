@@ -64,6 +64,7 @@ const mocks = vi.hoisted(() => {
     hlsInstances: [] as FakeHlsInstance[],
     hlsSupported: true,
     notifyState: vi.fn(),
+    metadataState: "idle",
     readZprTag: vi.fn(),
     resetSmartListening: vi.fn(),
     rmfProvider,
@@ -112,6 +113,7 @@ const intervals = vi.hoisted(() => ({
 const liveTrackListeners = vi.hoisted(() => new Set<() => void>());
 
 const fetchMock = vi.fn<typeof fetch>();
+const documentEvents = new Map<string, () => void>();
 
 vi.mock("hls.js", () => {
   class FakeHls implements FakeHlsInstance {
@@ -177,6 +179,10 @@ vi.mock("../src/state.js", () => ({
     });
   },
   state,
+  getMetadataState: () => mocks.metadataState,
+  setMetadataState: (value: string) => {
+    mocks.metadataState = value;
+  },
 }));
 vi.mock("../src/ui.js", () => ({
   els: { npLiveDot: { classList: { contains: vi.fn(() => false) } } },
@@ -231,7 +237,11 @@ beforeEach(async () => {
   vi.resetModules();
   vi.stubGlobal("DOMParser", class {});
   vi.stubGlobal("window", { addEventListener: vi.fn() });
-  vi.stubGlobal("document", { addEventListener: vi.fn() });
+  documentEvents.clear();
+  vi.stubGlobal("document", {
+    hidden: false,
+    addEventListener: (event: string, handler: () => void) => documentEvents.set(event, handler),
+  });
   const storage = new Map<string, string>();
   vi.stubGlobal("localStorage", {
     getItem: (key: string) => storage.get(key) ?? null,
@@ -248,6 +258,7 @@ beforeEach(async () => {
   mocks.readZprTag.mockReturnValue(false);
   vi.mocked(mocks.eskaProvider.fetch).mockReset().mockResolvedValue(null);
   state.station = null;
+  mocks.metadataState = "idle";
   state.playing = false;
   state.liveTrack = null;
   state.history = [];
@@ -672,6 +683,125 @@ describe("RMF station metadata", () => {
 });
 
 describe("metadata failure boundaries", () => {
+  it("finishes loading passively after pausing an initial active request", async () => {
+    const target = station({ provider: "eska", apiBaseUrl: "/playlist" });
+    let finish: (value: PlaylistResult) => void = () => undefined;
+    mocks.eskaProvider.fetch.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    mocks.eskaProvider.fetch.mockResolvedValueOnce({ current: { artist: "Paused", title: "Visible" }, all: [] });
+    player.selectStation(target);
+    player.togglePlay();
+    finish({ current: { artist: "Cancelled", title: "Old" }, all: [] });
+    await settleMetadata();
+    expect(state.playing).toBe(false);
+    expect(state.liveTrack?.title).toBe("Visible");
+    expect(mocks.metadataState).toBe("ready");
+    expect(target._consecutiveFailures).toBeUndefined();
+    expect(mocks.evaluateSmartListening).not.toHaveBeenCalled();
+    expect(mocks.eskaProvider.fetch.mock.calls[1]?.[1]?.passive).toBe(true);
+  });
+
+  it("waits for visibility, cancels when hidden and resumes the single startup request", async () => {
+    const target = station({ provider: "eska", apiBaseUrl: "/playlist" });
+    state.station = target;
+    Object.defineProperty(document, "hidden", { configurable: true, value: true });
+    await player.restoreStationMetadata();
+    expect(mocks.eskaProvider.fetch).not.toHaveBeenCalled();
+    expect(mocks.metadataState).toBe("loading");
+    Object.defineProperty(document, "hidden", { configurable: true, value: false });
+    let finish: (value: PlaylistResult) => void = () => undefined;
+    mocks.eskaProvider.fetch.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    documentEvents.get("visibilitychange")?.();
+    const signal = mocks.eskaProvider.fetch.mock.calls[0]?.[1]?.signal;
+    Object.defineProperty(document, "hidden", { configurable: true, value: true });
+    documentEvents.get("visibilitychange")?.();
+    expect(signal?.aborted).toBe(true);
+    finish({ current: { artist: "Old", title: "Hidden" }, all: [] });
+    await settleMetadata();
+    expect(state.liveTrack).toBeNull();
+    mocks.eskaProvider.fetch.mockResolvedValueOnce({ current: { artist: "Visible", title: "New" }, all: [] });
+    Object.defineProperty(document, "hidden", { configurable: true, value: false });
+    documentEvents.get("visibilitychange")?.();
+    await settleMetadata();
+    expect(state.liveTrack?.title).toBe("New");
+    expect(mocks.eskaProvider.fetch).toHaveBeenCalledTimes(2);
+    expect(mocks.audio.play).not.toHaveBeenCalled();
+  });
+
+  it.each(["rmf", "eska"] as const)(
+    "loads restored %s metadata without playback or health changes",
+    async (provider) => {
+      const target = station({ provider, apiBaseUrl: "/playlist", _consecutiveFailures: 99, _apiFailed: true });
+      const result = {
+        current: { artist: "Restored", title: "Song", coverUrl: "/cover.png" },
+        all: [{ artist: "Next", title: "Song" }],
+      };
+      state.station = target;
+      fetchMock.mockResolvedValue(new Response("{}"));
+      mocks.rmfProvider.parse.mockReturnValue(result);
+      mocks.eskaProvider.fetch.mockResolvedValue(result);
+      const request = player.restoreStationMetadata();
+      expect(mocks.metadataState).toBe("loading");
+      await request;
+      expect(state.liveTrack).toEqual(result.current);
+      expect(state.history).toEqual(result.all);
+      expect(mocks.metadataState).toBe("ready");
+      expect(target._consecutiveFailures).toBe(99);
+      expect(target._apiFailed).toBe(true);
+      expect(mocks.audio.play).not.toHaveBeenCalled();
+      expect(mocks.audio.src).toBe("");
+      expect(state.playing).toBe(false);
+      expect(intervals.track).toBeNull();
+      expect(mocks.evaluateSmartListening).not.toHaveBeenCalled();
+      const { statisticsStore } = await import("../src/statisticsPlayback.js");
+      expect(statisticsStore.snapshot().allTime.listeningMs).toBe(0);
+      expect(statisticsStore.snapshot().allTime.detours).toBe(0);
+    },
+  );
+
+  it("distinguishes unsupported, empty and failed startup metadata", async () => {
+    state.station = station();
+    await player.restoreStationMetadata();
+    expect(mocks.metadataState).toBe("unsupported");
+    expect(fetchMock).not.toHaveBeenCalled();
+    state.station = station({ provider: "eska", apiBaseUrl: "/playlist" });
+    mocks.eskaProvider.fetch.mockResolvedValueOnce({ current: null, all: [] });
+    await player.restoreStationMetadata();
+    expect(mocks.metadataState).toBe("unavailable");
+    mocks.eskaProvider.fetch.mockRejectedValueOnce(new Error("offline"));
+    await player.restoreStationMetadata();
+    expect(mocks.metadataState).toBe("failed");
+  });
+
+  it("cancels a startup request and rejects its late reply after station selection", async () => {
+    const target = station({ provider: "eska", apiBaseUrl: "/playlist" });
+    state.station = target;
+    let finish: (value: PlaylistResult) => void = () => undefined;
+    mocks.eskaProvider.fetch.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const request = player.restoreStationMetadata();
+    const signal = mocks.eskaProvider.fetch.mock.calls[0]?.[1]?.signal;
+    player.selectStation(station({ id: "new" }));
+    finish({ current: { artist: "Late", title: "Old" }, all: [] });
+    await request;
+    expect(signal?.aborted).toBe(true);
+    expect(state.liveTrack).toBeNull();
+    expect(state.station?.id).toBe("new");
+  });
+
   it("uses the 3500 ms timeout, counts an error, and preserves displayed metadata", async () => {
     const timeoutSpy = vi.spyOn(AbortSignal, "timeout");
     const oldTrack = { artist: "Still", title: "Visible" };

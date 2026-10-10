@@ -2,11 +2,13 @@
    Overrides .pl-* from playlist.css, so must be imported after it. */
 
 .fav-item {
-  grid-template-columns: 12ch 14px 1fr auto;
+  grid-template-columns: 12ch 14px minmax(0, 1fr) auto;
 }
 
 .fav-item .pl-track {
+  display: flex;
   flex-direction: column;
+  align-items: stretch;
   gap: 1px;
 }
 
@@ -23,9 +25,12 @@
   font-size: var(--k-fs-data);
   color: var(--k-disp-dim);
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.fav-goto {
+.fav-goto,
+.fav-youtube {
   display: flex;
   align-items: center;
   background: none;
@@ -35,10 +40,12 @@
   cursor: pointer;
   transition: color var(--k-tr);
   -webkit-tap-highlight-color: transparent;
+  text-decoration: none;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .fav-goto:hover {
+  .fav-goto:hover,
+  .fav-youtube:hover {
     color: var(--k-disp-accent);
   }
 }
@@ -59,6 +66,24 @@
      source order when both lived in one file. Split apart, that order flips,
      so we repeat the columns instead of relying on it. */
   .fav-item {
-    grid-template-columns: min-content 10px 1fr auto;
+    grid-template-columns: min-content 10px minmax(0, 1fr);
+  }
+
+  .fav-item .pl-actions {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (pointer: coarse) {
+  .fav-item .pl-actions {
+    gap: var(--k-s1);
+  }
+
+  .fav-item .pl-actions > * {
+    display: inline-flex;
+    min-width: 44px;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
   }
 }

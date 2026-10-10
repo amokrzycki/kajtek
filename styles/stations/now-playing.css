@@ -1,5 +1,8 @@
 .browser-mode-switch {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: fit-content;
+  margin-inline: auto;
   gap: var(--k-s1);
   margin-bottom: var(--k-s3);
 }
@@ -83,6 +86,8 @@
 
 .discovery-list {
   list-style: none;
+  overflow: clip;
+  overflow-clip-margin: 1px;
   display: grid;
   gap: var(--k-s2);
   padding: 4px;
@@ -256,8 +261,12 @@
 }
 
 @media (max-width: 640px) {
+  .browser-mode-switch {
+    width: 100%;
+    max-width: 28rem;
+  }
+
   .browser-mode-switch .btn-key {
-    flex: 1;
     padding-inline: var(--k-s2);
     letter-spacing: 0.02em;
   }

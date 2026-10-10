@@ -109,6 +109,17 @@ export function getLiveTrackUpdatedAt(): number {
   return liveTrackUpdatedAt;
 }
 
+export type MetadataState = "idle" | "loading" | "ready" | "unavailable" | "failed" | "unsupported";
+let metadataState: MetadataState = "idle";
+
+export function getMetadataState(): MetadataState {
+  return metadataState;
+}
+
+export function setMetadataState(value: MetadataState): void {
+  metadataState = value;
+}
+
 export function subscribeLiveTrack(listener: () => void): () => void {
   liveTrackListeners.add(listener);
   return () => liveTrackListeners.delete(listener);

@@ -1,3 +1,62 @@
+export function createLayoutTransition(container: HTMLElement, selector: string) {
+  let frame: number | null = null;
+  let pendingPositions: Map<string, DOMRect> | null = null;
+  let generation = 0;
+  const animations = new Map<HTMLElement, Animation>();
+  const cancel = () => {
+    generation++;
+    if (frame !== null) cancelAnimationFrame(frame);
+    frame = null;
+    pendingPositions = null;
+    animations.forEach((animation, card) => {
+      animation.cancel();
+      card.style.zIndex = "";
+    });
+    animations.clear();
+  };
+  const capture = () => {
+    const first = pendingPositions ?? new Map<string, DOMRect>();
+    if (!pendingPositions) {
+      container.querySelectorAll<HTMLElement>(selector).forEach((card) => {
+        if (card.dataset.id) first.set(card.dataset.id, card.getBoundingClientRect());
+      });
+    }
+    cancel();
+    return () => {
+      if (!first.size || container.hidden || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+      const token = generation;
+      pendingPositions = first;
+      frame = requestAnimationFrame(() => {
+        if (token !== generation) return;
+        frame = null;
+        pendingPositions = null;
+        container.querySelectorAll<HTMLElement>(selector).forEach((card) => {
+          const before = first.get(card.dataset.id ?? "");
+          if (!before) return;
+          const after = card.getBoundingClientRect();
+          const x = before.left - after.left;
+          const y = before.top - after.top;
+          if (!x && !y) return;
+          card.style.zIndex = "10";
+          const animation = card.animate([{ transform: `translate(${x}px, ${y}px)` }, { transform: "none" }], {
+            duration: 280,
+            easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+          });
+          animations.set(card, animation);
+          void animation.finished
+            .catch(() => undefined)
+            .finally(() => {
+              if (animations.get(card) !== animation) return;
+              animations.delete(card);
+              card.style.zIndex = "";
+            });
+        });
+      });
+    };
+  };
+  return { capture, cancel };
+}
+
 export function createBrowserTransition(
   container: HTMLElement,
   panels: readonly HTMLElement[],

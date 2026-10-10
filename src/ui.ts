@@ -4,7 +4,7 @@ import { isVolAnimating } from "./controls.js";
 import { ICONS } from "./icons.js";
 import { getSmartListeningConfig, musicPreference } from "./listeningPreferences.js";
 import { classifyContent, NOW_PLAYING_STALE_MS } from "./nowPlaying.js";
-import { getLiveTrackUpdatedAt, type PlaybackState, setPlaybackState, state } from "./state.js";
+import { getLiveTrackUpdatedAt, getMetadataState, type PlaybackState, setPlaybackState, state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import { els, initVolumeControlUI, initVU, renderVolLadder } from "./ui/elements.js";
 import { applyHistoryTabVisibility, isTrackFavorited, renderFavoritesUI } from "./ui/favorites.js";
@@ -77,9 +77,19 @@ export function updateNowPlayingTrack(track: TrackInfo | null): void {
     : `${state.station.name} · KAJTEK`;
 
   els.npTrackWrap.classList.add("visible");
+  els.npTrackWrap.setAttribute("aria-busy", String(getMetadataState() === "loading"));
 
   const artistText = track?.artist || state.station.name;
-  const titleText = track?.title || "brak informacji o treści";
+  const titleText =
+    track?.title ||
+    {
+      idle: "brak informacji o treści",
+      loading: "Sprawdzanie bieżącej treści…",
+      ready: "brak informacji o treści",
+      unavailable: "Stacja nie podaje teraz treści",
+      failed: "Nie udało się pobrać informacji o treści",
+      unsupported: "Ta stacja nie udostępnia informacji o treści",
+    }[getMetadataState()];
 
   triggerFade(els.npArtist, artistText);
   triggerFade(els.npTitle, titleText);
@@ -108,7 +118,12 @@ function updateMetadataFreshness(): void {
       Date.now() - observedAt >= NOW_PLAYING_STALE_MS ||
       track.isPredicted ||
       (track.endTimestamp != null && track.endTimestamp * 1000 <= Date.now()));
-  const text = state.station && stale ? "Ostatnio znana treść · starsze dane" : "";
+  const text =
+    state.station && track && getMetadataState() === "failed"
+      ? "Ostatnio znana treść · błąd danych"
+      : state.station && stale
+        ? "Ostatnio znana treść · starsze dane"
+        : "";
   if (els.npMetadataState.textContent !== text) els.npMetadataState.textContent = text;
   els.npMetadataState.hidden = !text;
 }
@@ -277,34 +292,29 @@ export function updateUI(
   renderFavoritesUI();
   applyHistoryTabVisibility();
 
-  if (shouldRenderStationList()) {
-    renderStationList(onSelect, onToggleFav);
+  const listChanged = shouldRenderStationList();
+  if (listChanged || lastViewMode !== state.viewMode) {
+    renderStationList(onSelect, onToggleFav, !listChanged);
+    lastViewMode = state.viewMode;
   }
 }
 
 /* memoize station list render triggers so volume/sleep/playing updates don't touch station DOM */
 let lastStationId: string | null = null;
 let lastFavsKey = "";
-let lastViewMode = "";
 let lastEnabledKey = "";
+let lastViewMode = "";
 
 function shouldRenderStationList(): boolean {
   const currentStationId = state.station?.id ?? null;
   const currentFavsKey = Array.from(state.favs).sort().join(",");
-  const currentViewMode = state.viewMode;
   const currentEnabledKey = getEnabledStations()
     .map((s) => s.id)
     .join(",");
 
-  if (
-    currentStationId !== lastStationId ||
-    currentFavsKey !== lastFavsKey ||
-    currentViewMode !== lastViewMode ||
-    currentEnabledKey !== lastEnabledKey
-  ) {
+  if (currentStationId !== lastStationId || currentFavsKey !== lastFavsKey || currentEnabledKey !== lastEnabledKey) {
     lastStationId = currentStationId;
     lastFavsKey = currentFavsKey;
-    lastViewMode = currentViewMode;
     lastEnabledKey = currentEnabledKey;
     return true;
   }

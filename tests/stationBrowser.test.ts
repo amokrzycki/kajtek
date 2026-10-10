@@ -266,6 +266,128 @@ afterEach(() => {
 });
 
 describe("station browser wiring and lifecycle", () => {
+  it("keeps the original deferred translation-only station FLIP and card identity", async () => {
+    window.matchMedia = vi.fn().mockReturnValue({ matches: false });
+    const frames: FrameRequestCallback[] = [];
+    const requestFrame = vi.fn((callback: FrameRequestCallback) => {
+      frames.push(callback);
+      return frames.length;
+    });
+    vi.stubGlobal("requestAnimationFrame", requestFrame);
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
+    const container = element("station-list-container");
+    const cards = [new ElementStub(), new ElementStub()];
+    cards.forEach((card, index) => {
+      card.dataset.id = String(index);
+      card.getBoundingClientRect = () =>
+        container.classes.has("is-grid-view")
+          ? { left: index * 280, top: 0, width: 250, height: 90 }
+          : { left: 0, top: index * 100, width: 800, height: 100 };
+      container.appendChild(card);
+    });
+    const { renderStationList, cancelStationLayoutTransition } = await import("../src/ui/stations.js");
+    mocks.state.viewMode = "grid";
+    renderStationList(vi.fn(), vi.fn(), true);
+    expect(cards[1]?.animate).not.toHaveBeenCalled();
+    frames.at(-1)?.(0);
+    expect(cards[1]?.animate).toHaveBeenCalledWith([{ transform: "translate(-280px, 100px)" }, { transform: "none" }], {
+      duration: 280,
+      easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+    });
+    expect(container.children).toEqual(cards);
+    const previous = animations.at(-1);
+    mocks.state.viewMode = "list";
+    renderStationList(vi.fn(), vi.fn(), true);
+    expect(previous?.cancel).toHaveBeenCalled();
+    frames.at(-1)?.(0);
+    expect(cards[1]?.animate).toHaveBeenLastCalledWith(
+      [{ transform: "translate(280px, -100px)" }, { transform: "none" }],
+      { duration: 280, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
+    );
+    cancelStationLayoutTransition();
+    requestFrame.mockClear();
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true });
+    mocks.state.viewMode = "grid";
+    renderStationList(vi.fn(), vi.fn(), true);
+    expect(requestFrame).not.toHaveBeenCalled();
+    expect(container.classes.has("is-grid-view")).toBe(true);
+    cards.forEach((card) => {
+      card.animate.mockClear();
+    });
+    window.matchMedia = vi.fn().mockReturnValue({ matches: false });
+    mocks.state.viewMode = "list";
+    renderStationList(vi.fn(), vi.fn(), true);
+    const obsoleteFrame = frames.at(-1);
+    mocks.state.viewMode = "grid";
+    renderStationList(vi.fn(), vi.fn(), true);
+    expect(cancelAnimationFrame).toHaveBeenCalled();
+    obsoleteFrame?.(0);
+    frames.at(-1)?.(0);
+    expect(cards[1]?.animate).not.toHaveBeenCalled();
+    cancelStationLayoutTransition();
+  });
+
+  it("matches deferred station translation in both discovery directions without animating refreshes", async () => {
+    window.matchMedia = vi.fn().mockReturnValue({ matches: false });
+    const frames: FrameRequestCallback[] = [];
+    vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+      frames.push(callback);
+      return frames.length;
+    });
+    vi.stubGlobal("cancelAnimationFrame", vi.fn());
+    cleanup = initStationBrowser(vi.fn());
+    element("browser-now").click();
+    await vi.advanceTimersByTimeAsync(0);
+    const row = element("discovery-list").children[0];
+    if (!row) throw new Error("Missing discovery row");
+    row.getBoundingClientRect = () =>
+      element("now-playing-browser").classes.has("is-grid-view")
+        ? { left: 100, top: 200, width: 240, height: 360 }
+        : { left: 0, top: 100, width: 800, height: 96 };
+    element("station-view-toggle").children[0]?.click();
+    expect(row.animate).not.toHaveBeenCalled();
+    frames.at(-1)?.(0);
+    expect(row.animate).toHaveBeenCalledWith([{ transform: "translate(100px, 100px)" }, { transform: "none" }], {
+      duration: 280,
+      easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+    });
+    const previous = animations.at(-1);
+    element("station-view-toggle").children[1]?.click();
+    expect(previous?.cancel).toHaveBeenCalled();
+    frames.at(-1)?.(0);
+    expect(row.animate).toHaveBeenLastCalledWith([{ transform: "translate(-100px, -100px)" }, { transform: "none" }], {
+      duration: 280,
+      easing: "cubic-bezier(0.16, 1, 0.3, 1)",
+    });
+    previous?.finish();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(row.style.zIndex).toBe("10");
+    expect(element("discovery-list").children[0]).toBe(row);
+    const count = row.animate.mock.calls.length;
+    await vi.advanceTimersByTimeAsync(15_000);
+    expect(row.animate).toHaveBeenCalledTimes(count);
+    expect(frames).toHaveLength(2);
+    row.animate.mockClear();
+    element("station-view-toggle").children[0]?.click();
+    const obsoleteFrame = frames.at(-1);
+    element("station-view-toggle").children[1]?.click();
+    expect(cancelAnimationFrame).toHaveBeenCalled();
+    obsoleteFrame?.(0);
+    frames.at(-1)?.(0);
+    expect(row.animate).not.toHaveBeenCalled();
+    element("station-view-toggle").children[0]?.click();
+    const hiddenFrame = frames.at(-1);
+    element("browser-stations").click();
+    hiddenFrame?.(0);
+    expect(row.animate).not.toHaveBeenCalled();
+    expect(row.style.zIndex).toBe("");
+    window.matchMedia = vi.fn().mockReturnValue({ matches: true });
+    element("browser-now").click();
+    const frameCount = frames.length;
+    element("station-view-toggle").children[1]?.click();
+    expect(frames).toHaveLength(frameCount);
+    expect(row.animate).not.toHaveBeenCalled();
+  });
   it("replaces animations on rapid switches and keeps only the final panel interactive", async () => {
     window.matchMedia = vi.fn().mockReturnValue({ matches: false });
     cleanup = initStationBrowser(vi.fn());

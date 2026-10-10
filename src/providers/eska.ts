@@ -190,9 +190,14 @@ export const eskaProvider: Provider = {
 
     options?.signal?.throwIfAborted();
     if (options?.passive) {
+      const current = data.current?.name?.trim() ? toTrackInfo(data.current, 0) : null;
       return {
-        current: data.current?.name?.trim() ? toTrackInfo(data.current, 0) : null,
-        all: [],
+        current,
+        all: [
+          ...(data.pasts || []).map((track, index, pasts) => toTrackInfo(track, index - pasts.length)),
+          ...(current ? [current] : []),
+          ...(data.futures || []).map((track, index) => toTrackInfo(track, index + 1)),
+        ],
       };
     }
 

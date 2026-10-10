@@ -1,4 +1,5 @@
 .station-list-toolbar {
+  --toolbar-height: 50px;
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -6,6 +7,7 @@
 }
 
 .btn-catalog-trigger {
+  height: var(--toolbar-height);
   flex: 1;
   min-width: 0;
   padding: 0.65rem 1rem;
@@ -38,6 +40,7 @@
 }
 
 .view-toggle-group {
+  height: var(--toolbar-height);
   margin: 0;
   min-width: 0;
   position: relative;
@@ -84,6 +87,7 @@
   line-height: 0;
   min-width: 44px;
   min-height: 44px;
+  height: 100%;
   transition: color var(--k-tr);
 }
 
