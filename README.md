@@ -58,6 +58,8 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 - `tests/` - Vitest coverage and captured provider fixtures.
 - `scripts/ui-ux-qa.mjs` - Direct headed Playwright F1–F12 regressions, controlled native media, responsive/theme/shell checks and real browser zoom; uses an existing Playwright installation via `PLAYWRIGHT_MODULE` when it is not locally installed.
 - `scripts/inject-hashes.mjs` - Injects hashed build asset filenames into `dist/index.html`.
+- `scripts/targeted-ux-qa.mjs` - Direct headed Playwright checks for restored metadata, playlist/favorite actions, spatial view changes and responsive controls. Uses an existing installation via `PLAYWRIGHT_MODULE`; runs against the local dev server and writes screenshots to `/tmp/kajtek-ux-qa` by default.
+- `docs/targeted-ux-refinement.md` - Implementation decisions, focused QA results, limits and changed-file list for the targeted UX refinement.
 - `dist/` - Production build directory (generated assets).
 - `tsconfig.json` - Strict TypeScript configuration.
 - `tsconfig.test.json` - TypeScript configuration for source and test files.

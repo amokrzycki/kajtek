@@ -64,8 +64,9 @@
 }
 
 @media (max-width: 640px) {
-  .controls-row {
-    grid-template-columns: 1fr;
+  .controls-row,
+  .controls-row.is-ios {
+    grid-template-columns: minmax(0, 1fr);
     gap: 0;
     background: var(--k-bg-panel);
     border: 1px solid var(--k-border-2);
@@ -74,65 +75,30 @@
   }
 
   .controls-row .k-panel {
+    min-width: 0;
     background: none;
     border: none;
     box-shadow: none;
     border-radius: 0;
-    padding: 0.25rem 0.75rem;
+    padding: var(--k-s3);
   }
 
   .controls-row .k-panel + .k-panel {
     border-top: 1px dashed var(--k-border-3);
   }
 
-  .controls-row.is-ios {
-    grid-template-columns: auto 1fr;
-  }
-
-  .controls-row.is-ios .k-panel + .k-panel {
-    border-top: none;
-    padding-left: 0;
-  }
-
   .controls-row .k-head {
-    margin-bottom: 0.25rem;
+    margin-bottom: var(--k-s2);
   }
 
-  .controls-row #volume-panel .k-head,
-  .controls-row .k-field-hint {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    margin: 0;
+  .controls-row.is-ios #volume-panel .k-head {
+    display: flex;
   }
 
-  .controls-row .sleep-keys {
-    gap: 0.35rem;
-  }
-
-  .controls-row .sleep-key {
-    min-height: 44px;
-    flex-direction: row;
-    justify-content: center;
-    align-items: baseline;
-    gap: 0.25em;
-    padding: 0.35rem 0.2rem;
-  }
-
-  .controls-row .sleep-count-line {
-    padding-top: 0.4rem;
-  }
-}
-
-@media (max-width: 420px) {
-  .controls-row.is-ios {
-    grid-template-columns: 1fr;
-  }
-
-  .controls-row.is-ios .k-panel + .k-panel {
-    border-top: 1px dashed var(--k-border-3);
-    padding-left: 0.75rem;
+  .controls-row.is-ios .volume-row::after {
+    content: "Głośność zmienisz przyciskami urządzenia";
+    font-size: var(--k-fs-data);
+    color: var(--k-text-muted);
+    line-height: 1.5;
   }
 }

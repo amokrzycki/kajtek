@@ -21,7 +21,6 @@
 .pl-item.is-current {
   background: rgba(74, 222, 128, 0.12);
   border-radius: 5px;
-  padding: 7px 6px 7px 10px;
   margin: 3px 0;
   border-top: none;
 }
@@ -33,7 +32,6 @@
 .pl-item.is-break:not(.is-past) {
   background: rgba(245, 158, 11, 0.12);
   border-radius: 5px;
-  padding: 7px 6px 7px 10px;
   margin: 3px 0;
   border-top: none;
 }
@@ -127,16 +125,18 @@
 
 .pl-track {
   min-width: 0;
-  display: flex;
-  flex-direction: row;
-  gap: 12px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--k-s1);
 }
 
 .pl-tags {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   align-items: center;
   gap: 0.3rem;
-  margin-bottom: 1px;
 }
 
 .pl-tag {
@@ -171,6 +171,8 @@
 }
 
 .pl-line {
+  grid-column: 1;
+  grid-row: 1;
   display: flex;
   align-items: baseline;
   gap: 0.3rem;
@@ -182,7 +184,7 @@
   font-size: var(--k-fs-data);
   color: var(--k-disp-accent);
   white-space: nowrap;
-  flex-shrink: 1;
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -200,15 +202,19 @@
 }
 
 .pl-title {
-  font-size: var(--k-fs-body);
-  font-weight: 600;
+  font-size: var(--k-fs-data);
+  font-weight: 400;
   color: var(--k-disp-text);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex-shrink: 1;
+  flex: 0 1 auto;
   min-width: 0;
   transition: color var(--k-tr);
+}
+
+.pl-item.is-current .pl-title {
+  font-weight: 600;
 }
 
 .pl-item.is-past .pl-title {
@@ -220,7 +226,7 @@
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  font-size: var(--k-fs-body);
+  font-size: var(--k-fs-data);
   font-weight: 500;
   font-style: italic;
   color: var(--k-disp-dim);
@@ -316,8 +322,14 @@
   }
 
   .pl-track {
+    display: flex;
     flex-direction: column;
+    align-items: stretch;
     gap: 0.15rem;
+  }
+
+  .pl-tags {
+    order: 1;
   }
 
   .pl-time-sec {
@@ -325,13 +337,7 @@
   }
 
   .pl-line {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 1px;
-  }
-
-  .pl-sep {
-    display: none;
+    align-items: baseline;
   }
 
   .pl-artist {
@@ -352,11 +358,11 @@
   }
 
   .pl-actions .sc-star,
-  .pl-actions .fav-goto {
+  .pl-actions .fav-goto,
+  .pl-actions .fav-youtube {
     box-sizing: border-box;
     min-width: 44px;
     min-height: 44px;
-    margin-block: -7px;
     justify-content: center;
     align-items: center;
   }

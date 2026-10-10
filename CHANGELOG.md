@@ -6,6 +6,10 @@ Smart Listening łączy zasady słuchania w jednym miejscu: wybiera odpowiednią
 
 - W ustawieniach znajdziesz jedną konfigurację Smart Listening: stacje do przełączania, treści do pomijania i preferencje muzyczne. Przełącznik SMART na obudowie włącza całość. Pula stacji jest niezależna od ich widoczności i ulubionych; na początku przejmuje dotychczasowy wybór.
 - Wybierz „Preferuj”, „Neutralnie” lub „Unikaj” dla artysty albo konkretnego utworu. Niechciana muzyka wywołuje pominięcie; preferowana pomaga wybrać stację dopiero wtedy, gdy trzeba coś ominąć. Kajtek nie przeskakuje sam za ulubionymi utworami. Gwiazdki nadal służą zakładkom, a dotychczasowa czarna lista przechodzi do preferencji „Unikaj”.
+- Artysta i tytuł w playliście oraz ulubionych znów tworzą zwartą frazę bez sztucznych odstępów.
+- Po odświeżeniu strony zapamiętana stacja pobiera bieżącą treść i dostępną playlistę bez włączania dźwięku. Sprawdzanie, brak danych i błąd pobierania mają osobne komunikaty.
+- Wyrównano typografię playlisty i ulubionych, dodano wyszukiwanie zapisanych utworów w YouTube.
+- Uporządkowano przyciski przeglądania stacji i wyrównano wysokość katalogu z przełącznikiem widoku. Na telefonach wyłącznik czasowy ma własny rząd czterech równych klawiszy pod głośnością.
 - Reklamy zachowują dotychczasowe ustawienie. Wiadomości i inne rozpoznane przerwy możesz wybrać osobno w zasadach treści. Audycje pozostają do słuchania, a brak danych nie oznacza reklamy.
 - Powrót wymaga świeżych danych potwierdzających odpowiednią treść na pierwotnej stacji. Kajtek sprawdza ją ponownie i nie wraca w ciemno po trzech minutach ani po samym upływie czasu reklamy. Ręczna zmiana stacji, wyłączenie Smart Listening lub „Zostań tutaj” kończy objazd; pauza wstrzymuje automatyczne przełączanie.
 - Komunikat pominięcia jest widoczny także przy zamkniętej PLAYLIŚCIE. Przyciski „Przełącz teraz” i „Zostań mimo to” zachowują miejsce podczas odliczania; gdy brakuje odpowiedniej stacji, Kajtek pokazuje oczekiwanie.

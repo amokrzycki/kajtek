@@ -8,7 +8,16 @@ import { rmfProvider } from "./providers/rmf.js";
 import { trojkaProvider } from "./providers/trojka.js";
 import { getProvider } from "./providers.js";
 import { evaluateSmartListening, resetSmartListening } from "./smartListening.js";
-import { getLiveTrackUpdatedAt, intervals, notifyState, radioAudio, setLiveTrack, state } from "./state.js";
+import {
+  getLiveTrackUpdatedAt,
+  getMetadataState,
+  intervals,
+  notifyState,
+  radioAudio,
+  setLiveTrack,
+  setMetadataState,
+  state,
+} from "./state.js";
 import type { ProtectiveRoute } from "./statistics.js";
 import { bindListeningStatistics, listeningStatistics } from "./statisticsPlayback.js";
 import type { Station, TrackInfo } from "./types.js";
@@ -250,11 +259,11 @@ async function ensureStationMetadata(station: Station) {
   }
 }
 
-export async function fetchPlaylist(station: Station) {
+export async function fetchPlaylist(station: Station, signal?: AbortSignal) {
   if (!station?.apiBaseUrl || (station._consecutiveFailures || 0) > MAX_CONSECUTIVE_FAILURES) return null;
 
   try {
-    const parsed = await fetchMetadata(station);
+    const parsed = await fetchMetadata(station, signal ? { signal } : {});
 
     if (parsed) {
       station._consecutiveFailures = 0;
@@ -264,7 +273,7 @@ export async function fetchPlaylist(station: Station) {
     // Ignore network or parse failures
   }
 
-  station._consecutiveFailures = (station._consecutiveFailures || 0) + 1;
+  if (!signal?.aborted) station._consecutiveFailures = (station._consecutiveFailures || 0) + 1;
   return null;
 }
 
@@ -314,35 +323,64 @@ function checkRealtimeTrackState() {
 }
 
 let pendingStationSlideIn = false;
+let metadataRequest: AbortController | null = null;
+let restorePending = false;
 
-async function refreshTrackInfo() {
-  if (!state.playing || !state.station) return;
+function cancelMetadataRequest(): void {
+  metadataRequest?.abort();
+  metadataRequest = null;
+}
 
-  if (state.station.apiBaseUrl) {
-    const targetId = state.station.id;
-    const data = await fetchPlaylist(state.station);
-    if (state.station?.id !== targetId || !state.playing) return;
+export async function restoreStationMetadata(): Promise<void> {
+  if (!state.station || state.playing) return;
+  restorePending = true;
+  setMetadataState(state.station.apiBaseUrl ? "loading" : "unsupported");
+  notifyState();
+  if (!document.hidden) await refreshTrackInfo(true);
+}
 
-    if (data?.current) {
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && restorePending) cancelMetadataRequest();
+  else if (restorePending) void restoreStationMetadata();
+});
+window.addEventListener("pagehide", cancelMetadataRequest);
+window.addEventListener("pageshow", () => {
+  if (restorePending) void restoreStationMetadata();
+});
+
+async function refreshTrackInfo(passive = false) {
+  if ((!passive && !state.playing) || !state.station || metadataRequest) return;
+  const station = state.station;
+  const controller = new AbortController();
+  metadataRequest = controller;
+
+  if (station.apiBaseUrl) {
+    const data = await (passive
+      ? fetchMetadata(station, { passive: true, signal: controller.signal }).catch(() => null)
+      : fetchPlaylist(station, controller.signal));
+    if (metadataRequest !== controller || controller.signal.aborted || state.station !== station) return;
+    setMetadataState(data?.current ? "ready" : data ? "unavailable" : "failed");
+
+    if (data) {
       state.history = data.all || [];
       setLiveTrack(data.current, data.observedAt ?? Date.now());
-      checkRealtimeTrackState();
-      updateNowPlayingTrack(state.liveTrack);
-      updateAlbumArt(resolveAlbumCoverUrl(state.liveTrack, state.station), state.liveTrack);
-      const doFullSlide = pendingStationSlideIn;
-      pendingStationSlideIn = false;
-      updateHistoryUI(doFullSlide);
-      evaluateSmartListening();
+      if (!passive && state.playing) checkRealtimeTrackState();
+      if (!passive && state.playing && data.current) evaluateSmartListening();
     }
   } else {
+    setMetadataState("unsupported");
     setLiveTrack(null);
     state.history = [];
-    updateNowPlayingTrack(null);
-    updateAlbumArt(resolveAlbumCoverUrl(null, state.station), null);
-    const doFullSlide = pendingStationSlideIn;
-    pendingStationSlideIn = false;
-    updateHistoryUI(doFullSlide);
   }
+  if (metadataRequest !== controller) return;
+  metadataRequest = null;
+  if (passive) restorePending = false;
+  updateNowPlayingTrack(state.liveTrack);
+  updateAlbumArt(resolveAlbumCoverUrl(state.liveTrack, state.station), state.liveTrack);
+  setHistoryLoadingState(false);
+  const doFullSlide = pendingStationSlideIn;
+  pendingStationSlideIn = false;
+  updateHistoryUI(doFullSlide);
 }
 
 function stopTrackRotation() {
@@ -366,6 +404,8 @@ export function currentTrack(): TrackInfo | null {
 }
 
 export function selectStation(s: Station, protection: ProtectiveRoute | null = null, smart = false) {
+  restorePending = false;
+  cancelMetadataRequest();
   if (!smart) resetSmartListening();
   listeningStatistics.suspend(
     radioAudio.currentTime,
@@ -380,6 +420,7 @@ export function selectStation(s: Station, protection: ProtectiveRoute | null = n
   delete s._apiFailed;
   state.playing = true;
   state.history = [];
+  setMetadataState(s.apiBaseUrl ? "loading" : "unsupported");
   setLiveTrack(null);
   pendingStationSlideIn = true;
   failoverTimestamps = [];
@@ -397,6 +438,8 @@ export function selectStation(s: Station, protection: ProtectiveRoute | null = n
 
 export function togglePlay() {
   if (!state.station) return;
+  restorePending = false;
+  cancelMetadataRequest();
   state.playing = !state.playing;
 
   if (state.playing) {
@@ -413,6 +456,7 @@ export function togglePlay() {
     );
     radioAudio.pause();
     stopTrackRotation();
+    if (getMetadataState() === "loading") void restoreStationMetadata();
   }
 
   notifyState();

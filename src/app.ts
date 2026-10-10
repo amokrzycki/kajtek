@@ -2,7 +2,7 @@ import { getAllKnownStations, getOrderedStations } from "./catalog.js";
 import { checkForNewChangelog, latestChangelog } from "./changelog.js";
 import { STORAGE_KEYS } from "./consts.js";
 import { setSleepTimer, setSmartListeningEnabled, toggleFav, toggleMute, updateVolume } from "./controls.js";
-import { currentTrack, selectStation, togglePlay } from "./player.js";
+import { currentTrack, restoreStationMetadata, selectStation, togglePlay } from "./player.js";
 import {
   cancelSmartReturn,
   initSmartListening,
@@ -217,6 +217,7 @@ function init() {
   subscribeState(refresh);
   initStationBrowser(selectRememberedStation);
   initSmartListening();
+  void restoreStationMetadata();
   refresh();
 
   const newEntries = checkForNewChangelog();

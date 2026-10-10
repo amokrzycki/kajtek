@@ -5,10 +5,11 @@ import { notifyState, state, subscribeState } from "../state.js";
 import { sharedSnapshots } from "../stationSnapshots.js";
 import type { Station } from "../types.js";
 import { setStoredString } from "../utils.js";
-import { createBrowserTransition } from "./browserTransition.js";
+import { createBrowserTransition, createLayoutTransition } from "./browserTransition.js";
 import { openCatalogModal } from "./catalog/modal.js";
 import { els } from "./elements.js";
 import { renderNowPlaying } from "./nowPlaying.js";
+import { cancelStationLayoutTransition } from "./stations.js";
 import { bindTabKeys } from "./tabs.js";
 
 export function initStationBrowser(onSelect: (station: Station) => void): () => void {
@@ -24,6 +25,8 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
   if (!stationsTab || !nowTab || !panel || !list || !status || !empty || !emptyText || !view || !panels)
     return () => undefined;
   const transition = createBrowserTransition(panels, [els.stationListContainer, panel]);
+  const discoveryLayout = createLayoutTransition(list, ":scope > li[data-id]");
+  let lastViewMode = state.viewMode;
   let active = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let stationKey = "";
@@ -59,6 +62,8 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
   const switchMode = (now: boolean) => {
     if (active === now) return;
     active = now;
+    cancelStationLayoutTransition();
+    discoveryLayout.cancel();
     stationsTab.setAttribute("aria-selected", String(!now));
     nowTab.setAttribute("aria-selected", String(now));
     stationsTab.classList.toggle("active", !now);
@@ -88,6 +93,8 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
   });
   const viewButtons = Array.from(view.querySelectorAll<HTMLButtonElement>(".btn-view-toggle"));
   const updateView = () => {
+    const play = active && lastViewMode !== state.viewMode ? discoveryLayout.capture() : null;
+    lastViewMode = state.viewMode;
     view.dataset.view = state.viewMode;
     els.stationListContainer.classList.toggle("is-grid-view", state.viewMode === "grid");
     panel.classList.toggle("is-grid-view", state.viewMode === "grid");
@@ -97,6 +104,7 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
       button.setAttribute("aria-pressed", String(selected));
       button.tabIndex = selected ? 0 : -1;
     });
+    play?.();
   };
   viewButtons.forEach((button, index) => {
     button.innerHTML = button.dataset.view === "list" ? ICONS.viewList : ICONS.viewGrid;
@@ -126,6 +134,8 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
   };
   const visibility = () => {
     transition.cancel();
+    cancelStationLayoutTransition();
+    discoveryLayout.cancel();
     stop();
     if (active && !document.hidden) {
       render();
@@ -141,6 +151,8 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
   return () => {
     active = false;
     transition.cancel();
+    cancelStationLayoutTransition();
+    discoveryLayout.cancel();
     stop();
     unsubscribe();
     unsubscribeSnapshots();

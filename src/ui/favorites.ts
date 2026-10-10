@@ -40,19 +40,26 @@ export function removeFavTrackByKey(key: string): void {
   notifyState();
 }
 
+export function youtubeSearchUrl(track: Pick<TrackInfo, "artist" | "title">): string {
+  const url = new URL("https://www.youtube.com/results");
+  url.searchParams.set("search_query", `${track.artist} ${track.title}`);
+  return url.href;
+}
+
 function favRowHtml(f: FavTrack): string {
   return `
     <span class="pl-time fav-time">${formatFavDateTime(f.timestamp)}</span>
     <span class="pl-dot fav-dot"></span>
     <div class="pl-track">
       <div class="pl-line">
-        <span class="pl-artist">${escapeHtml(f.artist)}</span>
+        <span class="pl-artist" title="${escapeHtml(f.artist)}">${escapeHtml(f.artist)}</span>
         <span class="pl-sep">·</span>
-        <span class="pl-title">${escapeHtml(f.title)}</span>
+        <span class="pl-title" title="${escapeHtml(f.title)}">${escapeHtml(f.title)}</span>
       </div>
       <span class="fav-station">${escapeHtml(f.stationTag)}</span>
     </div>
     <div class="pl-actions">
+      <a class="fav-youtube" href="${escapeHtml(youtubeSearchUrl(f))}" target="_blank" rel="noopener noreferrer" aria-label="Wyszukaj w YouTube: ${escapeHtml(f.artist)} – ${escapeHtml(f.title)}" title="Wyszukaj w YouTube">${ICONS.externalLink}</a>
       <button type="button" class="fav-goto" data-station-id="${escapeHtml(f.stationId)}" aria-label="Przejdź do stacji ${escapeHtml(f.stationTag)}">${ICONS.chevron}</button>
       <button type="button" class="sc-star fav-star on" data-key="${escapeHtml(f.key)}" aria-label="Usuń z ulubionych: ${escapeHtml(f.artist)} – ${escapeHtml(f.title)}">${ICONS.star(true)}</button>
     </div>
@@ -67,7 +74,12 @@ export function renderFavoritesUI(): void {
   const existing = new Map(children.map((row) => [row.dataset.favoriteId, row]));
   const focused = document.activeElement;
   const focusedIndex = children.findIndex((row) => row.contains(focused));
-  const action = focused instanceof HTMLElement && focused.classList.contains("fav-goto") ? ".fav-goto" : ".fav-star";
+  const action =
+    focused instanceof HTMLElement && focused.classList.contains("fav-goto")
+      ? ".fav-goto"
+      : focused instanceof HTMLElement && focused.classList.contains("fav-youtube")
+        ? ".fav-youtube"
+        : ".fav-star";
   const targets = state.favTracks.map((track) => ({ track, id: JSON.stringify([track.stationId, track.key]) }));
   const keys = new Set(targets.map(({ id }) => id));
   for (const row of children) if (!keys.has(row.dataset.favoriteId ?? "")) row.remove();
@@ -88,7 +100,7 @@ export function renderFavoritesUI(): void {
   });
   if (focusedIndex !== -1 && !list.contains(document.activeElement)) {
     const next = list.children[Math.min(focusedIndex, list.children.length - 1)];
-    (next?.querySelector<HTMLButtonElement>(action) ?? els.historyTabFavorites).focus();
+    (next?.querySelector<HTMLElement>(action) ?? els.historyTabFavorites).focus();
   }
 }
 

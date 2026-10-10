@@ -1,7 +1,7 @@
 import { TIMERS } from "../consts.js";
 import { ICONS } from "../icons.js";
 import { getSmartListeningConfig, musicPreference } from "../listeningPreferences.js";
-import { state } from "../state.js";
+import { getMetadataState, state } from "../state.js";
 import type { TrackInfo } from "../types.js";
 import { escapeHtml, formatDuration, getTrackKey } from "../utils.js";
 import { els } from "./elements.js";
@@ -35,6 +35,7 @@ export function triggerHistorySlideIn(): void {
 
 export function setHistoryLoadingState(loading: boolean): void {
   els.historyList.classList.toggle("is-loading", loading);
+  els.historyList.setAttribute("aria-busy", String(loading));
 }
 
 function formatPlTime(start: string | null | undefined): string {
@@ -77,9 +78,9 @@ function getTrackItemInnerHTML(t: TrackInfo, isCurrent: boolean, isNext: boolean
           : ""
       }
       <div class="pl-line">
-        <span class="pl-artist">${escapeHtml(t.artist)}</span>
+        <span class="pl-artist" title="${escapeHtml(t.artist)}">${escapeHtml(t.artist)}</span>
         <span class="pl-sep">·</span>
-        <span class="pl-title">${escapeHtml(t.title)}</span>
+        <span class="pl-title" title="${escapeHtml(t.title)}">${escapeHtml(t.title)}</span>
       </div>
     </div>
     <div class="pl-actions">
@@ -261,7 +262,12 @@ export function updateHistoryUI(animateSlideIn = false): void {
     els.historyEmpty.textContent =
       "Ta stacja nie udostępnia playlisty. Ulubione utwory są dostępne w sąsiedniej zakładce.";
   } else {
-    els.historyEmpty.textContent = "Brak aktualnej playlisty tej stacji.";
+    els.historyEmpty.textContent =
+      getMetadataState() === "loading"
+        ? "Sprawdzanie playlisty…"
+        : getMetadataState() === "failed"
+          ? "Nie udało się pobrać playlisty. Spróbuj ponownie, włączając odtwarzanie."
+          : "Brak aktualnej playlisty tej stacji.";
   }
   if (clearTimer) {
     window.clearTimeout(clearTimer);
@@ -289,6 +295,7 @@ export function updateHistoryUI(animateSlideIn = false): void {
     } else {
       clearHistoryContent();
     }
+    setHistoryLoadingState(getMetadataState() === "loading");
     return;
   }
 

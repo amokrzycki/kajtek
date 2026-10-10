@@ -1,10 +1,10 @@
 .sleep-keys {
-  display: flex;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(44px, 1fr));
+  gap: var(--k-s1);
 }
 
 .sleep-key {
-  flex: 1;
   padding: 0.55rem 0.2rem;
   display: flex;
   flex-direction: column;

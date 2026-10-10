@@ -33,6 +33,24 @@ beforeEach(() => {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("passive provider isolation", () => {
+  it("shares simultaneous passive transport without cancelling the other consumer", async () => {
+    let finish: (response: Response) => void = () => undefined;
+    fetchMock.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const controller = new AbortController();
+    const first = fetchMetadata(station, { passive: true, signal: controller.signal });
+    const second = fetchMetadata(station, { passive: true });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    controller.abort();
+    await expect(first).rejects.toMatchObject({ name: "AbortError" });
+    expect(fetchMock.mock.calls[0]?.[1]?.signal?.aborted).toBe(false);
+    finish(rest("Shared"));
+    expect((await second)?.current?.title).toBe("Shared");
+  });
   it.each(["network", "HTTP", "parse"])("does not mutate any station fields after %s failure", async (failure) => {
     if (failure === "network") fetchMock.mockRejectedValueOnce(new Error("offline"));
     if (failure === "HTTP") fetchMock.mockResolvedValueOnce(new Response("offline", { status: 503 }));
@@ -61,6 +79,27 @@ describe("passive provider isolation", () => {
       contentKind: "advertisement",
       contentEvidence: "explicit",
     });
+  });
+  it("returns the available ESKA REST playlist without creating session history", async () => {
+    const target = { ...station, id: "eska-rest-playlist" };
+    startEskaSession(target.id);
+    fetchMock.mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({
+          current: { artists: ["Current"], name: "Now" },
+          pasts: [{ artists: ["Past"], name: "Before" }],
+          futures: [{ artists: ["Next"], name: "After" }],
+        }),
+      ),
+    );
+    const result = await fetchMetadata(target, { passive: true });
+    expect(result?.all.map((track) => [track.artist, track.title, track.order])).toEqual([
+      ["Past", "Before", -1],
+      ["Current", "Now", 0],
+      ["Next", "After", 1],
+    ]);
+    fetchMock.mockResolvedValueOnce(rest("Active"));
+    expect((await eskaProvider.fetch?.(target))?.all.map((track) => track.title)).toEqual(["Active"]);
   });
   it("does not insert passively observed songs into the active ESKA session history", async () => {
     fetchMock.mockResolvedValueOnce(rest("A")).mockResolvedValueOnce(rest("Passive")).mockResolvedValueOnce(rest("B"));

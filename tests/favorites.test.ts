@@ -40,7 +40,7 @@ vi.mock("../src/utils.js", () => ({
   getTrackKey: vi.fn((track: TrackInfo) => `ts_${track.timestamp}`),
 }));
 
-import { isTrackFavorited, toggleFavTrack } from "../src/ui/favorites.js";
+import { isTrackFavorited, toggleFavTrack, youtubeSearchUrl } from "../src/ui/favorites.js";
 
 const track: TrackInfo = { artist: "Artist", title: "Song", timestamp: 123 };
 const stationA: Station = {
@@ -59,6 +59,14 @@ beforeEach(() => {
 });
 
 describe("favorite track identity", () => {
+  it("encodes saved Unicode and URL punctuation in a YouTube search", () => {
+    const saved = { artist: "Björk & Łąki / 東京", title: 'A? #B + "C" 🦊' };
+    const url = new URL(youtubeSearchUrl(saved));
+    expect(url.origin).toBe("https://www.youtube.com");
+    expect(url.pathname).toBe("/results");
+    expect(url.searchParams.get("search_query")).toBe(`${saved.artist} ${saved.title}`);
+    expect([...url.searchParams.keys()]).toEqual(["search_query"]);
+  });
   it("keeps equal timestamps from different stations as separate favorites", () => {
     toggleFavTrack(track, stationA);
     toggleFavTrack(track, stationB);

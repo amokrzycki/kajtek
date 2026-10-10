@@ -1,3 +1,59 @@
+const layoutAnimations = new WeakMap<HTMLElement, Set<Animation>>();
+
+export function createLayoutTransition(container: HTMLElement, selector: string) {
+  const animations = layoutAnimations.get(container) ?? new Set<Animation>();
+  layoutAnimations.set(container, animations);
+  const cancel = () => {
+    animations.forEach((animation) => {
+      animation.cancel();
+    });
+    animations.clear();
+  };
+  const capture = () => {
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const first = new Map<string, DOMRect>();
+    if (!container.hidden && !reduced) {
+      container.querySelectorAll<HTMLElement>(selector).forEach((card) => {
+        if (card.dataset.id) first.set(card.dataset.id, card.getBoundingClientRect());
+      });
+    }
+    cancel();
+    return () => {
+      if (!first.size) return;
+      const cards = Array.from(container.querySelectorAll<HTMLElement>(selector)).map((card) => ({
+        card,
+        before: first.get(card.dataset.id ?? ""),
+        after: card.getBoundingClientRect(),
+      }));
+      cards.forEach(({ card, before, after }) => {
+        if (!before?.width || !before.height || !after.width || !after.height || !card.animate) return;
+        const x = before.left - after.left;
+        const y = before.top - after.top;
+        const scaleX = before.width / after.width;
+        const scaleY = before.height / after.height;
+        if (!x && !y && scaleX === 1 && scaleY === 1) return;
+        const animation = card.animate(
+          [
+            {
+              transform: `translate(${x}px, ${y}px) scale(${scaleX}, ${scaleY})`,
+              transformOrigin: "top left",
+              zIndex: 10,
+            },
+            { transform: "none", transformOrigin: "top left", zIndex: 10 },
+          ],
+          { duration: 280, easing: "cubic-bezier(0.16, 1, 0.3, 1)" },
+        );
+        animations.add(animation);
+        void animation.finished.then(
+          () => animations.delete(animation),
+          () => animations.delete(animation),
+        );
+      });
+    };
+  };
+  return { capture, cancel };
+}
+
 export function createBrowserTransition(
   container: HTMLElement,
   panels: readonly HTMLElement[],
