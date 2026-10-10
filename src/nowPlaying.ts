@@ -146,6 +146,10 @@ export class NowPlayingCache {
     return this.refreshPromise !== null;
   }
 
+  refreshingFor(stations: Station[]): boolean {
+    return stations.some((station) => this.pending.has(station.id));
+  }
+
   refresh(stations: Station[], active: ActiveMetadata | null = null): Promise<void> {
     if (this.refreshPromise) return this.refreshPromise;
     const enabled = new Set(stations.map((station) => station.id));
