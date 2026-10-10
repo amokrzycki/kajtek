@@ -11,11 +11,6 @@ export interface Station {
   apiBaseUrl?: string;
   coverUrl?: string;
   _streams?: string[];
-  _currentStreamIndex?: number;
-  _streamsFetched?: boolean;
-  _coverFetched?: boolean;
-  _consecutiveFailures?: number;
-  _apiFailed?: boolean;
 }
 
 export type StationPref = {
