@@ -100,9 +100,10 @@ export class NowPlayingCache {
           (now - active.updatedAt < NOW_PLAYING_STALE_MS || active.updatedAt >= (cached?.updatedAt ?? 0))
             ? active
             : null;
-        const updatedAt = live?.updatedAt ?? cached?.updatedAt ?? null;
+        const observation = live ?? cached;
+        const updatedAt = observation?.updatedAt ?? null;
         const expired = updatedAt !== null && now - updatedAt >= NOW_PLAYING_MAX_AGE_MS;
-        const timeline = live?.upcoming ?? cached?.upcoming ?? [];
+        const timeline = observation?.upcoming ?? [];
         const timedCurrent = timeline
           .filter(
             (item) =>
@@ -113,7 +114,7 @@ export class NowPlayingCache {
               item.endTimestamp * 1000 > now,
           )
           .sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))[0];
-        const observed = live?.track ?? cached?.track ?? null;
+        const observed = observation?.track ?? null;
         const ended = observed?.endTimestamp != null && observed.endTimestamp * 1000 <= now;
         const track = expired ? null : (timedCurrent ?? (ended ? null : observed));
         const kind = classifyContent(station, track);
@@ -130,7 +131,7 @@ export class NowPlayingCache {
           source: live ? "player" : "passive",
           upcoming: expired
             ? []
-            : timedUpcoming(live?.upcoming ?? cached?.upcoming ?? [], now).map((item) => {
+            : timedUpcoming(timeline, now).map((item) => {
                 const contentKind = classifyContent(station, item);
                 const contentEvidence =
                   item.contentEvidence ?? (contentKind === "advertisement" ? "inferred" : undefined);
