@@ -116,6 +116,7 @@ function updateMetadataFreshness(): void {
 // RMF sometimes returns its generic placeholder logo (empty) instead of a real cover; treat it as "no cover"
 const RMF_PLACEHOLDER_COVER = "/assets/images/logo200x200.png";
 const failedArtwork = new Set<string>();
+const MAX_FAILED_ARTWORK = 100;
 
 export function resolveAlbumCoverUrl(track: TrackInfo | null, station: Station | null): string {
   if (track?.isLiveBreak) {
@@ -157,6 +158,10 @@ export function updateAlbumArt(coverUrl: string | undefined, track: TrackInfo | 
       image.onerror = () => {
         if (!isCurrent()) return;
         failedArtwork.add(source);
+        if (failedArtwork.size > MAX_FAILED_ARTWORK) {
+          const first = failedArtwork.values().next().value;
+          if (first !== undefined) failedArtwork.delete(first);
+        }
         updateAlbumArt(coverUrl, state.liveTrack);
       };
       art.prepend(image);

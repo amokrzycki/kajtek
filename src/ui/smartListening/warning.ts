@@ -1,5 +1,6 @@
 import { getSmartListeningStatus } from "../../smartListening.js";
 import type { SmartReason } from "../../smartPolicy.js";
+import type { Station } from "../../types.js";
 import { escapeHtml } from "../../utils.js";
 import { els } from "../elements.js";
 
@@ -18,6 +19,52 @@ const DESTINATIONS: Record<string, string> = {
   safe: "zgodna z regułami",
   unknown: "brak świeżych danych",
 };
+
+type PlaybackLabel = "idle" | "connecting" | "playing" | "paused" | "buffering" | "failed";
+type ReturnWaitLabel = "metadata" | "unwanted" | "upcoming" | "confirming";
+
+function formatPlaybackState(state: PlaybackLabel): string {
+  switch (state) {
+    case "failed":
+      return "Nie udało się połączyć";
+    case "paused":
+    case "idle":
+      return "Odtwarzanie wstrzymane";
+    case "playing":
+      return "Gra";
+    case "buffering":
+      return "Buforowanie";
+    default:
+      return "Łączenie";
+  }
+}
+
+function formatReturnWait(wait: ReturnWaitLabel, origin: string): string {
+  switch (wait) {
+    case "metadata":
+      return `Czekamy na aktualne informacje z ${origin}, aby ocenić powrót.`;
+    case "unwanted":
+      return `Na ${origin} nadal trwa niechciana treść. Czekamy na odpowiedni moment powrotu.`;
+    case "upcoming":
+      return `Na ${origin} zbliża się niechciana treść. Czekamy na odpowiedni moment powrotu.`;
+    default:
+      return `Potwierdzamy odpowiednią treść na ${origin}. Wrócimy, gdy warunki powrotu będą spełnione.`;
+  }
+}
+
+function formatSkipStatus(
+  reason: string,
+  status: { phase: string; checking: boolean; candidate?: Station | null },
+  playback: string,
+): string {
+  if (status.phase === "warning") {
+    if (status.checking) return `${reason}. Sprawdzanie stacji.`;
+    return `${reason}. Za chwilę ${status.candidate?.name ?? ""}.`;
+  }
+  if (status.phase === "unavailable") return `${reason}. Brak odpowiedniej stacji.`;
+  return `${reason}. ${playback}: ${status.candidate?.name ?? ""}.`;
+}
+
 let contentKey = "";
 
 export function renderSmartListeningWarning(): void {
@@ -46,24 +93,8 @@ export function renderSmartListeningWarning(): void {
   const reason = `${REASONS[status.trigger.reason]} na ${status.triggerStation.name}`;
   const origin = escapeHtml(status.originStation.name);
   const candidate = status.candidate ? escapeHtml(status.candidate.name) : "";
-  const playback =
-    status.playback === "failed"
-      ? "Nie udało się połączyć"
-      : status.playback === "paused" || status.playback === "idle"
-        ? "Odtwarzanie wstrzymane"
-        : status.playback === "playing"
-          ? "Gra"
-          : status.playback === "buffering"
-            ? "Buforowanie"
-            : "Łączenie";
-  const returnText =
-    status.returnWait === "metadata"
-      ? `Czekamy na aktualne informacje z ${origin}, aby ocenić powrót.`
-      : status.returnWait === "unwanted"
-        ? `Na ${origin} nadal trwa niechciana treść. Czekamy na odpowiedni moment powrotu.`
-        : status.returnWait === "upcoming"
-          ? `Na ${origin} zbliża się niechciana treść. Czekamy na odpowiedni moment powrotu.`
-          : `Potwierdzamy odpowiednią treść na ${origin}. Wrócimy, gdy warunki powrotu będą spełnione.`;
+  const playback = formatPlaybackState(status.playback);
+  const returnText = formatReturnWait(status.returnWait, origin);
   const destination =
     status.phase === "detour"
       ? `${playback}: ${candidate}${status.playback === "failed" ? ". Ponów w odtwarzaczu." : ""}`
@@ -79,7 +110,7 @@ export function renderSmartListeningWarning(): void {
       ${status.phase === "warning" || status.phase === "unavailable" ? '<button type="button" class="bl-warn-link bl-warn-play-anyway">Zostań mimo to</button>' : ""}
       ${status.phase === "detour" || status.originStation.id !== status.triggerStation.id ? '<button type="button" class="bl-warn-link bl-warn-revert">Wróć teraz</button><button type="button" class="bl-warn-link bl-warn-cancel-return">Zostań tutaj</button>' : ""}
     </div>`;
-  els.skipStatus.textContent = `${reason}. ${status.phase === "warning" ? (status.checking ? "Sprawdzanie stacji." : `Za chwilę ${status.candidate?.name ?? ""}.`) : status.phase === "unavailable" ? "Brak odpowiedniej stacji." : `${playback}: ${status.candidate?.name ?? ""}.`}`;
+  els.skipStatus.textContent = formatSkipStatus(reason, status, playback);
   if (focusedAction)
     Array.from(container.querySelectorAll<HTMLButtonElement>("button"))
       .find((button) => button.className === focusedAction)

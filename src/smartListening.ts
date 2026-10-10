@@ -13,6 +13,17 @@ let started = false;
 let pendingManualSwitch = false;
 let originAdWindow: ProtectiveRoute["originAdWindow"];
 
+function computeReturnWait(evaluation: {
+  eligibility: string;
+  trigger?: { upcoming?: boolean } | null;
+}): "metadata" | "unwanted" | "upcoming" | "confirming" {
+  if (evaluation.eligibility === "fallback") return "metadata";
+  if (evaluation.eligibility === "rejected") {
+    return evaluation.trigger?.upcoming ? "upcoming" : "unwanted";
+  }
+  return "confirming";
+}
+
 export function getSmartListeningStatus() {
   const status = route.status;
   if (!status) return null;
@@ -23,14 +34,7 @@ export function getSmartListeningStatus() {
       : media;
   const origin = sharedSnapshots.snapshots([status.originStation])[0];
   const evaluation = evaluateSnapshot(origin, state.smartListening, Date.now());
-  const returnWait =
-    evaluation.eligibility === "fallback"
-      ? "metadata"
-      : evaluation.eligibility === "rejected"
-        ? evaluation.trigger?.upcoming
-          ? "upcoming"
-          : "unwanted"
-        : "confirming";
+  const returnWait = computeReturnWait(evaluation);
   return { ...status, playback, returnWait, checking: pendingManualSwitch };
 }
 

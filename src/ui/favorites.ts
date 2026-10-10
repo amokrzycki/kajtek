@@ -42,20 +42,20 @@ export function removeFavTrackByKey(key: string): void {
 
 function favRowHtml(f: FavTrack): string {
   return `
-      <span class="pl-time fav-time">${formatFavDateTime(f.timestamp)}</span>
-      <span class="pl-dot fav-dot"></span>
-      <div class="pl-track">
-        <div class="pl-line">
-          <span class="pl-artist">${escapeHtml(f.artist)}</span>
-          <span class="pl-sep">·</span>
-          <span class="pl-title">${escapeHtml(f.title)}</span>
-        </div>
-        <span class="fav-station">${escapeHtml(f.stationTag)}</span>
+    <span class="pl-time fav-time">${formatFavDateTime(f.timestamp)}</span>
+    <span class="pl-dot fav-dot"></span>
+    <div class="pl-track">
+      <div class="pl-line">
+        <span class="pl-artist">${escapeHtml(f.artist)}</span>
+        <span class="pl-sep">·</span>
+        <span class="pl-title">${escapeHtml(f.title)}</span>
       </div>
-      <div class="pl-actions">
-        <button type="button" class="fav-goto" data-station-id="${escapeHtml(f.stationId)}" aria-label="Przejdź do stacji ${escapeHtml(f.stationTag)}">${ICONS.chevron}</button>
-        <button type="button" class="sc-star fav-star on" data-key="${escapeHtml(f.key)}" aria-label="Usuń z ulubionych: ${escapeHtml(f.artist)} – ${escapeHtml(f.title)}">${ICONS.star(true)}</button>
-      </div>
+      <span class="fav-station">${escapeHtml(f.stationTag)}</span>
+    </div>
+    <div class="pl-actions">
+      <button type="button" class="fav-goto" data-station-id="${escapeHtml(f.stationId)}" aria-label="Przejdź do stacji ${escapeHtml(f.stationTag)}">${ICONS.chevron}</button>
+      <button type="button" class="sc-star fav-star on" data-key="${escapeHtml(f.key)}" aria-label="Usuń z ulubionych: ${escapeHtml(f.artist)} – ${escapeHtml(f.title)}">${ICONS.star(true)}</button>
+    </div>
   `;
 }
 
@@ -79,7 +79,7 @@ export function renderFavoritesUI(): void {
       row.dataset.key = track.key;
       row.dataset.favoriteId = id;
     }
-    const signature = JSON.stringify(track);
+    const signature = `${track.key}|${track.timestamp}|${track.artist}|${track.title}|${track.stationTag}|${track.stationId}`;
     if (row.dataset.signature !== signature) {
       row.innerHTML = favRowHtml(track);
       row.dataset.signature = signature;
