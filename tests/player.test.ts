@@ -19,6 +19,7 @@ interface FakeHlsInstance {
 
 const mocks = vi.hoisted(() => {
   class FakeAudio {
+    paused = true;
     currentTime = 0;
     playbackRate = 1;
     crossOrigin = "";
@@ -35,11 +36,14 @@ const mocks = vi.hoisted(() => {
       this.listeners.set(event, handlers);
     }
 
-    dispatch(event: string): void {
+    dispatch(event: string, queued = false): void {
+      if (event === "pause" && !queued) this.paused = true;
+      if (event === "playing") this.paused = false;
       for (const handler of this.listeners.get(event) ?? []) handler();
     }
 
     reset(): void {
+      this.paused = true;
       this.currentTime = 0;
       this.muted = false;
       this.volume = 1;
@@ -149,8 +153,11 @@ vi.mock("../src/smartListening.js", () => ({
   resetSmartListening: mocks.resetSmartListening,
 }));
 
-vi.mock("../src/catalog.js", () => ({ getOrderedStations: vi.fn(() => []) }));
-vi.mock("../src/controls.js", () => ({ applyAudioVolume: vi.fn() }));
+vi.mock("../src/catalog.js", () => ({ getOrderedStations: vi.fn(() => []), setStationFavorite: vi.fn() }));
+vi.mock("../src/controls.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/controls.js")>()),
+  applyAudioVolume: vi.fn(),
+}));
 vi.mock("../src/providers/eska.js", () => ({
   readZprTag: mocks.readZprTag,
   startEskaSession: mocks.startEskaSession,
@@ -185,6 +192,9 @@ vi.mock("../src/state.js", () => ({
   },
 }));
 vi.mock("../src/ui.js", () => ({
+  updateSleepUI: vi.fn(),
+  renderVolLadder: vi.fn(),
+  updateMuteAccessibility: vi.fn(),
   els: { npLiveDot: { classList: { contains: vi.fn(() => false) } } },
   resolveAlbumCoverUrl: vi.fn(() => ""),
   setHistoryLoadingState: mocks.setHistoryLoadingState,
@@ -257,6 +267,9 @@ beforeEach(async () => {
   mocks.hlsSupported = true;
   mocks.readZprTag.mockReturnValue(false);
   vi.mocked(mocks.eskaProvider.fetch).mockReset().mockResolvedValue(null);
+  state.sleepMin = null;
+  state.sleepSec = null;
+  intervals.sleep = null;
   state.station = null;
   mocks.metadataState = "idle";
   state.playing = false;
@@ -623,6 +636,188 @@ describe("playback state and cleanup", () => {
 
     expect(secondHls.startLoad).toHaveBeenCalledOnce();
     expect(state.playing).toBe(true);
+  });
+});
+
+describe("terminal polling cleanup", () => {
+  function selectPollingStation(overrides: Partial<Station> = {}): void {
+    player.selectStation(station({ provider: "eska", apiBaseUrl: "/playlist", ...overrides }));
+  }
+
+  async function interrupt(mode: string): Promise<void> {
+    if (mode === "sleep") {
+      const { setSleepTimer } = await import("../src/controls.js");
+      mocks.audio.pause.mockImplementation(() => mocks.audio.dispatch("pause"));
+      setSleepTimer(0);
+      await vi.advanceTimersByTimeAsync(1000);
+    } else if (mode === "rejection") {
+      mocks.audio.play.mockRejectedValueOnce(new Error("decoder failed"));
+      selectPollingStation();
+      await settleMetadata();
+    } else if (mode === "failover") {
+      for (let attempt = 0; attempt < 4; attempt++) mocks.audio.dispatch("error");
+    } else player.togglePlay();
+  }
+
+  it.each(["sleep", "rejection", "failover", "user pause"])(
+    "releases polling after %s, then resumes once and replaces polling on selection",
+    async (mode) => {
+      const setIntervalSpy = vi.spyOn(globalThis, "setInterval");
+      const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
+      selectPollingStation();
+      await settleMetadata();
+      const initial = intervals.track;
+      expect(initial).not.toBeNull();
+      await interrupt(mode);
+      expect(state.playing).toBe(false);
+      expect(intervals.track).toBeNull();
+      expect(clearIntervalSpy).toHaveBeenCalledWith(initial);
+      const pollCount = () => setIntervalSpy.mock.calls.filter(([, delay]) => delay === 5000).length;
+      const beforeResume = pollCount();
+      mocks.audio.dispatch("pause");
+      mocks.audio.dispatch("pause");
+      expect(intervals.track).toBeNull();
+      player.togglePlay();
+      await settleMetadata();
+      const resumed = intervals.track;
+      mocks.audio.dispatch("playing");
+      mocks.audio.dispatch("playing");
+      expect(state.playing).toBe(true);
+      expect(resumed).not.toBeNull();
+      expect(intervals.track).toBe(resumed);
+      expect(pollCount()).toBe(beforeResume + 1);
+      expect(mocks.resetSmartListening).toHaveBeenCalledTimes(mode === "rejection" ? 2 : 1);
+      selectPollingStation({ id: "after-interruption" });
+      await settleMetadata();
+      expect(intervals.track).not.toBeNull();
+      expect(intervals.track).not.toBe(resumed);
+      expect(clearIntervalSpy).toHaveBeenCalledWith(resumed);
+      expect(pollCount()).toBe(beforeResume + 2);
+    },
+  );
+
+  it("cleans up sleep expiration even if audio was already paused and emits no pause event", async () => {
+    selectPollingStation();
+    const { setSleepTimer } = await import("../src/controls.js");
+    setSleepTimer(0);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(intervals.track).toBeNull();
+  });
+
+  it("does not attach or play a pending HLS generation after sleep expires", async () => {
+    const { setSleepTimer } = await import("../src/controls.js");
+    selectPollingStation({ stream: "https://example.test/pending.m3u8" });
+    setSleepTimer(0);
+    vi.advanceTimersByTime(1000);
+    await settlePlayback();
+    expect(state.playing).toBe(false);
+    expect(intervals.track).toBeNull();
+    expect(mocks.audio.play).not.toHaveBeenCalled();
+    expect(mocks.hlsInstances).toHaveLength(0);
+  });
+
+  it("keeps one polling interval across rapid interruption/reselection and stale play rejection", async () => {
+    const setIntervalSpy = vi.spyOn(globalThis, "setInterval");
+    const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
+    let rejectOld: (reason: Error) => void = () => undefined;
+    mocks.audio.play.mockImplementationOnce(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectOld = reject;
+        }),
+    );
+    selectPollingStation();
+    player.togglePlay();
+    selectPollingStation({ id: "replacement" });
+    const current = intervals.track;
+    rejectOld(new Error("late rejection"));
+    await settleMetadata();
+    mocks.audio.dispatch("playing");
+    expect(state.playing).toBe(true);
+    expect(intervals.track).toBe(current);
+    const pollingHandles = setIntervalSpy.mock.results
+      .filter((_, index) => setIntervalSpy.mock.calls[index]?.[1] === 5000)
+      .map((result) => result.value);
+    expect(
+      pollingHandles.filter((handle) => !clearIntervalSpy.mock.calls.some(([cleared]) => cleared === handle)),
+    ).toEqual([current]);
+  });
+
+  it.each(["user pause", "sleep", "failover"])(
+    "ignores a delayed %s event while replacement HLS attachment is pending",
+    async (interruption) => {
+      const { setSleepTimer } = await import("../src/controls.js");
+      const setIntervalSpy = vi.spyOn(globalThis, "setInterval");
+      const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
+      selectPollingStation();
+      await settlePlayback();
+      mocks.audio.dispatch("playing");
+      if (interruption === "sleep") {
+        setSleepTimer(0);
+        vi.advanceTimersByTime(1000);
+      } else if (interruption === "failover") {
+        for (let attempt = 0; attempt < 4; attempt++) mocks.audio.dispatch("error");
+      } else player.togglePlay();
+      mocks.audio.paused = true;
+      selectPollingStation({ id: "replacement", stream: "https://example.test/replacement.m3u8" });
+      const replacementPolling = intervals.track;
+      const previousPlayCalls = mocks.audio.play.mock.calls.length;
+      mocks.audio.dispatch("pause", true);
+      mocks.audio.dispatch("pause", true);
+      expect(state.playing).toBe(true);
+      expect(intervals.track).toBe(replacementPolling);
+      await settlePlayback();
+      expect(mocks.hlsInstances).toHaveLength(1);
+      expect(mocks.audio.play.mock.calls.length).toBe(previousPlayCalls + 1);
+      mocks.audio.dispatch("playing");
+      expect(intervals.track).toBe(replacementPolling);
+      const pollingHandles = setIntervalSpy.mock.results
+        .filter((_, index) => setIntervalSpy.mock.calls[index]?.[1] === 5000)
+        .map((result) => result.value);
+      expect(
+        pollingHandles.filter((handle) => !clearIntervalSpy.mock.calls.some(([cleared]) => cleared === handle)),
+      ).toEqual([replacementPolling]);
+    },
+  );
+
+  it("still cancels a pending replacement HLS request on an explicit user pause", async () => {
+    selectPollingStation({ stream: "https://example.test/replacement.m3u8" });
+    mocks.audio.dispatch("pause", true);
+    expect(state.playing).toBe(true);
+    player.togglePlay();
+    mocks.audio.dispatch("pause", true);
+    await settlePlayback();
+    expect(state.playing).toBe(false);
+    expect(intervals.track).toBeNull();
+    expect(mocks.hlsInstances).toHaveLength(0);
+    expect(mocks.audio.play).not.toHaveBeenCalled();
+  });
+
+  it("keeps only the latest native HLS source through reselection and delayed pause", async () => {
+    mocks.hlsSupported = false;
+    selectPollingStation({ id: "first-hls", stream: "https://example.test/first.m3u8" });
+    selectPollingStation({ id: "second-hls", stream: "https://example.test/second.m3u8" });
+    const current = intervals.track;
+    mocks.audio.dispatch("pause", true);
+    await settlePlayback();
+    expect(state.station?.id).toBe("second-hls");
+    expect(state.playing).toBe(true);
+    expect(mocks.hlsInstances).toHaveLength(0);
+    expect(mocks.audio.src).toBe("https://example.test/second.m3u8");
+    expect(mocks.audio.play).toHaveBeenCalledOnce();
+    expect(intervals.track).toBe(current);
+  });
+
+  it("ignores a queued source-replacement pause event once the new audio is playing", async () => {
+    selectPollingStation();
+    selectPollingStation({ id: "replacement" });
+    await settleMetadata();
+    mocks.audio.dispatch("playing");
+    const current = intervals.track;
+    // Deliver the queued event with the current media state, rather than a new pause.
+    mocks.audio.dispatch("pause", true);
+    expect(state.playing).toBe(true);
+    expect(intervals.track).toBe(current);
   });
 });
 

@@ -7,7 +7,7 @@ import {
   updateSmartListeningConfig,
 } from "../../listeningPreferences.js";
 import { notifyState, setTheme, state } from "../../state.js";
-import { getStoredString } from "../../utils.js";
+import { getStoredString, setStoredString } from "../../utils.js";
 import { bindModalDismiss, closeModal, openModal } from "../modal.js";
 import { openSmartListeningModal } from "../smartListening/modal.js";
 
@@ -131,6 +131,7 @@ function createModalElements(): void {
     const btn = (e.target as HTMLElement).closest<HTMLButtonElement>(".k-settings-swatch");
     if (!btn?.dataset.case) return;
     state.case = btn.dataset.case as CaseSlug;
+    setStoredString(STORAGE_KEYS.CASE, state.case);
     notifyState();
     syncCaseSwatches();
   });

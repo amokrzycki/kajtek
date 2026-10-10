@@ -12,6 +12,23 @@ export function persistFavTracks(): void {
   setStoredJSON(STORAGE_KEYS.FAV_TRACKS, state.favTracks);
 }
 
+function getStoredFavTracks(): FavTrack[] {
+  return getStoredJSON<unknown[]>(STORAGE_KEYS.FAV_TRACKS, [], Array.isArray).filter((value): value is FavTrack => {
+    if (!value || typeof value !== "object") return false;
+    const track = value as Partial<FavTrack>;
+    return (
+      typeof track.key === "string" &&
+      typeof track.artist === "string" &&
+      typeof track.title === "string" &&
+      typeof track.stationId === "string" &&
+      typeof track.stationTag === "string" &&
+      typeof track.timestamp === "number" &&
+      Number.isFinite(track.timestamp) &&
+      !Number.isNaN(new Date(track.timestamp).getTime())
+    );
+  });
+}
+
 const storedCase = getStoredString(STORAGE_KEYS.CASE);
 const storedTheme = getStoredString(STORAGE_KEYS.THEME);
 const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
@@ -30,7 +47,7 @@ export const state: AppState = {
   history: [],
   showHistory: false,
   historyTab: "program",
-  favTracks: getStoredJSON<FavTrack[]>(STORAGE_KEYS.FAV_TRACKS, [], Array.isArray),
+  favTracks: getStoredFavTracks(),
   viewMode: getStoredString(STORAGE_KEYS.VIEW_MODE) === "grid" ? "grid" : "list",
   version: typeof APP_VERSION !== "undefined" ? APP_VERSION : DEFAULT_VERSION,
   smartListening: getSmartListeningConfig(),

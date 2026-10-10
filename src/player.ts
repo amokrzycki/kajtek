@@ -37,6 +37,7 @@ bindListeningStatistics(radioAudio);
 let failoverTimestamps: number[] = [];
 let hlsInstance: Hls | null = null;
 let playbackRequestId = 0;
+let pendingHlsRequestId: number | null = null;
 
 function getCurrentStreamUrl(station: Station): string {
   const streams = station._streams || [station.stream];
@@ -56,7 +57,7 @@ const MAX_HLS_RECOVERY_ATTEMPTS = 3;
 
 async function attachHlsStream(url: string, requestId: number): Promise<void> {
   const { default: Hls } = await import("hls.js");
-  if (requestId !== playbackRequestId) return;
+  if (requestId !== playbackRequestId || !state.playing) return;
   if (!Hls.isSupported()) {
     // Real native HLS support (Safari/iOS) — MediaSource-based hls.js isn't needed there.
     radioAudio.src = url;
@@ -107,14 +108,19 @@ async function playStreamUrl(url: string | undefined): Promise<void> {
   destroyHls();
   radioAudio.crossOrigin = getProvider(state.station) === rmfProvider ? "use-credentials" : "anonymous";
   if (isHlsStream(url)) {
-    await attachHlsStream(url, requestId);
+    pendingHlsRequestId = requestId;
+    try {
+      await attachHlsStream(url, requestId);
+    } finally {
+      if (pendingHlsRequestId === requestId) pendingHlsRequestId = null;
+    }
   } else {
     radioAudio.src = url;
   }
-  if (requestId !== playbackRequestId) return;
+  if (requestId !== playbackRequestId || !state.playing) return;
   applyAudioVolume();
   radioAudio.play().catch((error: unknown) => {
-    if (requestId !== playbackRequestId) return;
+    if (requestId !== playbackRequestId || !state.playing) return;
     if (error instanceof DOMException && error.name === "AbortError") return;
     listeningStatistics.stop(
       radioAudio.currentTime,
@@ -123,6 +129,7 @@ async function playStreamUrl(url: string | undefined): Promise<void> {
       radioAudio.playbackRate,
     );
     state.playing = false;
+    stopTrackRotation();
     notifyState();
     setPlaybackStatus("Nie udało się włączyć stacji. Ponów lub wybierz inną.", "failed");
   });
@@ -145,6 +152,7 @@ function handleAudioFailover() {
     );
     // max 3 stream switches in 30s limit to avoid infinite retry loop during outage.
     state.playing = false;
+    stopTrackRotation();
     radioAudio.pause();
     updateNowPlayingTrack({
       artist: state.station.name,
@@ -193,9 +201,10 @@ radioAudio.addEventListener("playing", () => {
   setPlaybackStatus("Na żywo", "playing");
 });
 radioAudio.addEventListener("pause", () => {
+  if (!radioAudio.paused || (state.playing && pendingHlsRequestId === playbackRequestId)) return;
+  stopTrackRotation();
   if (state.playing) {
     state.playing = false;
-    stopTrackRotation();
     notifyState();
   }
   if (!els.npLiveDot.classList.contains("failed")) setPlaybackStatus("Pauza", "paused");
@@ -383,8 +392,8 @@ async function refreshTrackInfo(passive = false) {
   updateHistoryUI(doFullSlide);
 }
 
-function stopTrackRotation() {
-  if (intervals.track) clearInterval(intervals.track);
+export function stopTrackRotation() {
+  if (intervals.track !== null) clearInterval(intervals.track);
   intervals.track = null;
 }
 

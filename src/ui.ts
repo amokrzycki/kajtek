@@ -1,5 +1,4 @@
 import { getEnabledStations } from "./catalog.js";
-import { STORAGE_KEYS } from "./consts.js";
 import { isVolAnimating } from "./controls.js";
 import { ICONS } from "./icons.js";
 import { getSmartListeningConfig, musicPreference } from "./listeningPreferences.js";
@@ -11,7 +10,7 @@ import { applyHistoryTabVisibility, isTrackFavorited, renderFavoritesUI } from "
 import { setHistoryLoadingState, triggerHistorySlideIn, updateHistoryUI } from "./ui/history.js";
 import { renderSmartListeningWarning } from "./ui/smartListening/warning.js";
 import { renderStationList } from "./ui/stations.js";
-import { setStoredString, triggerFade } from "./utils.js";
+import { triggerFade } from "./utils.js";
 import { startVisualizer, stopVisualizer } from "./visualizer.js";
 
 const ART_V: Record<string, string> = {
@@ -330,5 +329,4 @@ function applyTheme(): void {
 
 function applyCase(): void {
   document.documentElement.dataset.case = state.case;
-  setStoredString(STORAGE_KEYS.CASE, state.case);
 }
