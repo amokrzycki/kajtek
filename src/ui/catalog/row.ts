@@ -16,10 +16,12 @@ function isPreviewing(id: string): boolean {
 
 function syncPreviewButton(btn: HTMLButtonElement): void {
   const on = isPreviewing(btn.dataset.id ?? "");
+  const action = on ? "Zatrzymaj podgląd" : "Posłuchaj";
+  btn.setAttribute("aria-label", `${action}: ${btn.dataset.stationName ?? ""}`);
   if (btn.firstChild && btn.classList.contains("on") === on) return;
   btn.classList.toggle("on", on);
   btn.setAttribute("aria-pressed", String(on));
-  btn.title = on ? "Zatrzymaj podgląd" : "Posłuchaj";
+  btn.title = action;
   btn.innerHTML = on ? ICONS.previewPause : ICONS.previewPlay;
 }
 
@@ -64,7 +66,7 @@ export function createStationRow(station: Station, opts: StationRowOpts, rerende
     </div>
 
     <div class="catalog-col-actions">
-      <button type="button" class="btn-preview" data-id="${escapeHtml(station.id)}" aria-pressed="false" aria-label="Posłuchaj: ${safeName}"></button>
+      <button type="button" class="btn-preview" data-id="${escapeHtml(station.id)}" data-station-name="${safeName}" aria-pressed="false" aria-label="Posłuchaj: ${safeName}"></button>
       ${
         opts.isCustom
           ? `<button type="button" class="btn-delete-custom" title="Usuń własną stację" aria-label="Usuń ${safeName}">${ICONS.trash}</button>

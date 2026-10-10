@@ -1,7 +1,7 @@
 import { ICONS } from "../../icons.js";
 
 export const CATALOG_MODAL_HTML = `
-    <div class="k-modal" role="dialog" aria-modal="true" aria-labelledby="catalog-modal-title">
+    <div class="k-modal k-catalog-modal" role="dialog" aria-modal="true" aria-labelledby="catalog-modal-title">
       <div class="k-modal-header">
         <div class="k-modal-title-group">
           <h2 id="catalog-modal-title" class="k-modal-title">Katalog stacji radiowych</h2>
@@ -12,6 +12,7 @@ export const CATALOG_MODAL_HTML = `
         <button type="button" id="catalog-modal-close" class="k-modal-close" aria-label="Zamknij">&times;</button>
       </div>
 
+      <div class="k-catalog-body">
       <div class="k-modal-toolbar">
         <div class="search-input-wrap">
           <span class="search-icon">${ICONS.search}</span>
@@ -28,7 +29,7 @@ export const CATALOG_MODAL_HTML = `
             <button type="button" id="catalog-custom-toggle-btn" class="btn-secondary" aria-expanded="false" aria-controls="catalog-custom-form-wrap">Dodaj własną stację</button>
             <button type="button" id="open-smart-listening-btn" class="btn-secondary">Smart Listening</button>
           </div>
-          <div id="catalog-custom-form-wrap" class="k-custom-form-wrap">
+          <div id="catalog-custom-form-wrap" class="k-custom-form-wrap" inert>
             <div class="k-custom-form-inner">
               <form id="catalog-custom-form" class="k-custom-form">
                 <div class="k-form-row">
@@ -54,8 +55,8 @@ export const CATALOG_MODAL_HTML = `
 
       <div class="catalog-tabbar" role="tablist" aria-label="Kategorie stacji">
         <button type="button" id="catalog-tab-all" class="catalog-tab active" role="tab" aria-selected="true" aria-controls="catalog-list-container" data-tab="all">WSZYSTKIE A–Z</button>
-        <button type="button" id="catalog-tab-local" class="catalog-tab" role="tab" aria-selected="false" aria-controls="catalog-list-container" data-tab="local">LOKALNE <span class="catalog-tab-count">0</span></button>
-        <button type="button" id="catalog-tab-custom" class="catalog-tab" role="tab" aria-selected="false" aria-controls="catalog-list-container" data-tab="custom">WŁASNE <span class="catalog-tab-count">0</span></button>
+        <button type="button" id="catalog-tab-local" class="catalog-tab" role="tab" aria-selected="false" aria-controls="catalog-list-container" tabindex="-1" data-tab="local">LOKALNE <span class="catalog-tab-count">0</span></button>
+        <button type="button" id="catalog-tab-custom" class="catalog-tab" role="tab" aria-selected="false" aria-controls="catalog-list-container" tabindex="-1" data-tab="custom">WŁASNE <span class="catalog-tab-count">0</span></button>
       </div>
 
       <div id="catalog-network-chips" class="catalog-chips" role="group" aria-label="Filtr sieci nadawców"></div>
@@ -64,6 +65,7 @@ export const CATALOG_MODAL_HTML = `
 
       <div id="catalog-error-banner" class="k-modal-error" role="status"><div class="k-error-clip"><div class="k-error-msg"></div></div></div>
 
-      <div id="catalog-list-container" class="k-modal-list" role="tabpanel" aria-labelledby="catalog-tab-all"></div>
+      <div id="catalog-list-container" class="k-modal-list" role="tabpanel" tabindex="0" aria-labelledby="catalog-tab-all"></div>
+      </div>
     </div>
   `;

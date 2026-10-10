@@ -54,6 +54,16 @@
   transform: none;
 }
 
+.k-catalog-modal {
+  max-height: min(85dvh, 100%);
+}
+
+.k-catalog-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 .k-modal-header {
   padding: 1rem;
   border-bottom: 1px solid var(--k-border);
@@ -61,6 +71,10 @@
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+}
+
+.k-catalog-modal > .k-modal-header {
+  flex-shrink: 0;
 }
 
 .k-modal-title {
@@ -85,6 +99,9 @@
   cursor: pointer;
   padding: 0 0.5rem;
   line-height: 1;
+  min-width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -264,6 +281,10 @@
 
 .k-modal-list.is-switching {
   opacity: 0;
+}
+
+.k-catalog-body > .k-modal-list {
+  overflow: visible;
 }
 
 /* ——— tabs (catalog, blacklist) ——— */

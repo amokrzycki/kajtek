@@ -42,21 +42,19 @@ export function removeFavTrackByKey(key: string): void {
 
 function favRowHtml(f: FavTrack): string {
   return `
-    <div class="pl-item fav-item" data-key="${escapeHtml(f.key)}">
-      <span class="pl-time fav-time">${formatFavDateTime(f.timestamp)}</span>
-      <span class="pl-dot fav-dot"></span>
-      <div class="pl-track">
-        <div class="pl-line">
-          <span class="pl-artist">${escapeHtml(f.artist)}</span>
-          <span class="pl-sep">·</span>
-          <span class="pl-title">${escapeHtml(f.title)}</span>
-        </div>
-        <span class="fav-station">${escapeHtml(f.stationTag)}</span>
+    <span class="pl-time fav-time">${formatFavDateTime(f.timestamp)}</span>
+    <span class="pl-dot fav-dot"></span>
+    <div class="pl-track">
+      <div class="pl-line">
+        <span class="pl-artist">${escapeHtml(f.artist)}</span>
+        <span class="pl-sep">·</span>
+        <span class="pl-title">${escapeHtml(f.title)}</span>
       </div>
-      <div class="pl-actions">
-        <button type="button" class="fav-goto" data-station-id="${escapeHtml(f.stationId)}" aria-label="Przejdź do stacji ${escapeHtml(f.stationTag)}">${ICONS.chevron}</button>
-        <button type="button" class="sc-star fav-star on" data-key="${escapeHtml(f.key)}" aria-label="Usuń z ulubionych: ${escapeHtml(f.artist)} – ${escapeHtml(f.title)}">${ICONS.star(true)}</button>
-      </div>
+      <span class="fav-station">${escapeHtml(f.stationTag)}</span>
+    </div>
+    <div class="pl-actions">
+      <button type="button" class="fav-goto" data-station-id="${escapeHtml(f.stationId)}" aria-label="Przejdź do stacji ${escapeHtml(f.stationTag)}">${ICONS.chevron}</button>
+      <button type="button" class="sc-star fav-star on" data-key="${escapeHtml(f.key)}" aria-label="Usuń z ulubionych: ${escapeHtml(f.artist)} – ${escapeHtml(f.title)}">${ICONS.star(true)}</button>
     </div>
   `;
 }
@@ -64,7 +62,34 @@ function favRowHtml(f: FavTrack): string {
 export function renderFavoritesUI(): void {
   els.favTabCount.textContent = String(state.favTracks.length);
   els.favoritesEmpty.style.display = state.favTracks.length ? "none" : "block";
-  els.favoritesList.innerHTML = state.favTracks.map(favRowHtml).join("");
+  const list = els.favoritesList;
+  const children = Array.from(list.children) as HTMLElement[];
+  const existing = new Map(children.map((row) => [row.dataset.favoriteId, row]));
+  const focused = document.activeElement;
+  const focusedIndex = children.findIndex((row) => row.contains(focused));
+  const action = focused instanceof HTMLElement && focused.classList.contains("fav-goto") ? ".fav-goto" : ".fav-star";
+  const targets = state.favTracks.map((track) => ({ track, id: JSON.stringify([track.stationId, track.key]) }));
+  const keys = new Set(targets.map(({ id }) => id));
+  for (const row of children) if (!keys.has(row.dataset.favoriteId ?? "")) row.remove();
+  targets.forEach(({ track, id }, index) => {
+    let row = existing.get(id);
+    if (!row) {
+      row = document.createElement("div");
+      row.className = "pl-item fav-item";
+      row.dataset.key = track.key;
+      row.dataset.favoriteId = id;
+    }
+    const signature = `${track.key}|${track.timestamp}|${track.artist}|${track.title}|${track.stationTag}|${track.stationId}`;
+    if (row.dataset.signature !== signature) {
+      row.innerHTML = favRowHtml(track);
+      row.dataset.signature = signature;
+    }
+    if (list.children[index] !== row) list.insertBefore(row, list.children[index] ?? null);
+  });
+  if (focusedIndex !== -1 && !list.contains(document.activeElement)) {
+    const next = list.children[Math.min(focusedIndex, list.children.length - 1)];
+    (next?.querySelector<HTMLButtonElement>(action) ?? els.historyTabFavorites).focus();
+  }
 }
 
 export function applyHistoryTabVisibility(): void {
@@ -73,6 +98,14 @@ export function applyHistoryTabVisibility(): void {
   els.historyTabFavorites.classList.toggle("active", !showProgram);
   els.historyTabProgram.setAttribute("aria-selected", String(showProgram));
   els.historyTabFavorites.setAttribute("aria-selected", String(!showProgram));
+  els.historyTabProgram.tabIndex = showProgram ? 0 : -1;
+  els.historyTabFavorites.tabIndex = showProgram ? -1 : 0;
   els.programView.classList.toggle("active", showProgram);
   els.favoritesView.classList.toggle("active", !showProgram);
+  els.programView.hidden = !showProgram;
+  els.favoritesView.hidden = showProgram;
+  els.programView.inert = !showProgram;
+  els.favoritesView.inert = showProgram;
+  els.programView.tabIndex = showProgram ? 0 : -1;
+  els.favoritesView.tabIndex = showProgram ? -1 : 0;
 }

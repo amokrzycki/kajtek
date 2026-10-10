@@ -47,6 +47,7 @@ Key architecture points:
 
 - **CHANGELOG.md**: user-facing, one `## <version>` section per release, matching `package.json` version. Update when shipping a user-visible change; the app parses this file to show new-version notices.
 - **Design system** (`styles/`, `DESIGN.md`) is locked/canon per `PRODUCT.md` — extend deliberately, don't genericize or replace the retro PRL visual language.
+- Read `UX_DECISIONS.md` before Impeccable critique, UI/UX design work, responsive redesign, accessibility remediation, or significant component-level visual changes. `PRODUCT.md` defines product goals and boundaries; `DESIGN.md` defines the visual system and primitives; `UX_DECISIONS.md` records rationale, approved tradeoffs, historical resolutions, and rejected alternatives. Reconsider accepted decisions with concrete evidence; reproduce historical findings against the current implementation.
 - Don't add a framework or new runtime dependency without strong justification — "ultra-lightweight, zero-framework" is a stated product principle.
 - CodeGraph index exists (`.codegraph/`) — agents with access should query it (`codegraph_explore` / `codegraph explore`) before grepping/reading files to locate symbols and call paths.
 - **Browser QA**: use Playwright directly only, never headless.

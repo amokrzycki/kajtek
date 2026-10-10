@@ -2,8 +2,9 @@ import { STORAGE_KEYS } from "../../consts.js";
 import { ICONS } from "../../icons.js";
 import { getStoredString } from "../../utils.js";
 import { bindModalDismiss, closeModal, openModal } from "../modal.js";
+import { openSmartListeningModal } from "../smartListening/modal.js";
 
-const FEATURES: { icon: string; title: string; desc: string }[] = [
+const FEATURES: { icon: string; title: string; desc: string; configurable?: boolean }[] = [
   {
     icon: ICONS.viewList,
     title: "1. Kliknij stację",
@@ -16,8 +17,9 @@ const FEATURES: { icon: string; title: string; desc: string }[] = [
   },
   {
     icon: ICONS.adSkip,
-    title: "Bonus: pomijanie reklam",
-    desc: "Kajtek sam przełącza stację na czas reklam. Wyłączysz to przełącznikiem na obudowie lub w Ustawieniach.",
+    title: "Smart Listening",
+    desc: "Smart Listening może na chwilę przełączyć radio, gdy rozpozna niechcianą treść. Wybierasz osobny zestaw stacji do przełączeń, niezależny od listy pod odtwarzaczem, oraz reklamy, wiadomości i inne przerwy do pomijania. Możesz też preferować lub unikać wykonawców i utworów. Powrót zależy od odpowiedniej treści na poprzedniej stacji i wystarczająco aktualnych informacji.",
+    configurable: true,
   },
   {
     icon: ICONS.radio,
@@ -32,19 +34,24 @@ export function shouldShowOnboarding(): boolean {
   return Object.values(STORAGE_KEYS).every((key) => getStoredString(key) === null);
 }
 
-function featureHtml(f: { icon: string; title: string; desc: string }): string {
+function featureHtml(f: { icon: string; title: string; desc: string; configurable?: boolean }): string {
   return `
     <div class="k-onboarding-item">
       <span class="k-onboarding-item-icon">${f.icon}</span>
       <div class="k-onboarding-item-text">
         <div class="k-onboarding-item-title">${f.title}</div>
         <div class="k-onboarding-item-desc">${f.desc}</div>
+        ${f.configurable ? '<button type="button" id="onboarding-smart-configure" class="btn-secondary k-onboarding-configure">Ustaw Smart Listening</button>' : ""}
       </div>
     </div>
   `;
 }
 
 export function openOnboardingModal(onChooseStation: () => void): void {
+  const restoreFocus =
+    document.activeElement instanceof HTMLElement && document.activeElement !== document.body
+      ? document.activeElement
+      : document.getElementById("help-btn");
   modalEl = document.createElement("div");
   modalEl.id = "onboarding-modal-overlay";
   modalEl.className = "k-modal-overlay";
@@ -74,6 +81,10 @@ export function openOnboardingModal(onChooseStation: () => void): void {
   bindModalDismiss(modalEl, close);
   modalEl.querySelector("#onboarding-modal-close")?.addEventListener("click", close);
   modalEl.querySelector("#onboarding-skip-btn")?.addEventListener("click", close);
+  modalEl.querySelector("#onboarding-smart-configure")?.addEventListener("click", () => {
+    close();
+    openSmartListeningModal(undefined, restoreFocus);
+  });
   modalEl.querySelector("#onboarding-choose-stations-btn")?.addEventListener("click", () => {
     close();
     onChooseStation();

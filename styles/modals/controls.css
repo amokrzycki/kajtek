@@ -54,7 +54,11 @@
   font-size: var(--k-fs-data);
   font-family: var(--k-font-mono);
   cursor: pointer;
-  transition: border-color var(--k-tr);
+  box-shadow: var(--k-sh-btn);
+  transition:
+    border-color var(--k-tr),
+    box-shadow var(--k-tr-fast),
+    transform var(--k-tr-fast);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -68,17 +72,28 @@
   background: var(--k-accent);
   border: 1px solid var(--k-case-edge);
   border-radius: var(--k-rb);
-  color: #fff;
+  color: var(--k-primary-ink, #ffffff);
   font-family: var(--k-font-mono);
   font-size: var(--k-fs-body);
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--k-tr);
+  box-shadow: var(--k-sh-btn);
+  transition:
+    background var(--k-tr),
+    border-color var(--k-tr),
+    box-shadow var(--k-tr-fast),
+    transform var(--k-tr-fast);
+}
+
+.btn-secondary:active,
+.btn-primary:active {
+  box-shadow: var(--k-sh-inset);
+  transform: translateY(1px);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .btn-primary:hover {
-    background: var(--k-accent-2);
+    border-color: var(--k-primary-ink, #ffffff);
   }
 }
 

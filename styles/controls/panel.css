@@ -65,10 +65,6 @@
 
 @media (max-width: 640px) {
   .controls-row {
-    position: sticky;
-    bottom: max(0.5rem, env(safe-area-inset-bottom));
-    z-index: 5;
-    order: 1;
     grid-template-columns: 1fr;
     gap: 0;
     background: var(--k-bg-panel);

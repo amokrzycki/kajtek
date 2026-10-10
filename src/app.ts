@@ -3,7 +3,6 @@ import { checkForNewChangelog, latestChangelog } from "./changelog.js";
 import { STORAGE_KEYS } from "./consts.js";
 import { setSleepTimer, setSmartListeningEnabled, toggleFav, toggleMute, updateVolume } from "./controls.js";
 import { currentTrack, selectStation, togglePlay } from "./player.js";
-import { genericProvider, getProvider } from "./providers.js";
 import {
   cancelSmartReturn,
   initSmartListening,
@@ -22,6 +21,7 @@ import { openShortcutsModal } from "./ui/shortcuts/modal.js";
 import { openSmartListeningModal } from "./ui/smartListening/modal.js";
 import { initStationBrowser } from "./ui/stationBrowser.js";
 import { initStatisticsUI } from "./ui/statistics.js";
+import { bindTabKeys } from "./ui/tabs.js";
 import {
   els,
   initVolumeControlUI,
@@ -117,9 +117,6 @@ function attachEvents() {
   els.smartListeningSwitch.addEventListener("click", () => setSmartListeningEnabled(!state.smartListening.enabled));
 
   els.historyToggleBtn.addEventListener("click", () => {
-    if (state.station && getProvider(state.station) === genericProvider) {
-      return;
-    }
     state.showHistory = !state.showHistory;
     if (state.showHistory) {
       triggerHistorySlideIn();
@@ -144,6 +141,7 @@ function attachEvents() {
     state.historyTab = "favorites";
     notifyState();
   });
+  bindTabKeys([els.historyTabProgram, els.historyTabFavorites]);
 
   els.historyList.addEventListener("click", (e: Event) => {
     const target = e.target as HTMLElement;

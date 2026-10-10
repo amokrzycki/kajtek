@@ -6,7 +6,7 @@ import { fetchMetadata, parseJsonFromRes } from "./metadata.js";
 import { readZprTag, startEskaSession } from "./providers/eska.js";
 import { rmfProvider } from "./providers/rmf.js";
 import { trojkaProvider } from "./providers/trojka.js";
-import { genericProvider, getProvider } from "./providers.js";
+import { getProvider } from "./providers.js";
 import { evaluateSmartListening, resetSmartListening } from "./smartListening.js";
 import { getLiveTrackUpdatedAt, intervals, notifyState, radioAudio, setLiveTrack, state } from "./state.js";
 import type { ProtectiveRoute } from "./statistics.js";
@@ -181,7 +181,7 @@ radioAudio.addEventListener("playing", () => {
     startTrackRotation();
     notifyState();
   }
-  setPlaybackStatus("Na żywo");
+  setPlaybackStatus("Na żywo", "playing");
 });
 radioAudio.addEventListener("pause", () => {
   if (state.playing) {
@@ -189,7 +189,7 @@ radioAudio.addEventListener("pause", () => {
     stopTrackRotation();
     notifyState();
   }
-  if (!els.npLiveDot.classList.contains("failed")) setPlaybackStatus("Pauza");
+  if (!els.npLiveDot.classList.contains("failed")) setPlaybackStatus("Pauza", "paused");
 });
 
 function navigateStation(direction: 1 | -1) {
@@ -376,9 +376,6 @@ export function selectStation(s: Station, protection: ProtectiveRoute | null = n
   listeningStatistics.route(protection, Date.now());
   listeningStatistics.selectStation(s);
   state.station = s;
-  if (getProvider(s) === genericProvider) {
-    state.showHistory = false;
-  }
   delete s._consecutiveFailures;
   delete s._apiFailed;
   state.playing = true;

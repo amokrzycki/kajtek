@@ -91,6 +91,11 @@
   margin-top: 2px;
 }
 
+.k-onboarding-configure {
+  margin-top: var(--k-s1);
+  min-height: 44px;
+}
+
 .k-onboarding-cta {
   width: 100%;
   display: flex;

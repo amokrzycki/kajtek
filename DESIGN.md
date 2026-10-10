@@ -97,7 +97,7 @@ components:
     rounded: "{rounded.sm}"
     padding: "0.45rem 0.9rem"
   button-primary-hover:
-    backgroundColor: "{colors.bakelite-red-bright}"
+    backgroundColor: "{colors.bakelite-red}"
   button-secondary:
     backgroundColor: "{colors.paper-bg-inset}"
     textColor: "{colors.ink}"
@@ -237,8 +237,8 @@ The detector found literal radii outside the three-step scale. They are the only
 
 ### Buttons
 - **Key button** (`.btn-key`, `.sleep-key`, `.play-btn`): raised bakelite-key shape (radius `--k-rb` or 20% for round knobs), `--k-sh-btn` at rest, `--k-sh-inset` + 1px downshift on press, accent-dim fill with accent border when toggled active.
-- **Primary** (`.btn-primary`): solid bakelite red, white text, hover shifts to the brighter red variant.
-- **Secondary** (`.btn-secondary`): inset-stone background, hairline border, border darkens on hover — quieter than primary, used for modal actions.
+- **Primary** (`.btn-primary`): solid shell accent with white text on red, blue and pink, and dark well ink on green, yellow and black (`--k-primary-ink`). Hover changes the edge rather than brightening the fill, preserving normal-text contrast. Rest and press use the shared raised/inset key shadows and 1px displacement.
+- **Secondary** (`.btn-secondary`): inset-stone background, hairline border, border darkens on hover — quieter than primary, used for modal actions. Uses the same raised/inset shadows and 1px press as other keys. Selected shell swatches also stay pushed in; selection retains a contrasting edge.
 - **Play button**: the deck's largest control — 68px, round-ish (20% radius), glows with the theme's accent color and `--k-glow` when playing.
 
 ### Station Card
@@ -275,6 +275,7 @@ The collapsible panel below the deck contains PLAYLISTA and favorites. `.history
 - **Header:** title in display font, close button as a bare oversized "×", optional "last updated" byline.
 - **Toolbar/tabs:** underline-style active tab (2px accent border-bottom), search + view-toggle controls in a shared toolbar row.
 - **Expandable forms** (custom station, music preference): animate via `grid-template-rows: 0fr → 1fr`, never `max-height` or `display` toggling.
+- **Catalog scrolling:** the header and close control remain outside one scrollable body containing search, management, tabs, filters and results. Results do not create a nested scrolling well. Closed custom forms are inert.
 
 ### Navigation (Header)
 Flat, no background — brand wordmark left, two icon-only round key-buttons right (dark-mode toggle with animated sun/moon swap, settings gear that spins 150° on open). Same raised-key shadow language as the rest of the app; the header is not a separate visual register.
@@ -302,6 +303,10 @@ Flat, no background — brand wordmark left, two icon-only round key-buttons rig
 - **Ponów** retries failed playback. **Smart Listening** names the single protective-listening configuration; the deck’s **SMART** switch controls its master state. **Preferuj**, **Neutralnie** and **Unikaj** describe explicit artist/track preferences; saved stars remain bookmarks.
 
 Smart Listening uses the incumbent modal, switch, form and paper-panel vocabulary. Keep its station pool, content policy and music preferences progressively disclosed inside one configuration. The protective status remains visible beside playback when PLAYLISTA is closed. Use the existing amber warning treatment for reasons, the existing text hierarchy for temporary/original station identity, and stable action buttons through countdown updates. A return status describes waiting for fresh suitable content; it must not imply that a timer alone proves a safe return.
+
+On compact screens, volume and timer controls follow the player in normal document flow so changing titles, expanded panels and keyboard focus cannot place playback behind a dock. The playlist panel remains available on every station; unavailable provider history is explained inside its own tab. A quiet last-known-content cue sits outside the track live region and remains independent of live audio status.
+
+Modal close controls retain the bare × glyph with a 44×44px target. Playback failure text uses the display's fixed amber foreground for legibility on every smoked-glass tint; the failure LED retains its red status treatment.
 
 ### Station discovery browser
 

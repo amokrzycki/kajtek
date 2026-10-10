@@ -7,6 +7,7 @@
   --k-sh-contact: 0 18px 30px -12px rgba(120, 40, 30, 0.45), 2px 4px 12px rgba(0, 0, 0, 0.13);
 
   --k-accent: #c4251b;
+  --k-primary-ink: #ffffff;
   --k-accent-2: #d83428;
   --k-accent-text: #a81c14;
   --k-accent-dim: rgba(196, 37, 27, 0.12);
@@ -27,6 +28,7 @@
   --k-sh-contact: 0 18px 30px -12px rgba(80, 100, 20, 0.45), 2px 4px 12px rgba(0, 0, 0, 0.13);
 
   --k-accent: #5f8c14;
+  --k-primary-ink: var(--k-disp-well);
   --k-accent-2: #6fa119;
   --k-accent-text: #46680c;
   --k-accent-dim: rgba(95, 140, 20, 0.14);
@@ -47,6 +49,7 @@
   --k-sh-contact: 0 18px 30px -12px rgba(140, 100, 15, 0.45), 2px 4px 12px rgba(0, 0, 0, 0.13);
 
   --k-accent: #b8790a;
+  --k-primary-ink: var(--k-disp-well);
   --k-accent-2: #d18d0e;
   --k-accent-text: #8a5504;
   --k-accent-dim: rgba(184, 121, 10, 0.14);
@@ -67,6 +70,7 @@
   --k-sh-contact: 0 18px 30px -12px rgba(35, 80, 130, 0.45), 2px 4px 12px rgba(0, 0, 0, 0.13);
 
   --k-accent: #1f6fb2;
+  --k-primary-ink: #ffffff;
   --k-accent-2: #2a83cc;
   --k-accent-text: #145a8f;
   --k-accent-dim: rgba(31, 111, 178, 0.13);
@@ -87,6 +91,7 @@
   --k-sh-contact: 0 18px 30px -12px rgba(150, 80, 100, 0.42), 2px 4px 12px rgba(0, 0, 0, 0.13);
 
   --k-accent: #c33e6b;
+  --k-primary-ink: #ffffff;
   --k-accent-2: #d9547f;
   --k-accent-text: #a32c56;
   --k-accent-dim: rgba(195, 62, 107, 0.13);
@@ -107,6 +112,7 @@
   --k-sh-contact: 0 18px 30px -12px rgba(20, 18, 16, 0.5), 2px 4px 12px rgba(0, 0, 0, 0.16);
 
   --k-accent: #a8862c;
+  --k-primary-ink: var(--k-disp-well);
   --k-accent-2: #c19a35;
   --k-accent-text: #7a6015;
   --k-accent-dim: rgba(168, 134, 44, 0.14);

@@ -255,6 +255,14 @@ function animateHistoryHeight(isPanelOpen: boolean, prevHeight: number): void {
 }
 
 export function updateHistoryUI(animateSlideIn = false): void {
+  if (!state.station) {
+    els.historyEmpty.textContent = "Playlista pojawi się po wybraniu stacji…";
+  } else if (!state.station.apiBaseUrl) {
+    els.historyEmpty.textContent =
+      "Ta stacja nie udostępnia playlisty. Ulubione utwory są dostępne w sąsiedniej zakładce.";
+  } else {
+    els.historyEmpty.textContent = "Brak aktualnej playlisty tej stacji.";
+  }
   if (clearTimer) {
     window.clearTimeout(clearTimer);
     clearTimer = undefined;

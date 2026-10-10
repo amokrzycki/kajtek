@@ -3,6 +3,7 @@ import type { Station } from "../../types.js";
 import { escapeHtml } from "../../utils.js";
 import { animateTabSwitch, bindModalDismiss, closeModal, openModal } from "../modal.js";
 import { openSmartListeningModal } from "../smartListening/modal.js";
+import { bindTabKeys } from "../tabs.js";
 import { handleCustomStationSubmit } from "./form.js";
 import { CATALOG_MODAL_HTML } from "./markup.js";
 import { formatDate, getErrorMessage, refreshCatalog } from "./refresh.js";
@@ -125,6 +126,7 @@ function createModalElements(): void {
     customToggleBtn.setAttribute("aria-expanded", String(showCustomForm));
     const formWrap = modalEl?.querySelector<HTMLElement>("#catalog-custom-form-wrap");
     formWrap?.classList.toggle("is-open", showCustomForm);
+    if (formWrap) formWrap.inert = !showCustomForm;
   });
 
   const customForm = modalEl.querySelector<HTMLFormElement>("#catalog-custom-form");
@@ -166,6 +168,7 @@ function createModalElements(): void {
         customToggleBtn?.setAttribute("aria-expanded", "false");
         const formWrap = modalEl?.querySelector<HTMLElement>("#catalog-custom-form-wrap");
         formWrap?.classList.remove("is-open");
+        if (formWrap) formWrap.inert = true;
         if (activeTab === "custom") renderModalBody();
         else setActiveTab("custom");
         modalEl?.querySelector<HTMLButtonElement>("#catalog-tab-custom")?.focus();
@@ -179,6 +182,7 @@ function createModalElements(): void {
     const tab = btn?.dataset.tab as CatalogTab | undefined;
     if (tab) setActiveTab(tab);
   });
+  bindTabKeys(Array.from(modalEl.querySelectorAll<HTMLButtonElement>(".catalog-tab")));
 
   const idxrail = modalEl.querySelector<HTMLElement>("#catalog-list-container");
   idxrail?.addEventListener("click", (e) => {
@@ -206,6 +210,7 @@ function setActiveTab(tab: CatalogTab): void {
     const isActive = btn.dataset.tab === tab;
     btn.classList.toggle("active", isActive);
     btn.setAttribute("aria-selected", String(isActive));
+    btn.tabIndex = isActive ? 0 : -1;
     if (isActive) activeBtnId = btn.id;
   });
   modalEl?.querySelector("#catalog-list-container")?.setAttribute("aria-labelledby", activeBtnId);
