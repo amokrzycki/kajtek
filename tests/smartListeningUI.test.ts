@@ -138,6 +138,7 @@ beforeEach(() => {
       },
     },
   });
+  vi.stubGlobal("HTMLElement", ElementStub);
   vi.stubGlobal("localStorage", { getItem: () => null });
   vi.stubGlobal("requestAnimationFrame", (callback: () => void) => callback());
 });
@@ -147,6 +148,24 @@ afterEach(() => {
 });
 
 describe("Smart Listening configuration", () => {
+  it("explains unified protection in help and restores the help trigger after configuration", async () => {
+    const trigger = activeElement;
+    const { openOnboardingModal } = await import("../src/ui/onboarding/modal.js");
+    const { closeSmartListeningModal } = await import("../src/ui/smartListening/modal.js");
+    openOnboardingModal(vi.fn());
+    const help = overlays[0];
+    if (!help) throw new Error("Expected onboarding");
+    expect(help.innerHTML).toContain("niezależny od listy pod odtwarzaczem");
+    expect(help.innerHTML).toContain("reklamy, wiadomości i inne przerwy");
+    expect(help.innerHTML).toContain("preferować lub unikać wykonawców i utworów");
+    expect(help.innerHTML).toContain("Powrót zależy");
+    activeElement = help.querySelector("#onboarding-smart-configure");
+    activeElement.fire("click");
+    expect(overlays).toHaveLength(2);
+    closeSmartListeningModal();
+    expect(mocks.close).toHaveBeenLastCalledWith(overlays[1], trigger);
+  });
+
   it("restores the Settings trigger after handing off to the unified modal", async () => {
     const trigger = activeElement;
     const { openSettingsModal } = await import("../src/ui/settings/modal.js");

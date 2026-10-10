@@ -15,6 +15,9 @@ Smart Listening łączy zasady słuchania w jednym miejscu: wybiera odpowiednią
 - Naprawiono automatyczny powrót do Trójki oraz ostrzeżenia Smart Listening, które po ręcznej zmianie stacji mogły dotyczyć poprzednio słuchanego utworu.
 - Ramówka i playlista Trójki odświeżają się teraz co 15 sekund, więc bieżący utwór i audycja pojawiają się szybciej.
 - Zaktualizowano politykę prywatności o Smart Listening, preferencje muzyczne i nowe liczniki statystyk.
+- Katalog pozostaje dostępny na małych ekranach i po powiększeniu strony, a głośność i wyłącznik nie zasłaniają odtwarzania. Ulubione utwory są dostępne także na własnych stacjach.
+- Poprawiono kontrast przycisków we wszystkich obudowach, obsługę zakładek klawiaturą, nazwy podglądu stacji i zachowanie fokusu w ulubionych. Komunikaty Smart Listening rozróżniają pauzę, łączenie i błąd; starsze informacje o treści mają osobne oznaczenie, a błędne okładki korzystają z zastępczej grafiki.
+- Pomoc wyjaśnia aktualne zasady Smart Listening i prowadzi do konfiguracji. Przyciski w oknach i wybór obudowy reagują jak pozostałe klawisze Kajtka.
 
 ## 0.13.0
 

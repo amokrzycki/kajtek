@@ -149,6 +149,7 @@
                 <div id="np-artist" class="np-artist">—</div>
                 <span id="np-title" class="np-title">—</span>
               </div>
+              <div id="np-metadata-state" class="np-metadata-state" hidden></div>
             </div>
             <div id="reel-right" class="tape-reel" aria-hidden="true"><div class="reel-hub"></div></div>
             <div class="np-tape-scale" aria-hidden="true">END · 100 · 50 · 0 · START</div>
@@ -220,6 +221,7 @@
                       role="tab"
                       aria-selected="false"
                       aria-controls="favorites-view"
+                      tabindex="-1"
                       data-history-tab="favorites">
                       ULUBIONE UTWORY<span id="fav-tab-count" class="fav-tab-count">0</span>
                     </button>
@@ -235,7 +237,13 @@
                   <div id="history-empty" class="history-empty">Playlista pojawi się po wybraniu stacji…</div>
                   <div id="history-list"></div>
                 </div>
-                <div id="favorites-view" class="history-view" role="tabpanel" aria-labelledby="history-tab-favorites">
+                <div
+                  id="favorites-view"
+                  class="history-view"
+                  role="tabpanel"
+                  aria-labelledby="history-tab-favorites"
+                  hidden
+                  inert>
                   <div id="favorites-empty" class="history-empty">
                     Brak ulubionych utworów — kliknij ★ przy utworze w zakładce PLAYLISTA
                   </div>

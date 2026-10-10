@@ -67,6 +67,17 @@ systemTheme.addEventListener("change", () => {
 export const radioAudio = new Audio();
 radioAudio.crossOrigin = "anonymous";
 
+export type PlaybackState = "idle" | "connecting" | "playing" | "paused" | "buffering" | "failed";
+let playbackState: PlaybackState = "idle";
+
+export function getPlaybackState(): PlaybackState {
+  return playbackState;
+}
+
+export function setPlaybackState(value: PlaybackState): void {
+  playbackState = value;
+}
+
 if ("mediaSession" in navigator) {
   radioAudio.addEventListener("play", () => {
     navigator.mediaSession.playbackState = "playing";

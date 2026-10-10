@@ -210,22 +210,6 @@
   min-height: 44px;
 }
 
-.k-smart-body .btn-primary,
-.k-smart-body .btn-secondary {
-  box-shadow: var(--k-sh-btn);
-  transition:
-    background var(--k-tr),
-    border-color var(--k-tr),
-    box-shadow var(--k-tr-fast),
-    transform var(--k-tr-fast);
-}
-
-.k-smart-body .btn-primary:active,
-.k-smart-body .btn-secondary:active {
-  box-shadow: var(--k-sh-inset);
-  transform: translateY(1px);
-}
-
 .k-smart-body :is(summary, button, select, input:not(.catalog-checkbox)):focus-visible {
   outline: 2px solid var(--k-focus);
   outline-offset: 2px;

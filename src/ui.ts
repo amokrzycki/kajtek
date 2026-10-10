@@ -3,9 +3,8 @@ import { STORAGE_KEYS } from "./consts.js";
 import { isVolAnimating } from "./controls.js";
 import { ICONS } from "./icons.js";
 import { getSmartListeningConfig, musicPreference } from "./listeningPreferences.js";
-import { classifyContent } from "./nowPlaying.js";
-import { genericProvider, getProvider } from "./providers.js";
-import { state } from "./state.js";
+import { classifyContent, NOW_PLAYING_STALE_MS } from "./nowPlaying.js";
+import { getLiveTrackUpdatedAt, type PlaybackState, setPlaybackState, state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import { els, initVolumeControlUI, initVU, renderVolLadder } from "./ui/elements.js";
 import { applyHistoryTabVisibility, isTrackFavorited, renderFavoritesUI } from "./ui/favorites.js";
@@ -37,6 +36,7 @@ export {
 export function startHistoryClock(): void {
   const tick = () => {
     els.historyClock.textContent = new Date().toLocaleTimeString("pl-PL");
+    updateMetadataFreshness();
   };
   tick();
   setInterval(tick, 1000);
@@ -59,12 +59,14 @@ export function updateSleepUI(): void {
   });
 }
 
-export function setPlaybackStatus(message: string, dotState?: "buffering" | "failed"): void {
+export function setPlaybackStatus(message: string, dotState: PlaybackState = "connecting"): void {
+  setPlaybackState(dotState);
   triggerFade(els.npStatus, message);
   els.npStatus.classList.toggle("failed", dotState === "failed");
   els.npRetry.hidden = dotState !== "failed";
   els.npLiveDot.classList.toggle("buffering", dotState === "buffering");
   els.npLiveDot.classList.toggle("failed", dotState === "failed");
+  renderSmartListeningWarning();
 }
 
 export function updateNowPlayingTrack(track: TrackInfo | null): void {
@@ -74,18 +76,14 @@ export function updateNowPlayingTrack(track: TrackInfo | null): void {
     ? `${track.artist ? `${track.artist} – ` : ""}${track.title} · ${state.station.name} · KAJTEK`
     : `${state.station.name} · KAJTEK`;
 
-  if (!track && state.station.apiBaseUrl) {
-    els.npTrackWrap.classList.remove("visible");
-    return;
-  }
-
   els.npTrackWrap.classList.add("visible");
 
   const artistText = track?.artist || state.station.name;
-  const titleText = track?.title || (state.station.apiBaseUrl ? "Audycja na żywo" : "brak informacji o utworze");
+  const titleText = track?.title || "brak informacji o treści";
 
   triggerFade(els.npArtist, artistText);
   triggerFade(els.npTitle, titleText);
+  updateMetadataFreshness();
 
   if ("mediaSession" in navigator) {
     const coverUrl = resolveAlbumCoverUrl(track, state.station);
@@ -101,8 +99,23 @@ export function updateNowPlayingTrack(track: TrackInfo | null): void {
   }
 }
 
+function updateMetadataFreshness(): void {
+  const track = state.liveTrack;
+  const observedAt = getLiveTrackUpdatedAt();
+  const stale =
+    track &&
+    (!observedAt ||
+      Date.now() - observedAt >= NOW_PLAYING_STALE_MS ||
+      track.isPredicted ||
+      (track.endTimestamp != null && track.endTimestamp * 1000 <= Date.now()));
+  const text = state.station && stale ? "Ostatnio znana treść · starsze dane" : "";
+  if (els.npMetadataState.textContent !== text) els.npMetadataState.textContent = text;
+  els.npMetadataState.hidden = !text;
+}
+
 // RMF sometimes returns its generic placeholder logo (empty) instead of a real cover; treat it as "no cover"
 const RMF_PLACEHOLDER_COVER = "/assets/images/logo200x200.png";
+const failedArtwork = new Set<string>();
 
 export function resolveAlbumCoverUrl(track: TrackInfo | null, station: Station | null): string {
   if (track?.isLiveBreak) {
@@ -116,40 +129,39 @@ export function resolveAlbumCoverUrl(track: TrackInfo | null, station: Station |
 
 export function updateAlbumArt(coverUrl: string | undefined, track: TrackInfo | null): void {
   const art = els.albumArt;
-  let img = art.querySelector<HTMLImageElement>(".album-art-img");
+  const img = art.querySelector<HTMLImageElement>(".album-art-img");
   const initial = art.querySelector<HTMLElement>(".album-art-initial");
   const label = art.querySelector<HTMLElement>(".album-art-label");
+  const source = [coverUrl, state.station?.coverUrl].find((url) => url?.trim() && !failedArtwork.has(url));
+  const stationId = state.station?.id ?? "";
 
-  if (coverUrl) {
-    if (!img) {
-      img = document.createElement("img");
-      img.className = "album-art-img";
-      img.alt = "";
-      img.setAttribute("aria-hidden", "true");
-      art.prepend(img);
-    }
-    if (img.dataset.src !== coverUrl) {
-      img.dataset.src = coverUrl;
-      img.style.opacity = "0";
-      img.onload = () => {
-        if (!img) return;
-        img.style.opacity = "1";
-      };
-      img.onerror = () => {
-        if (!img) return;
-        img.style.display = "none";
-      };
-      img.style.display = "";
-      img.src = coverUrl;
-    }
-    if (initial) initial.style.opacity = "0";
-    if (label) label.style.opacity = "0";
-  } else {
-    if (img) {
-      img.style.display = "none";
-    }
+  if (!source || img?.dataset.src !== source || img.dataset.stationId !== stationId) {
+    img?.remove();
     if (initial) initial.style.opacity = "";
     if (label) label.style.opacity = "";
+    if (source) {
+      const image = document.createElement("img");
+      image.className = "album-art-img";
+      image.alt = "";
+      image.setAttribute("aria-hidden", "true");
+      image.dataset.src = source;
+      image.dataset.stationId = stationId;
+      image.style.opacity = "0";
+      const isCurrent = () => art.querySelector(".album-art-img") === image && state.station?.id === stationId;
+      image.onload = () => {
+        if (!isCurrent()) return;
+        image.style.opacity = "1";
+        if (initial) initial.style.opacity = "0";
+        if (label) label.style.opacity = "0";
+      };
+      image.onerror = () => {
+        if (!isCurrent()) return;
+        failedArtwork.add(source);
+        updateAlbumArt(coverUrl, state.liveTrack);
+      };
+      art.prepend(image);
+      image.src = source;
+    }
   }
 
   if (track && state.station && classifyContent(state.station, track) === "track") {
@@ -218,19 +230,21 @@ export function updateUI(
     updateAlbumArt(resolveAlbumCoverUrl(currentTrack, state.station), currentTrack);
   } else {
     document.title = "KAJTEK";
-    setPlaybackStatus("Gotowy");
+    setPlaybackStatus("Gotowy", "idle");
     els.npShortRow.classList.add("hidden");
     els.npShort.textContent = "—";
     els.npStation.textContent = "wybierz stację";
     els.npStation.removeAttribute("title");
     els.npStation.classList.add("empty");
     els.npTrackWrap.classList.remove("visible");
+    els.npMetadataState.hidden = true;
     els.npLiveDot.classList.remove("on");
     els.albumArt.dataset.v = "0";
     const initial = els.albumArt.querySelector(".album-art-initial");
     const label = els.albumArt.querySelector(".album-art-label");
     if (initial) initial.textContent = "?";
     if (label) label.textContent = "— —";
+    updateAlbumArt(undefined, null);
     els.npFavStar.hidden = true;
     els.npBlockBtn.hidden = true;
   }
@@ -249,13 +263,6 @@ export function updateUI(
   updateSleepUI();
   els.smartListeningSwitch.setAttribute("aria-checked", String(state.smartListening.enabled));
 
-  const isGeneric = Boolean(state.station && getProvider(state.station) === genericProvider);
-  if (isGeneric && state.showHistory) {
-    state.showHistory = false;
-  }
-
-  els.historyToggleBtn.disabled = isGeneric;
-  els.historyToggleBtn.classList.toggle("disabled", isGeneric);
   els.historyToggleBtn.setAttribute("aria-expanded", String(state.showHistory));
   const willOpenHistory = state.showHistory;
   els.historyPanel.classList.toggle("open", willOpenHistory);

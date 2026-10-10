@@ -44,8 +44,8 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
   - `changelog.ts` - Parses `CHANGELOG.md` and detects unseen versions for the current user.
   - `controls.ts` - Volume, mute, favorites, and sleep timer control handling.
   - `visualizer.ts` - VU meter and audio visualization animation engine.
-  - `ui.ts` - Primary DOM rendering engine and album art resolver.
-  - `ui/` - UI subcomponents: `catalog/` (station browser & custom station form), `smartListening/modal.ts` (one configuration and current-track preference form), `smartListening/warning.ts` (protective-route status and actions), `settings/` (settings modal), `changelog/` (changelog modal), `shortcuts/` (keyboard shortcuts cheatsheet), `favorites.ts`, `history.ts`, `statistics.ts` (personal listening recap modal), `stations.ts`, `stationBrowser.ts` (browser mode and shared snapshot demand), `browserTransition.ts` (interruptible panel handoff), `nowPlaying.ts` (content entries), `modal.ts`, `elements.ts`.
+  - `ui.ts` - Primary DOM rendering engine, independent metadata freshness cue and guarded track/station artwork fallback.
+  - `ui/` - UI subcomponents: `catalog/` (station browser & custom station form), `smartListening/modal.ts` (one configuration and current-track preference form), `smartListening/warning.ts` (protective-route status and actions), `settings/` (settings modal), `changelog/` (changelog modal), `shortcuts/` (keyboard shortcuts cheatsheet), `favorites.ts`, `history.ts`, `statistics.ts` (personal listening recap modal), `stations.ts`, `stationBrowser.ts` (browser mode and shared snapshot demand), `browserTransition.ts` (interruptible panel handoff), `nowPlaying.ts` (content entries), `tabs.ts` (shared horizontal tab keyboard behavior), `modal.ts`, `elements.ts`.
   - `icons.ts` - SVG icon component definitions.
   - `utils.ts` - String decoding, timing helpers, and DOM fade triggers.
   - `md.d.ts` - Type declaration enabling `.md` file imports (used for `CHANGELOG.md`).
@@ -56,7 +56,7 @@ An ultra-lightweight retro-style web internet radio player inspired by the iconi
 - `styles/` - Retro design system and CSS stylesheet modules, including `stations/now-playing.css` for discovery entries, `statistics.css` for the personal recap and the legal-document layout, `modals/smart-listening.css` for Smart Listening configuration, and `history/smart-warning.css` for the incumbent protective status banner.
 - `public/` - Static assets and `/privacy` and `/legal` pages copied verbatim into the build; `appearance.js` restores their saved theme and case shell before rendering.
 - `tests/` - Vitest coverage and captured provider fixtures.
-- `scripts/smart-listening-qa.mjs` - Direct headed Playwright routing and UX checks; setup and evidence in `docs/smart-listening-verification.md`.
+- `scripts/ui-ux-qa.mjs` - Direct headed Playwright F1–F12 regressions, controlled native media, responsive/theme/shell checks and real browser zoom; uses an existing Playwright installation via `PLAYWRIGHT_MODULE` when it is not locally installed.
 - `scripts/inject-hashes.mjs` - Injects hashed build asset filenames into `dist/index.html`.
 - `dist/` - Production build directory (generated assets).
 - `tsconfig.json` - Strict TypeScript configuration.

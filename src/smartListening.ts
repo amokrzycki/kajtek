@@ -1,7 +1,8 @@
 import { getSmartStations, getStoredRmfCatalog } from "./catalog.js";
 import { selectStation } from "./player.js";
+import { evaluateSnapshot } from "./smartPolicy.js";
 import { type SmartRouteCommand, SmartRouteController, type SmartRouteInput } from "./smartRoute.js";
-import { notifyState, radioAudio, state, subscribeState } from "./state.js";
+import { getPlaybackState, notifyState, radioAudio, state, subscribeState } from "./state.js";
 import { sharedSnapshots } from "./stationSnapshots.js";
 import { createStatisticsOperationId, type ProtectiveRoute } from "./statistics.js";
 import { listeningStatistics } from "./statisticsPlayback.js";
@@ -9,12 +10,28 @@ import { listeningStatistics } from "./statisticsPlayback.js";
 const route = new SmartRouteController();
 let evaluating = false;
 let started = false;
-let replacementPlaying = false;
 let pendingManualSwitch = false;
 let originAdWindow: ProtectiveRoute["originAdWindow"];
 
 export function getSmartListeningStatus() {
-  return route.status ? { ...route.status, connected: replacementPlaying, checking: pendingManualSwitch } : null;
+  const status = route.status;
+  if (!status) return null;
+  const media = getPlaybackState();
+  const playback =
+    media === "playing" && (!state.playing || radioAudio.paused || radioAudio.ended || radioAudio.error)
+      ? "paused"
+      : media;
+  const origin = sharedSnapshots.snapshots([status.originStation])[0];
+  const evaluation = evaluateSnapshot(origin, state.smartListening, Date.now());
+  const returnWait =
+    evaluation.eligibility === "fallback"
+      ? "metadata"
+      : evaluation.eligibility === "rejected"
+        ? evaluation.trigger?.upcoming
+          ? "upcoming"
+          : "unwanted"
+        : "confirming";
+  return { ...status, playback, returnWait, checking: pendingManualSwitch };
 }
 
 function input(): SmartRouteInput {
@@ -45,7 +62,6 @@ function input(): SmartRouteInput {
 
 function execute(command: SmartRouteCommand | null): void {
   if (!command) return;
-  replacementPlaying = false;
   const track = command.trigger?.track;
   const isAd = command.trigger?.reason === "advertisement";
   const endsAt = isAd ? (track?.adEndsAt ?? (track?.endTimestamp ? track.endTimestamp * 1000 : undefined)) : undefined;
@@ -100,7 +116,6 @@ export function resetSmartListening(): void {
   pendingManualSwitch = false;
   route.reset();
   originAdWindow = undefined;
-  replacementPlaying = false;
 }
 export function switchSmartNow(): void {
   if (route.status?.phase !== "warning") return;
@@ -144,7 +159,6 @@ export function initSmartListening(): void {
   subscribeState(evaluateSmartListening);
   sharedSnapshots.subscribe(evaluateSmartListening);
   radioAudio.addEventListener("playing", () => {
-    replacementPlaying = true;
     evaluateSmartListening();
     notifyState();
   });

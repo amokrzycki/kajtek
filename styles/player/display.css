@@ -193,7 +193,7 @@
 }
 
 .np-status.failed {
-  color: var(--k-vu-led-red);
+  color: var(--k-disp-accent);
 }
 
 .np-track {
@@ -226,6 +226,12 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
   overflow-wrap: anywhere;
   display: block;
+}
+
+.np-metadata-state {
+  margin-top: 0.4rem;
+  font-size: var(--k-fs-data);
+  color: var(--k-disp-text-2);
 }
 
 .fade-in {

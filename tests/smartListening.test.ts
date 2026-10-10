@@ -1,6 +1,7 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import type { SmartListeningConfig } from "../src/listeningPreferences.js";
-import type { Station } from "../src/types.js";
+import type { PolicySnapshot } from "../src/smartPolicy.js";
+import type { Station, TrackInfo } from "../src/types.js";
 
 const data = vi.hoisted(() => {
   const origin = { id: "origin", name: "Origin", short: "O", cat: "test", provider: "rmf", stream: "o" };
@@ -23,8 +24,10 @@ const data = vi.hoisted(() => {
     target,
     pool: [origin, target],
     state,
-    snapshots: [] as unknown[],
+    snapshots: [] as PolicySnapshot[],
     pending: false,
+    playback: "connecting" as "connecting" | "playing" | "paused" | "failed" | "buffering",
+    audio: { currentTime: 0, muted: false, volume: 1, playbackRate: 1, paused: false, ended: false, error: null },
     selectStation: vi.fn(),
     demand: vi.fn(),
     reset: vi.fn(),
@@ -40,7 +43,8 @@ vi.mock("../src/player.js", () => ({ selectStation: data.selectStation }));
 vi.mock("../src/state.js", () => ({
   state: data.state,
   notifyState: vi.fn(),
-  radioAudio: { currentTime: 0, muted: false, volume: 1, playbackRate: 1 },
+  radioAudio: data.audio,
+  getPlaybackState: () => data.playback,
   subscribeState: (fn: () => void) => {
     data.listeners.push(fn);
     return () => undefined;
@@ -49,7 +53,8 @@ vi.mock("../src/state.js", () => ({
 vi.mock("../src/stationSnapshots.js", () => ({
   sharedSnapshots: {
     setDemand: data.demand,
-    snapshots: () => data.snapshots,
+    snapshots: (stations: Station[]) =>
+      data.snapshots.filter((s) => stations.some((station) => station.id === s.station.id)),
     get refreshing() {
       return data.pending;
     },
@@ -67,11 +72,13 @@ beforeEach(() => {
   data.pool = [data.origin, data.target];
   data.state.smartListening.preferences = [];
   data.pending = false;
+  data.playback = "connecting";
+  data.audio.paused = false;
   data.state.station = data.origin;
   data.state.playing = true;
   data.state.smartListening.enabled = true;
 });
-function snapshot(station: Station, kind = "track") {
+function snapshot(station: Station, kind: PolicySnapshot["kind"] = "track"): PolicySnapshot & { track: TrackInfo } {
   return {
     station,
     track: { artist: "A", title: "Song", contentKind: kind },
@@ -82,6 +89,28 @@ function snapshot(station: Station, kind = "track") {
     error: false,
   };
 }
+
+it("reports detour playback from media state and only supported return explanations", async () => {
+  const smart = await import("../src/smartListening.js");
+  smart.resetSmartListening();
+  data.snapshots = [snapshot(data.origin, "advertisement"), snapshot(data.target)];
+  smart.evaluateSmartListening();
+  smart.switchSmartNow();
+  data.state.station = data.target;
+  expect(smart.getSmartListeningStatus()).toMatchObject({ playback: "connecting", returnWait: "unwanted" });
+  data.playback = "playing";
+  expect(smart.getSmartListeningStatus()).toMatchObject({ playback: "playing" });
+  data.audio.paused = true;
+  expect(smart.getSmartListeningStatus()).toMatchObject({ playback: "paused" });
+  data.playback = "failed";
+  expect(smart.getSmartListeningStatus()).toMatchObject({ playback: "failed" });
+  data.snapshots = [snapshot(data.target)];
+  expect(smart.getSmartListeningStatus()).toMatchObject({ returnWait: "metadata" });
+  data.snapshots = [snapshot(data.origin), snapshot(data.target)];
+  expect(smart.getSmartListeningStatus()).toMatchObject({ returnWait: "confirming" });
+  smart.cancelSmartReturn();
+  expect(smart.getSmartListeningStatus()).toBeNull();
+});
 it("waits for the complete shared pool, then forwards only a Smart operation and preserves lifecycle on internal switching", async () => {
   const smart = await import("../src/smartListening.js");
   smart.resetSmartListening();

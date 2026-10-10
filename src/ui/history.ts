@@ -255,6 +255,11 @@ function animateHistoryHeight(isPanelOpen: boolean, prevHeight: number): void {
 }
 
 export function updateHistoryUI(animateSlideIn = false): void {
+  els.historyEmpty.textContent = !state.station
+    ? "Playlista pojawi się po wybraniu stacji…"
+    : !state.station.apiBaseUrl
+      ? "Ta stacja nie udostępnia playlisty. Ulubione utwory są dostępne w sąsiedniej zakładce."
+      : "Brak aktualnej playlisty tej stacji.";
   if (clearTimer) {
     window.clearTimeout(clearTimer);
     clearTimer = undefined;

@@ -21,7 +21,10 @@ function getFocusableElements(modalEl: HTMLElement): HTMLElement[] {
     ),
   ).filter(
     (element) =>
-      element.checkVisibility({ visibilityProperty: true }) && element.getAttribute("aria-hidden") !== "true",
+      element.tabIndex !== -1 &&
+      !element.closest("[inert]") &&
+      element.checkVisibility({ visibilityProperty: true }) &&
+      element.getAttribute("aria-hidden") !== "true",
   );
 }
 

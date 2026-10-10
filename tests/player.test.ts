@@ -263,6 +263,16 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
+it("keeps the personal collection open when selecting a generic station", () => {
+  state.showHistory = true;
+  state.historyTab = "favorites";
+  state.favTracks = [{ key: "saved", stationId: "test", stationTag: "Test", artist: "A", title: "T", timestamp: 123 }];
+  player.selectStation(station());
+  expect(state.showHistory).toBe(true);
+  expect(state.historyTab).toBe("favorites");
+  expect(state.favTracks[0]?.key).toBe("saved");
+});
+
 describe("HLS recovery", () => {
   it.each([
     ["network", "networkError", "startLoad"],

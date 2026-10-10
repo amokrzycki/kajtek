@@ -9,6 +9,7 @@ import { createBrowserTransition } from "./browserTransition.js";
 import { openCatalogModal } from "./catalog/modal.js";
 import { els } from "./elements.js";
 import { renderNowPlaying } from "./nowPlaying.js";
+import { bindTabKeys } from "./tabs.js";
 
 export function initStationBrowser(onSelect: (station: Station) => void): () => void {
   const stationsTab = document.querySelector<HTMLButtonElement>("#browser-stations");
@@ -77,14 +78,8 @@ export function initStationBrowser(onSelect: (station: Station) => void): () => 
   const tabs = [stationsTab, nowTab];
   tabs.forEach((tab, index) => {
     tab.onclick = () => switchMode(index === 1);
-    tab.onkeydown = (event) => {
-      if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
-      event.preventDefault();
-      const next = event.key === "Home" ? stationsTab : event.key === "End" ? nowTab : tabs[1 - index];
-      next?.click();
-      next?.focus();
-    };
   });
+  bindTabKeys(tabs);
   document.getElementById("open-catalog-btn")?.addEventListener("click", openCatalogModal);
   document.getElementById("discovery-catalog")?.addEventListener("click", openCatalogModal);
   document.getElementById("discovery-back")?.addEventListener("click", () => {
