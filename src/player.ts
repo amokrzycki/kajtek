@@ -11,21 +11,23 @@ import { evaluateSmartListening, resetSmartListening } from "./smartListening.js
 import {
   getLiveTrackUpdatedAt,
   getMetadataState,
+  getPlaybackState,
   intervals,
   notifyState,
+  type PlaybackState,
   radioAudio,
   setLiveTrack,
   setMetadataState,
+  setPlaybackState,
   state,
 } from "./state.js";
 import type { ProtectiveRoute } from "./statistics.js";
 import { bindListeningStatistics, listeningStatistics } from "./statisticsPlayback.js";
 import type { Station, TrackInfo } from "./types.js";
 import {
-  els,
+  setPlaybackStatus as renderPlaybackStatus,
   resolveAlbumCoverUrl,
   setHistoryLoadingState,
-  setPlaybackStatus,
   updateAlbumArt,
   updateHistoryUI,
   updateNowPlayingTrack,
@@ -38,6 +40,11 @@ let failoverTimestamps: number[] = [];
 let hlsInstance: Hls | null = null;
 let playbackRequestId = 0;
 let pendingHlsRequestId: number | null = null;
+
+function setPlaybackStatus(message: string, status: PlaybackState = "connecting"): void {
+  setPlaybackState(status);
+  renderPlaybackStatus(message);
+}
 
 function getCurrentStreamUrl(station: Station): string {
   const streams = station._streams || [station.stream];
@@ -73,12 +80,13 @@ async function attachHlsStream(url: string, requestId: number): Promise<void> {
   });
 
   hls.on(Hls.Events.FRAG_CHANGED, (_event, data) => {
+    if (requestId !== playbackRequestId || !state.playing) return;
     // ESKA ships track/ad state in a private #EXT-X-ZPR tag on every segment. FRAG_CHANGED fires as playback enters the fragment, so refreshing on a block change lands the panel on the same, moment as the audio instead of waiting up to TRACK_POLL_MS. Other streams carry no such tag.
     if (readZprTag(data.frag, state.station?.id ?? "")) void refreshTrackInfo();
   });
 
   hls.on(Hls.Events.ERROR, (_event, data) => {
-    if (!data.fatal) return;
+    if (requestId !== playbackRequestId || !state.playing || !data.fatal) return;
     console.warn("[HLS] fatal error", data.type, data.details);
     if (recoveryAttempts >= MAX_HLS_RECOVERY_ATTEMPTS) {
       handleAudioFailover();
@@ -130,8 +138,9 @@ async function playStreamUrl(url: string | undefined): Promise<void> {
     );
     state.playing = false;
     stopTrackRotation();
+    setPlaybackState("failed");
     notifyState();
-    setPlaybackStatus("Nie udało się włączyć stacji. Ponów lub wybierz inną.", "failed");
+    renderPlaybackStatus("Nie udało się włączyć stacji. Ponów lub wybierz inną.");
   });
 }
 
@@ -153,13 +162,14 @@ function handleAudioFailover() {
     // max 3 stream switches in 30s limit to avoid infinite retry loop during outage.
     state.playing = false;
     stopTrackRotation();
+    setPlaybackState("failed");
     radioAudio.pause();
     updateNowPlayingTrack({
       artist: state.station.name,
       title: "Błąd odtwarzania stacji",
     });
     notifyState();
-    setPlaybackStatus("Nie udało się połączyć ze stacją. Ponów lub wybierz inną.", "failed");
+    renderPlaybackStatus("Nie udało się połączyć ze stacją. Ponów lub wybierz inną.");
     return;
   }
 
@@ -182,32 +192,39 @@ function handleAudioFailover() {
 }
 
 radioAudio.addEventListener("error", () => {
-  if (!hlsInstance) {
+  if (state.playing && !hlsInstance) {
     setPlaybackStatus("Zmiana strumienia…");
     handleAudioFailover();
   }
 });
 radioAudio.addEventListener("stalled", () => {
+  if (!state.playing) return;
   setPlaybackStatus("Buforowanie…", "buffering");
   if (!hlsInstance) handleAudioFailover();
 });
-radioAudio.addEventListener("waiting", () => setPlaybackStatus("Buforowanie…", "buffering"));
+radioAudio.addEventListener("waiting", () => {
+  if (state.playing) setPlaybackStatus("Buforowanie…", "buffering");
+});
 radioAudio.addEventListener("playing", () => {
+  if (radioAudio.paused || radioAudio.ended || radioAudio.error) return;
+  setPlaybackState("playing");
   if (!state.playing) {
     state.playing = true;
     startTrackRotation();
     notifyState();
   }
-  setPlaybackStatus("Na żywo", "playing");
+  renderPlaybackStatus("Na żywo");
 });
 radioAudio.addEventListener("pause", () => {
   if (!radioAudio.paused || (state.playing && pendingHlsRequestId === playbackRequestId)) return;
   stopTrackRotation();
+  const failed = getPlaybackState() === "failed";
+  if (!failed) setPlaybackState("paused");
   if (state.playing) {
     state.playing = false;
     notifyState();
   }
-  if (!els.npLiveDot.classList.contains("failed")) setPlaybackStatus("Pauza", "paused");
+  if (!failed) renderPlaybackStatus("Pauza");
 });
 
 function navigateStation(direction: 1 | -1) {
@@ -428,6 +445,7 @@ export function selectStation(s: Station, protection: ProtectiveRoute | null = n
   delete s._consecutiveFailures;
   delete s._apiFailed;
   state.playing = true;
+  setPlaybackState("connecting");
   state.history = [];
   setMetadataState(s.apiBaseUrl ? "loading" : "unsupported");
   setLiveTrack(null);
@@ -435,7 +453,7 @@ export function selectStation(s: Station, protection: ProtectiveRoute | null = n
   failoverTimestamps = [];
   startEskaSession(s.id);
   setHistoryLoadingState(true);
-  setPlaybackStatus("Łączenie…");
+  renderPlaybackStatus("Łączenie…");
 
   ensureStationMetadata(s);
 
@@ -443,6 +461,16 @@ export function selectStation(s: Station, protection: ProtectiveRoute | null = n
 
   startTrackRotation();
   notifyState();
+}
+
+export function pausePlayback(): void {
+  playbackRequestId++;
+  state.playing = false;
+  stopTrackRotation();
+  const paused = state.station !== null && getPlaybackState() !== "failed";
+  if (paused) setPlaybackState("paused");
+  radioAudio.pause();
+  if (paused) renderPlaybackStatus("Pauza");
 }
 
 export function togglePlay() {
@@ -456,15 +484,13 @@ export function togglePlay() {
     playStreamUrl(getCurrentStreamUrl(state.station));
     startTrackRotation();
   } else {
-    playbackRequestId++;
     listeningStatistics.suspend(
       radioAudio.currentTime,
       Date.now(),
       !radioAudio.muted && radioAudio.volume > 0,
       radioAudio.playbackRate,
     );
-    radioAudio.pause();
-    stopTrackRotation();
+    pausePlayback();
     if (getMetadataState() === "loading") void restoreStationMetadata();
   }
 

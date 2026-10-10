@@ -3,7 +3,7 @@ import { isVolAnimating } from "./controls.js";
 import { ICONS } from "./icons.js";
 import { getSmartListeningConfig, musicPreference } from "./listeningPreferences.js";
 import { classifyContent, NOW_PLAYING_STALE_MS } from "./nowPlaying.js";
-import { getLiveTrackUpdatedAt, getMetadataState, type PlaybackState, setPlaybackState, state } from "./state.js";
+import { getLiveTrackUpdatedAt, getMetadataState, getPlaybackState, state } from "./state.js";
 import type { Station, TrackInfo } from "./types.js";
 import { els, initVolumeControlUI, initVU, renderVolLadder } from "./ui/elements.js";
 import { applyHistoryTabVisibility, isTrackFavorited, renderFavoritesUI } from "./ui/favorites.js";
@@ -58,8 +58,8 @@ export function updateSleepUI(): void {
   });
 }
 
-export function setPlaybackStatus(message: string, dotState: PlaybackState = "connecting"): void {
-  setPlaybackState(dotState);
+export function setPlaybackStatus(message: string): void {
+  const dotState = getPlaybackState();
   triggerFade(els.npStatus, message);
   els.npStatus.classList.toggle("failed", dotState === "failed");
   els.npRetry.hidden = dotState !== "failed";
@@ -249,7 +249,7 @@ export function updateUI(
     updateAlbumArt(resolveAlbumCoverUrl(currentTrack, state.station), currentTrack);
   } else {
     document.title = "KAJTEK";
-    setPlaybackStatus("Gotowy", "idle");
+    setPlaybackStatus("Gotowy");
     els.npShortRow.classList.add("hidden");
     els.npShort.textContent = "—";
     els.npStation.textContent = "wybierz stację";

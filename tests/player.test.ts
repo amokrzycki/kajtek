@@ -69,6 +69,7 @@ const mocks = vi.hoisted(() => {
     hlsSupported: true,
     notifyState: vi.fn(),
     metadataState: "idle",
+    playbackState: "idle",
     readZprTag: vi.fn(),
     resetSmartListening: vi.fn(),
     rmfProvider,
@@ -187,6 +188,10 @@ vi.mock("../src/state.js", () => ({
   },
   state,
   getMetadataState: () => mocks.metadataState,
+  getPlaybackState: () => mocks.playbackState,
+  setPlaybackState: (value: string) => {
+    mocks.playbackState = value;
+  },
   setMetadataState: (value: string) => {
     mocks.metadataState = value;
   },
@@ -272,6 +277,7 @@ beforeEach(async () => {
   intervals.sleep = null;
   state.station = null;
   mocks.metadataState = "idle";
+  mocks.playbackState = "idle";
   state.playing = false;
   state.liveTrack = null;
   state.history = [];
@@ -510,7 +516,8 @@ describe("stream failover", () => {
     mocks.audio.dispatch("error");
 
     expect(target._currentStreamIndex).toBeUndefined();
-    expect(mocks.setPlaybackStatus).toHaveBeenCalledWith("Buforowanie…", "buffering");
+    expect(mocks.setPlaybackStatus).toHaveBeenCalledWith("Buforowanie…");
+    expect(mocks.playbackState).toBe("buffering");
   });
 
   it("keeps waiting passive but fails over on stalled audio without hls.js", () => {
@@ -544,10 +551,7 @@ describe("playback state and cleanup", () => {
     await Promise.resolve();
 
     expect(state.playing).toBe(true);
-    expect(mocks.setPlaybackStatus).not.toHaveBeenCalledWith(
-      "Nie udało się włączyć stacji. Ponów lub wybierz inną.",
-      "failed",
-    );
+    expect(mocks.setPlaybackStatus).not.toHaveBeenCalledWith("Nie udało się włączyć stacji. Ponów lub wybierz inną.");
   });
 
   it("stops and reports a non-AbortError play failure", async () => {
@@ -556,10 +560,7 @@ describe("playback state and cleanup", () => {
     await Promise.resolve();
 
     expect(state.playing).toBe(false);
-    expect(mocks.setPlaybackStatus).toHaveBeenCalledWith(
-      "Nie udało się włączyć stacji. Ponów lub wybierz inną.",
-      "failed",
-    );
+    expect(mocks.setPlaybackStatus).toHaveBeenCalledWith("Nie udało się włączyć stacji. Ponów lub wybierz inną.");
   });
 
   it("ignores a stale play failure after switching sources", async () => {
@@ -576,10 +577,7 @@ describe("playback state and cleanup", () => {
     await Promise.resolve();
 
     expect(state.playing).toBe(true);
-    expect(mocks.setPlaybackStatus).not.toHaveBeenCalledWith(
-      "Nie udało się włączyć stacji. Ponów lub wybierz inną.",
-      "failed",
-    );
+    expect(mocks.setPlaybackStatus).not.toHaveBeenCalledWith("Nie udało się włączyć stacji. Ponów lub wybierz inną.");
   });
 
   it("does not resume a pending HLS request after pausing", async () => {
@@ -619,6 +617,21 @@ describe("playback state and cleanup", () => {
     expect(mocks.hlsInstances).toHaveLength(0);
     expect(replacement._currentStreamIndex).toBe(1);
     expect(mocks.audio.src).toBe("https://example.test/backup.mp3");
+  });
+
+  it("ignores recovery and fragment callbacks from a replaced HLS generation", async () => {
+    player.selectStation(station({ stream: "https://example.test/first.m3u8" }));
+    await settlePlayback();
+    const previous = latestHls();
+    player.selectStation(station({ id: "replacement" }));
+    mocks.setPlaybackStatus.mockClear();
+    mocks.readZprTag.mockClear().mockReturnValue(true);
+    previous.emit("error", { fatal: true, type: "networkError" });
+    previous.emit("fragChanged", { frag: { id: 1 } });
+    expect(mocks.setPlaybackStatus).not.toHaveBeenCalled();
+    expect(previous.startLoad).not.toHaveBeenCalled();
+    expect(mocks.readZprTag).not.toHaveBeenCalled();
+    expect(state.station?.id).toBe("replacement");
   });
 
   it("does not carry HLS recovery attempts into a new source", async () => {
