@@ -26,6 +26,7 @@ const data = vi.hoisted(() => {
     state,
     snapshots: [] as PolicySnapshot[],
     pending: false,
+    pendingStationIds: new Set<string>(),
     playback: "connecting" as "connecting" | "playing" | "paused" | "failed" | "buffering",
     audio: { currentTime: 0, muted: false, volume: 1, playbackRate: 1, paused: false, ended: false, error: null },
     selectStation: vi.fn(),
@@ -58,6 +59,11 @@ vi.mock("../src/stationSnapshots.js", () => ({
     get refreshing() {
       return data.pending;
     },
+    refreshingFor: (stations: Station[]) => {
+      if (!data.pending) return false;
+      if (data.pendingStationIds.size === 0) return true;
+      return stations.some((station) => data.pendingStationIds.has(station.id));
+    },
     subscribe: () => () => undefined,
   },
 }));
@@ -72,6 +78,7 @@ beforeEach(() => {
   data.pool = [data.origin, data.target];
   data.state.smartListening.preferences = [];
   data.pending = false;
+  data.pendingStationIds.clear();
   data.playback = "connecting";
   data.audio.paused = false;
   data.state.station = data.origin;
@@ -198,4 +205,60 @@ it("disabling Smart during a detour ends the statistics route while retaining cu
   expect(data.endRoute).toHaveBeenCalledTimes(1);
   expect(data.selectStation).toHaveBeenCalledTimes(1);
   expect(smart.getSmartListeningStatus()).toBeNull();
+});
+
+it("proceeds with Smart decisions when only Discovery-only metadata is pending", async () => {
+  const smart = await import("../src/smartListening.js");
+  smart.resetSmartListening();
+  data.pending = true;
+  data.pendingStationIds = new Set(["discovery-only"]);
+  data.snapshots = [snapshot(data.origin, "advertisement"), snapshot(data.target)];
+  smart.evaluateSmartListening();
+  vi.advanceTimersByTime(6000);
+  smart.evaluateSmartListening();
+  expect(data.selectStation).toHaveBeenCalledWith(
+    data.target,
+    expect.objectContaining({ kind: "advertisement", automatic: true }),
+    true,
+  );
+});
+
+it("blocks Smart decisions while a routing-required station is pending", async () => {
+  const smart = await import("../src/smartListening.js");
+  smart.resetSmartListening();
+  data.pending = true;
+  data.pendingStationIds = new Set([data.target.id]);
+  data.snapshots = [snapshot(data.origin, "advertisement"), snapshot(data.target)];
+  smart.evaluateSmartListening();
+  vi.advanceTimersByTime(6000);
+  smart.evaluateSmartListening();
+  expect(data.selectStation).not.toHaveBeenCalled();
+});
+
+it("queues switch-now while a required station is pending and executes once it resolves", async () => {
+  const smart = await import("../src/smartListening.js");
+  smart.resetSmartListening();
+  data.snapshots = [snapshot(data.origin, "advertisement"), snapshot(data.target)];
+  smart.evaluateSmartListening();
+  data.pending = true;
+  data.pendingStationIds = new Set([data.target.id]);
+  smart.switchSmartNow();
+  expect(data.selectStation).not.toHaveBeenCalled();
+  data.pending = false;
+  data.pendingStationIds.clear();
+  smart.evaluateSmartListening();
+  expect(data.selectStation).toHaveBeenCalledWith(data.target, expect.objectContaining({ automatic: false }), true);
+});
+
+it("cancels a queued switch when the user changes station manually", async () => {
+  const smart = await import("../src/smartListening.js");
+  smart.resetSmartListening();
+  data.snapshots = [snapshot(data.origin, "advertisement"), snapshot(data.target)];
+  smart.evaluateSmartListening();
+  data.pending = true;
+  data.pendingStationIds = new Set([data.target.id]);
+  smart.switchSmartNow();
+  data.state.station = data.target;
+  smart.evaluateSmartListening();
+  expect(data.selectStation).not.toHaveBeenCalled();
 });

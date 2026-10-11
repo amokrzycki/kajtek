@@ -2,6 +2,7 @@ import { setStationFavorite } from "./catalog.js";
 import { STORAGE_KEYS } from "./consts.js";
 import { ICONS } from "./icons.js";
 import { updateSmartListeningConfig } from "./listeningPreferences.js";
+import { pausePlayback } from "./player.js";
 import { intervals, notifyState, radioAudio, state } from "./state.js";
 import { els, renderVolLadder, updateMuteAccessibility, updateSleepUI } from "./ui.js";
 import { isIOS, setStoredJSON } from "./utils.js";
@@ -128,8 +129,7 @@ export function setSleepTimer(minutes: number): void {
 
   intervals.sleep = setInterval(() => {
     if (state.sleepSec !== null && state.sleepSec <= 0) {
-      state.playing = false;
-      radioAudio.pause();
+      pausePlayback();
       cancelSleepTimer();
       notifyState();
     } else if (state.sleepSec !== null) {

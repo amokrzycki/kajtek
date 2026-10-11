@@ -12,14 +12,76 @@ import type {
 } from "./types.js";
 import { capitalizeFirstLetter, getStoredJSON, resolveProtocolRelativeUrl, setStoredJSON } from "./utils.js";
 
+function isStoredRmfStation(
+  value: unknown,
+): value is Pick<RawRmfStation, "id" | "idname" | "name"> & Partial<RawRmfStation> {
+  if (!value || typeof value !== "object") return false;
+  const station = value as Partial<RawRmfStation>;
+  return (
+    (typeof station.id === "string" || (typeof station.id === "number" && Number.isFinite(station.id))) &&
+    typeof station.idname === "string" &&
+    typeof station.name === "string" &&
+    ["slug", "short", "mountpoint_mp3", "mountpoint_aac", "img", "description", "search"].every(
+      (key) => !(key in station) || typeof (station as Record<string, unknown>)[key] === "string",
+    ) &&
+    (station.in_premium === undefined ||
+      (typeof station.in_premium === "number" && Number.isFinite(station.in_premium))) &&
+    (station.station_category === undefined ||
+      (Array.isArray(station.station_category) &&
+        station.station_category.every(
+          (category) =>
+            category &&
+            typeof category.name === "string" &&
+            (category.slug === undefined || typeof category.slug === "string"),
+        ))) &&
+    (station.similar_stations === undefined ||
+      (Array.isArray(station.similar_stations?.id_list) &&
+        station.similar_stations.id_list.every((id) => typeof id === "number" && Number.isFinite(id))))
+  );
+}
+
+function isStoredEskaStation(
+  value: unknown,
+): value is Pick<RawEskaStation, "uid" | "name" | "stream_url"> & Partial<RawEskaStation> {
+  if (!value || typeof value !== "object") return false;
+  const station = value as Partial<RawEskaStation>;
+  return (
+    typeof station.uid === "string" &&
+    typeof station.name === "string" &&
+    typeof station.stream_url === "string" &&
+    ["now_playing_url", "dedicated_name", "cover", "stream_ic"].every(
+      (key) => !(key in station) || typeof (station as Record<string, unknown>)[key] === "string",
+    ) &&
+    (station.sort === undefined || (typeof station.sort === "number" && Number.isFinite(station.sort)))
+  );
+}
+
 export function getStoredRmfCatalog(): RmfCatalogCache | null {
-  return getStoredJSON<RmfCatalogCache | null>(
+  const cache = getStoredJSON<{ fetchedAt: number; stations: unknown[] } | null>(
     STORAGE_KEYS.RMF_CATALOG_CACHE,
     null,
     (v) =>
-      typeof (v as Partial<RmfCatalogCache>)?.fetchedAt === "number" &&
+      Number.isFinite((v as Partial<RmfCatalogCache>)?.fetchedAt) &&
       Array.isArray((v as Partial<RmfCatalogCache>)?.stations),
   );
+  if (!cache) return null;
+  return {
+    ...cache,
+    stations: cache.stations.filter(isStoredRmfStation).map((station) => ({
+      slug: "",
+      short: "",
+      mountpoint_mp3: "",
+      mountpoint_aac: "",
+      img: "",
+      in_premium: 0,
+      similar_stations: { id_list: [] },
+      ...station,
+      station_category: (station.station_category ?? []).map((category) => ({
+        ...category,
+        slug: category.slug ?? "",
+      })),
+    })),
+  };
 }
 
 function eskaStationId(uid: string): string {
@@ -27,13 +89,25 @@ function eskaStationId(uid: string): string {
 }
 
 export function getStoredEskaCatalog(): EskaCatalogCache | null {
-  return getStoredJSON<EskaCatalogCache | null>(
+  const cache = getStoredJSON<{ fetchedAt: number; stations: unknown[] } | null>(
     STORAGE_KEYS.ESKA_CATALOG_CACHE,
     null,
     (v) =>
-      typeof (v as Partial<EskaCatalogCache>)?.fetchedAt === "number" &&
+      Number.isFinite((v as Partial<EskaCatalogCache>)?.fetchedAt) &&
       Array.isArray((v as Partial<EskaCatalogCache>)?.stations),
   );
+  if (!cache) return null;
+  return {
+    ...cache,
+    stations: cache.stations.filter(isStoredEskaStation).map((station) => ({
+      now_playing_url: "",
+      dedicated_name: "",
+      cover: "",
+      stream_ic: "",
+      sort: 0,
+      ...station,
+    })),
+  };
 }
 
 export async function fetchEskaCatalog(): Promise<EskaCatalogCache> {
@@ -122,7 +196,13 @@ export async function fetchRmfCatalog(): Promise<RmfCatalogCache> {
 }
 
 export function getCustomStations(): CustomStation[] {
-  return getStoredJSON<CustomStation[]>(STORAGE_KEYS.CUSTOM_STATIONS, [], Array.isArray);
+  return getStoredJSON<unknown[]>(STORAGE_KEYS.CUSTOM_STATIONS, [], Array.isArray).filter(
+    (value): value is CustomStation => {
+      if (!value || typeof value !== "object") return false;
+      const station = value as Partial<CustomStation>;
+      return typeof station.id === "string" && typeof station.name === "string" && typeof station.stream === "string";
+    },
+  );
 }
 
 export function addCustomStation(name: string, streamUrl: string): CustomStation {

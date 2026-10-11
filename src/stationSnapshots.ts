@@ -66,6 +66,10 @@ export class StationSnapshotMonitor {
     return this.cache.refreshing;
   }
 
+  refreshingFor(stations: Station[]): boolean {
+    return this.cache.refreshingFor(stations);
+  }
+
   async refresh(): Promise<void> {
     if (!this.stations.length) return;
     const generation = this.generation;

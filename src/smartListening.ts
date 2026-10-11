@@ -6,6 +6,7 @@ import { getPlaybackState, notifyState, radioAudio, state, subscribeState } from
 import { sharedSnapshots } from "./stationSnapshots.js";
 import { createStatisticsOperationId, type ProtectiveRoute } from "./statistics.js";
 import { listeningStatistics } from "./statisticsPlayback.js";
+import type { Station } from "./types.js";
 
 const route = new SmartRouteController();
 let evaluating = false;
@@ -38,12 +39,16 @@ export function getSmartListeningStatus() {
   return { ...status, playback, returnWait, checking: pendingManualSwitch };
 }
 
-function input(): SmartRouteInput {
+function requiredStations(): Station[] {
   const pool = getSmartStations();
   const stations = [...pool];
   for (const station of [state.station, route.status?.originStation]) {
     if (station && !stations.some((item) => item.id === station.id)) stations.push(station);
   }
+  return stations;
+}
+
+function input(pool: Station[], stations: Station[]): SmartRouteInput {
   const catalog = getStoredRmfCatalog()?.stations ?? [];
   const origin = route.status?.originStation ?? state.station;
   const raw = catalog.find(
@@ -93,21 +98,17 @@ export function evaluateSmartListening(): void {
   evaluating = true;
   try {
     const active = state.smartListening.enabled && state.playing && state.station;
-    const stations = active ? getSmartStations() : [];
-    if (active) {
-      for (const station of [state.station, route.status?.originStation]) {
-        if (station && !stations.some((item) => item.id === station.id)) stations.push(station);
-      }
-    }
+    const stations = active ? requiredStations() : [];
+    const pool = getSmartStations();
     sharedSnapshots.setDemand("smart", stations);
-    if (active && sharedSnapshots.refreshing) return;
+    if (active && sharedSnapshots.refreshingFor(stations)) return;
     const previous = JSON.stringify(route.status);
     if (!state.smartListening.enabled && route.status) {
       endStatisticsRoute();
       originAdWindow = undefined;
     }
     if (!active) pendingManualSwitch = false;
-    const next = input();
+    const next = input(pool, stations);
     execute(pendingManualSwitch ? route.switchNow(next) : route.step(next));
     pendingManualSwitch = false;
     if (previous !== JSON.stringify(route.status)) notifyState();
@@ -123,12 +124,14 @@ export function resetSmartListening(): void {
 }
 export function switchSmartNow(): void {
   if (route.status?.phase !== "warning") return;
-  if (sharedSnapshots.refreshing) {
+  const stations = requiredStations();
+  if (sharedSnapshots.refreshingFor(stations)) {
     pendingManualSwitch = true;
     notifyState();
     return;
   }
-  execute(route.switchNow(input()));
+  const pool = getSmartStations();
+  execute(route.switchNow(input(pool, stations)));
   notifyState();
 }
 export function staySmartAnyway(): void {

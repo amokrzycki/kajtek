@@ -19,6 +19,7 @@ interface FakeHlsInstance {
 
 const mocks = vi.hoisted(() => {
   class FakeAudio {
+    paused = true;
     currentTime = 0;
     playbackRate = 1;
     crossOrigin = "";
@@ -35,11 +36,14 @@ const mocks = vi.hoisted(() => {
       this.listeners.set(event, handlers);
     }
 
-    dispatch(event: string): void {
+    dispatch(event: string, queued = false): void {
+      if (event === "pause" && !queued) this.paused = true;
+      if (event === "playing") this.paused = false;
       for (const handler of this.listeners.get(event) ?? []) handler();
     }
 
     reset(): void {
+      this.paused = true;
       this.currentTime = 0;
       this.muted = false;
       this.volume = 1;
@@ -65,6 +69,7 @@ const mocks = vi.hoisted(() => {
     hlsSupported: true,
     notifyState: vi.fn(),
     metadataState: "idle",
+    playbackState: "idle",
     readZprTag: vi.fn(),
     resetSmartListening: vi.fn(),
     rmfProvider,
@@ -149,8 +154,11 @@ vi.mock("../src/smartListening.js", () => ({
   resetSmartListening: mocks.resetSmartListening,
 }));
 
-vi.mock("../src/catalog.js", () => ({ getOrderedStations: vi.fn(() => []) }));
-vi.mock("../src/controls.js", () => ({ applyAudioVolume: vi.fn() }));
+vi.mock("../src/catalog.js", () => ({ getOrderedStations: vi.fn(() => []), setStationFavorite: vi.fn() }));
+vi.mock("../src/controls.js", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("../src/controls.js")>()),
+  applyAudioVolume: vi.fn(),
+}));
 vi.mock("../src/providers/eska.js", () => ({
   readZprTag: mocks.readZprTag,
   startEskaSession: mocks.startEskaSession,
@@ -180,11 +188,18 @@ vi.mock("../src/state.js", () => ({
   },
   state,
   getMetadataState: () => mocks.metadataState,
+  getPlaybackState: () => mocks.playbackState,
+  setPlaybackState: (value: string) => {
+    mocks.playbackState = value;
+  },
   setMetadataState: (value: string) => {
     mocks.metadataState = value;
   },
 }));
 vi.mock("../src/ui.js", () => ({
+  updateSleepUI: vi.fn(),
+  renderVolLadder: vi.fn(),
+  updateMuteAccessibility: vi.fn(),
   els: { npLiveDot: { classList: { contains: vi.fn(() => false) } } },
   resolveAlbumCoverUrl: vi.fn(() => ""),
   setHistoryLoadingState: mocks.setHistoryLoadingState,
@@ -257,8 +272,12 @@ beforeEach(async () => {
   mocks.hlsSupported = true;
   mocks.readZprTag.mockReturnValue(false);
   vi.mocked(mocks.eskaProvider.fetch).mockReset().mockResolvedValue(null);
+  state.sleepMin = null;
+  state.sleepSec = null;
+  intervals.sleep = null;
   state.station = null;
   mocks.metadataState = "idle";
+  mocks.playbackState = "idle";
   state.playing = false;
   state.liveTrack = null;
   state.history = [];
@@ -297,15 +316,17 @@ describe("HLS recovery", () => {
     player.selectStation(target);
     await settlePlayback();
     const hls = latestHls();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     for (let attempt = 0; attempt < 3; attempt++) {
       hls.emit("error", { fatal: true, type, details: "fixture" });
     }
     expect(hls[recoveryMethod]).toHaveBeenCalledTimes(3);
-    expect(target._currentStreamIndex).toBeUndefined();
+    expect(runtime.currentStreamIndex).toBeUndefined();
 
     hls.emit("error", { fatal: true, type, details: "fixture" });
-    expect(target._currentStreamIndex).toBe(1);
+    expect(runtime.currentStreamIndex).toBe(1);
     expect(mocks.audio.src).toBe("https://example.test/backup.mp3");
     expect(hls.destroy).toHaveBeenCalledOnce();
   });
@@ -318,6 +339,8 @@ describe("HLS recovery", () => {
     player.selectStation(target);
     await settlePlayback();
     const hls = latestHls();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     for (let attempt = 0; attempt < 3; attempt++) {
       hls.emit("error", { fatal: true, type: "networkError" });
@@ -326,7 +349,7 @@ describe("HLS recovery", () => {
     hls.emit("error", { fatal: true, type: "networkError" });
 
     expect(hls.startLoad).toHaveBeenCalledTimes(4);
-    expect(target._currentStreamIndex).toBeUndefined();
+    expect(runtime.currentStreamIndex).toBeUndefined();
   });
 
   it("ignores non-fatal HLS errors", async () => {
@@ -334,12 +357,14 @@ describe("HLS recovery", () => {
     player.selectStation(target);
     await settlePlayback();
     const hls = latestHls();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     hls.emit("error", { fatal: false, type: "networkError" });
 
     expect(hls.startLoad).not.toHaveBeenCalled();
     expect(hls.recoverMediaError).not.toHaveBeenCalled();
-    expect(target._currentStreamIndex).toBeUndefined();
+    expect(runtime.currentStreamIndex).toBeUndefined();
   });
 
   it("fails over immediately for an unknown fatal HLS error", async () => {
@@ -350,12 +375,14 @@ describe("HLS recovery", () => {
     player.selectStation(target);
     await settlePlayback();
     const hls = latestHls();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     hls.emit("error", { fatal: true, type: "otherError" });
 
     expect(hls.startLoad).not.toHaveBeenCalled();
     expect(hls.recoverMediaError).not.toHaveBeenCalled();
-    expect(target._currentStreamIndex).toBe(1);
+    expect(runtime.currentStreamIndex).toBe(1);
   });
 
   it("refreshes once for a changed ZPR block and ignores its stale result", async () => {
@@ -401,19 +428,21 @@ describe("HLS recovery", () => {
 });
 
 describe("stream failover", () => {
-  it("rotates streams modulo their length and stops on the fourth switch in 30 seconds", () => {
+  it("rotates streams modulo their length and stops on the fourth switch in 30 seconds", async () => {
     const target = station({
       _streams: ["https://example.test/one.mp3", "https://example.test/two.mp3", "https://example.test/three.mp3"],
     });
     player.selectStation(target);
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     mocks.audio.dispatch("error");
-    expect(target._currentStreamIndex).toBe(1);
+    expect(runtime.currentStreamIndex).toBe(1);
     expect(mocks.audio.src).toContain("two.mp3");
     mocks.audio.dispatch("error");
-    expect(target._currentStreamIndex).toBe(2);
+    expect(runtime.currentStreamIndex).toBe(2);
     mocks.audio.dispatch("error");
-    expect(target._currentStreamIndex).toBe(0);
+    expect(runtime.currentStreamIndex).toBe(0);
     expect(mocks.audio.src).toContain("one.mp3");
 
     mocks.audio.dispatch("error");
@@ -438,7 +467,7 @@ describe("stream failover", () => {
     expect(mocks.audio.play).toHaveBeenCalledTimes(4);
   });
 
-  it("expires a switch exactly on the rolling-window boundary", () => {
+  it("expires a switch exactly on the rolling-window boundary", async () => {
     const target = station({ _streams: ["https://example.test/one.mp3", "https://example.test/two.mp3"] });
     player.selectStation(target);
 
@@ -455,7 +484,7 @@ describe("stream failover", () => {
     expect(state.playing).toBe(false);
   });
 
-  it("resets the audio failover limit when a station is selected", () => {
+  it("resets the audio failover limit when a station is selected", async () => {
     const first = station({ _streams: ["https://example.test/a.mp3", "https://example.test/b.mp3"] });
     player.selectStation(first);
     for (let attempt = 0; attempt < 3; attempt++) mocks.audio.dispatch("error");
@@ -465,14 +494,16 @@ describe("stream failover", () => {
       _streams: ["https://example.test/c.mp3", "https://example.test/d.mp3"],
     });
     player.selectStation(second);
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(second);
     mocks.audio.dispatch("error");
 
     expect(state.playing).toBe(true);
-    expect(second._currentStreamIndex).toBe(1);
+    expect(runtime.currentStreamIndex).toBe(1);
     expect(mocks.audio.src).toContain("d.mp3");
   });
 
-  it("characterizes playing as not resetting the rolling failover limit", () => {
+  it("characterizes playing as not resetting the rolling failover limit", async () => {
     const target = station({ _streams: ["https://example.test/one.mp3", "https://example.test/two.mp3"] });
     player.selectStation(target);
     for (let attempt = 0; attempt < 3; attempt++) mocks.audio.dispatch("error");
@@ -491,23 +522,28 @@ describe("stream failover", () => {
     });
     player.selectStation(target);
     await settlePlayback();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     mocks.audio.dispatch("waiting");
     mocks.audio.dispatch("stalled");
     mocks.audio.dispatch("error");
 
-    expect(target._currentStreamIndex).toBeUndefined();
-    expect(mocks.setPlaybackStatus).toHaveBeenCalledWith("Buforowanie…", "buffering");
+    expect(runtime.currentStreamIndex).toBeUndefined();
+    expect(mocks.setPlaybackStatus).toHaveBeenCalledWith("Buforowanie…");
+    expect(mocks.playbackState).toBe("buffering");
   });
 
-  it("keeps waiting passive but fails over on stalled audio without hls.js", () => {
+  it("keeps waiting passive but fails over on stalled audio without hls.js", async () => {
     const target = station({ _streams: ["https://example.test/one.mp3", "https://example.test/two.mp3"] });
     player.selectStation(target);
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     mocks.audio.dispatch("waiting");
-    expect(target._currentStreamIndex).toBeUndefined();
+    expect(runtime.currentStreamIndex).toBeUndefined();
     mocks.audio.dispatch("stalled");
-    expect(target._currentStreamIndex).toBe(1);
+    expect(runtime.currentStreamIndex).toBe(1);
   });
 });
 
@@ -531,10 +567,7 @@ describe("playback state and cleanup", () => {
     await Promise.resolve();
 
     expect(state.playing).toBe(true);
-    expect(mocks.setPlaybackStatus).not.toHaveBeenCalledWith(
-      "Nie udało się włączyć stacji. Ponów lub wybierz inną.",
-      "failed",
-    );
+    expect(mocks.setPlaybackStatus).not.toHaveBeenCalledWith("Nie udało się włączyć stacji. Ponów lub wybierz inną.");
   });
 
   it("stops and reports a non-AbortError play failure", async () => {
@@ -543,10 +576,7 @@ describe("playback state and cleanup", () => {
     await Promise.resolve();
 
     expect(state.playing).toBe(false);
-    expect(mocks.setPlaybackStatus).toHaveBeenCalledWith(
-      "Nie udało się włączyć stacji. Ponów lub wybierz inną.",
-      "failed",
-    );
+    expect(mocks.setPlaybackStatus).toHaveBeenCalledWith("Nie udało się włączyć stacji. Ponów lub wybierz inną.");
   });
 
   it("ignores a stale play failure after switching sources", async () => {
@@ -563,10 +593,7 @@ describe("playback state and cleanup", () => {
     await Promise.resolve();
 
     expect(state.playing).toBe(true);
-    expect(mocks.setPlaybackStatus).not.toHaveBeenCalledWith(
-      "Nie udało się włączyć stacji. Ponów lub wybierz inną.",
-      "failed",
-    );
+    expect(mocks.setPlaybackStatus).not.toHaveBeenCalledWith("Nie udało się włączyć stacji. Ponów lub wybierz inną.");
   });
 
   it("does not resume a pending HLS request after pausing", async () => {
@@ -600,12 +627,29 @@ describe("playback state and cleanup", () => {
     });
     player.selectStation(replacement);
     await settlePlayback();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(replacement);
 
     mocks.audio.dispatch("error");
 
     expect(mocks.hlsInstances).toHaveLength(0);
-    expect(replacement._currentStreamIndex).toBe(1);
+    expect(runtime.currentStreamIndex).toBe(1);
     expect(mocks.audio.src).toBe("https://example.test/backup.mp3");
+  });
+
+  it("ignores recovery and fragment callbacks from a replaced HLS generation", async () => {
+    player.selectStation(station({ stream: "https://example.test/first.m3u8" }));
+    await settlePlayback();
+    const previous = latestHls();
+    player.selectStation(station({ id: "replacement" }));
+    mocks.setPlaybackStatus.mockClear();
+    mocks.readZprTag.mockClear().mockReturnValue(true);
+    previous.emit("error", { fatal: true, type: "networkError" });
+    previous.emit("fragChanged", { frag: { id: 1 } });
+    expect(mocks.setPlaybackStatus).not.toHaveBeenCalled();
+    expect(previous.startLoad).not.toHaveBeenCalled();
+    expect(mocks.readZprTag).not.toHaveBeenCalled();
+    expect(state.station?.id).toBe("replacement");
   });
 
   it("does not carry HLS recovery attempts into a new source", async () => {
@@ -623,6 +667,188 @@ describe("playback state and cleanup", () => {
 
     expect(secondHls.startLoad).toHaveBeenCalledOnce();
     expect(state.playing).toBe(true);
+  });
+});
+
+describe("terminal polling cleanup", () => {
+  function selectPollingStation(overrides: Partial<Station> = {}): void {
+    player.selectStation(station({ provider: "eska", apiBaseUrl: "/playlist", ...overrides }));
+  }
+
+  async function interrupt(mode: string): Promise<void> {
+    if (mode === "sleep") {
+      const { setSleepTimer } = await import("../src/controls.js");
+      mocks.audio.pause.mockImplementation(() => mocks.audio.dispatch("pause"));
+      setSleepTimer(0);
+      await vi.advanceTimersByTimeAsync(1000);
+    } else if (mode === "rejection") {
+      mocks.audio.play.mockRejectedValueOnce(new Error("decoder failed"));
+      selectPollingStation();
+      await settleMetadata();
+    } else if (mode === "failover") {
+      for (let attempt = 0; attempt < 4; attempt++) mocks.audio.dispatch("error");
+    } else player.togglePlay();
+  }
+
+  it.each(["sleep", "rejection", "failover", "user pause"])(
+    "releases polling after %s, then resumes once and replaces polling on selection",
+    async (mode) => {
+      const setIntervalSpy = vi.spyOn(globalThis, "setInterval");
+      const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
+      selectPollingStation();
+      await settleMetadata();
+      const initial = intervals.track;
+      expect(initial).not.toBeNull();
+      await interrupt(mode);
+      expect(state.playing).toBe(false);
+      expect(intervals.track).toBeNull();
+      expect(clearIntervalSpy).toHaveBeenCalledWith(initial);
+      const pollCount = () => setIntervalSpy.mock.calls.filter(([, delay]) => delay === 5000).length;
+      const beforeResume = pollCount();
+      mocks.audio.dispatch("pause");
+      mocks.audio.dispatch("pause");
+      expect(intervals.track).toBeNull();
+      player.togglePlay();
+      await settleMetadata();
+      const resumed = intervals.track;
+      mocks.audio.dispatch("playing");
+      mocks.audio.dispatch("playing");
+      expect(state.playing).toBe(true);
+      expect(resumed).not.toBeNull();
+      expect(intervals.track).toBe(resumed);
+      expect(pollCount()).toBe(beforeResume + 1);
+      expect(mocks.resetSmartListening).toHaveBeenCalledTimes(mode === "rejection" ? 2 : 1);
+      selectPollingStation({ id: "after-interruption" });
+      await settleMetadata();
+      expect(intervals.track).not.toBeNull();
+      expect(intervals.track).not.toBe(resumed);
+      expect(clearIntervalSpy).toHaveBeenCalledWith(resumed);
+      expect(pollCount()).toBe(beforeResume + 2);
+    },
+  );
+
+  it("cleans up sleep expiration even if audio was already paused and emits no pause event", async () => {
+    selectPollingStation();
+    const { setSleepTimer } = await import("../src/controls.js");
+    setSleepTimer(0);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(intervals.track).toBeNull();
+  });
+
+  it("does not attach or play a pending HLS generation after sleep expires", async () => {
+    const { setSleepTimer } = await import("../src/controls.js");
+    selectPollingStation({ stream: "https://example.test/pending.m3u8" });
+    setSleepTimer(0);
+    vi.advanceTimersByTime(1000);
+    await settlePlayback();
+    expect(state.playing).toBe(false);
+    expect(intervals.track).toBeNull();
+    expect(mocks.audio.play).not.toHaveBeenCalled();
+    expect(mocks.hlsInstances).toHaveLength(0);
+  });
+
+  it("keeps one polling interval across rapid interruption/reselection and stale play rejection", async () => {
+    const setIntervalSpy = vi.spyOn(globalThis, "setInterval");
+    const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
+    let rejectOld: (reason: Error) => void = () => undefined;
+    mocks.audio.play.mockImplementationOnce(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectOld = reject;
+        }),
+    );
+    selectPollingStation();
+    player.togglePlay();
+    selectPollingStation({ id: "replacement" });
+    const current = intervals.track;
+    rejectOld(new Error("late rejection"));
+    await settleMetadata();
+    mocks.audio.dispatch("playing");
+    expect(state.playing).toBe(true);
+    expect(intervals.track).toBe(current);
+    const pollingHandles = setIntervalSpy.mock.results
+      .filter((_, index) => setIntervalSpy.mock.calls[index]?.[1] === 5000)
+      .map((result) => result.value);
+    expect(
+      pollingHandles.filter((handle) => !clearIntervalSpy.mock.calls.some(([cleared]) => cleared === handle)),
+    ).toEqual([current]);
+  });
+
+  it.each(["user pause", "sleep", "failover"])(
+    "ignores a delayed %s event while replacement HLS attachment is pending",
+    async (interruption) => {
+      const { setSleepTimer } = await import("../src/controls.js");
+      const setIntervalSpy = vi.spyOn(globalThis, "setInterval");
+      const clearIntervalSpy = vi.spyOn(globalThis, "clearInterval");
+      selectPollingStation();
+      await settlePlayback();
+      mocks.audio.dispatch("playing");
+      if (interruption === "sleep") {
+        setSleepTimer(0);
+        vi.advanceTimersByTime(1000);
+      } else if (interruption === "failover") {
+        for (let attempt = 0; attempt < 4; attempt++) mocks.audio.dispatch("error");
+      } else player.togglePlay();
+      mocks.audio.paused = true;
+      selectPollingStation({ id: "replacement", stream: "https://example.test/replacement.m3u8" });
+      const replacementPolling = intervals.track;
+      const previousPlayCalls = mocks.audio.play.mock.calls.length;
+      mocks.audio.dispatch("pause", true);
+      mocks.audio.dispatch("pause", true);
+      expect(state.playing).toBe(true);
+      expect(intervals.track).toBe(replacementPolling);
+      await settlePlayback();
+      expect(mocks.hlsInstances).toHaveLength(1);
+      expect(mocks.audio.play.mock.calls.length).toBe(previousPlayCalls + 1);
+      mocks.audio.dispatch("playing");
+      expect(intervals.track).toBe(replacementPolling);
+      const pollingHandles = setIntervalSpy.mock.results
+        .filter((_, index) => setIntervalSpy.mock.calls[index]?.[1] === 5000)
+        .map((result) => result.value);
+      expect(
+        pollingHandles.filter((handle) => !clearIntervalSpy.mock.calls.some(([cleared]) => cleared === handle)),
+      ).toEqual([replacementPolling]);
+    },
+  );
+
+  it("still cancels a pending replacement HLS request on an explicit user pause", async () => {
+    selectPollingStation({ stream: "https://example.test/replacement.m3u8" });
+    mocks.audio.dispatch("pause", true);
+    expect(state.playing).toBe(true);
+    player.togglePlay();
+    mocks.audio.dispatch("pause", true);
+    await settlePlayback();
+    expect(state.playing).toBe(false);
+    expect(intervals.track).toBeNull();
+    expect(mocks.hlsInstances).toHaveLength(0);
+    expect(mocks.audio.play).not.toHaveBeenCalled();
+  });
+
+  it("keeps only the latest native HLS source through reselection and delayed pause", async () => {
+    mocks.hlsSupported = false;
+    selectPollingStation({ id: "first-hls", stream: "https://example.test/first.m3u8" });
+    selectPollingStation({ id: "second-hls", stream: "https://example.test/second.m3u8" });
+    const current = intervals.track;
+    mocks.audio.dispatch("pause", true);
+    await settlePlayback();
+    expect(state.station?.id).toBe("second-hls");
+    expect(state.playing).toBe(true);
+    expect(mocks.hlsInstances).toHaveLength(0);
+    expect(mocks.audio.src).toBe("https://example.test/second.m3u8");
+    expect(mocks.audio.play).toHaveBeenCalledOnce();
+    expect(intervals.track).toBe(current);
+  });
+
+  it("ignores a queued source-replacement pause event once the new audio is playing", async () => {
+    selectPollingStation();
+    selectPollingStation({ id: "replacement" });
+    await settleMetadata();
+    mocks.audio.dispatch("playing");
+    const current = intervals.track;
+    // Deliver the queued event with the current media state, rather than a new pause.
+    mocks.audio.dispatch("pause", true);
+    expect(state.playing).toBe(true);
+    expect(intervals.track).toBe(current);
   });
 });
 
@@ -660,8 +886,10 @@ describe("RMF station metadata", () => {
 
     player.selectStation(target);
     await settleMetadata();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
-    expect(target._streams).toEqual(expected);
+    expect(runtime.streams).toEqual(expected);
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/rmf/stations/101/streams",
       expect.objectContaining({ signal: expect.any(AbortSignal) }),
@@ -677,8 +905,10 @@ describe("RMF station metadata", () => {
 
     player.selectStation(target);
     await settleMetadata();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
-    expect(target._streams).toEqual([target.stream]);
+    expect(runtime.streams).toEqual([target.stream]);
   });
 });
 
@@ -697,10 +927,12 @@ describe("metadata failure boundaries", () => {
     player.togglePlay();
     finish({ current: { artist: "Cancelled", title: "Old" }, all: [] });
     await settleMetadata();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
     expect(state.playing).toBe(false);
     expect(state.liveTrack?.title).toBe("Visible");
     expect(mocks.metadataState).toBe("ready");
-    expect(target._consecutiveFailures).toBeUndefined();
+    expect(runtime.consecutiveFailures).toBeUndefined();
     expect(mocks.evaluateSmartListening).not.toHaveBeenCalled();
     expect(mocks.eskaProvider.fetch.mock.calls[1]?.[1]?.passive).toBe(true);
   });
@@ -740,7 +972,10 @@ describe("metadata failure boundaries", () => {
   it.each(["rmf", "eska"] as const)(
     "loads restored %s metadata without playback or health changes",
     async (provider) => {
-      const target = station({ provider, apiBaseUrl: "/playlist", _consecutiveFailures: 99, _apiFailed: true });
+      const target = station({ provider, apiBaseUrl: "/playlist" });
+      const { getStationRuntime } = await import("../src/player.js");
+      const runtime = getStationRuntime(target);
+      runtime.consecutiveFailures = 99;
       const result = {
         current: { artist: "Restored", title: "Song", coverUrl: "/cover.png" },
         all: [{ artist: "Next", title: "Song" }],
@@ -755,8 +990,7 @@ describe("metadata failure boundaries", () => {
       expect(state.liveTrack).toEqual(result.current);
       expect(state.history).toEqual(result.all);
       expect(mocks.metadataState).toBe("ready");
-      expect(target._consecutiveFailures).toBe(99);
-      expect(target._apiFailed).toBe(true);
+      expect(runtime.consecutiveFailures).toBe(99);
       expect(mocks.audio.play).not.toHaveBeenCalled();
       expect(mocks.audio.src).toBe("");
       expect(state.playing).toBe(false);
@@ -810,9 +1044,11 @@ describe("metadata failure boundaries", () => {
     state.liveTrack = oldTrack;
 
     await expect(player.fetchPlaylist(target)).resolves.toBeNull();
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     expect(timeoutSpy).toHaveBeenCalledWith(3500);
-    expect(target._consecutiveFailures).toBe(1);
+    expect(runtime.consecutiveFailures).toBe(1);
     expect(state.liveTrack).toBe(oldTrack);
     expect(mocks.updateNowPlayingTrack).not.toHaveBeenCalled();
   });
@@ -821,9 +1057,11 @@ describe("metadata failure boundaries", () => {
     const target = station({ apiBaseUrl: "/playlist" });
 
     for (let attempt = 0; attempt < 7; attempt++) await player.fetchPlaylist(target);
+    const { getStationRuntime } = await import("../src/player.js");
+    const runtime = getStationRuntime(target);
 
     expect(fetchMock).toHaveBeenCalledTimes(6);
-    expect(target._consecutiveFailures).toBe(6);
+    expect(runtime.consecutiveFailures).toBe(6);
   });
 });
 
