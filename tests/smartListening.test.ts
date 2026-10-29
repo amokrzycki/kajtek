@@ -137,6 +137,21 @@ it("waits for the complete shared pool, then forwards only a Smart operation and
     true,
   );
 });
+it("polls only the playing station until a rule fires, then the pool, then just the origin during a detour", async () => {
+  const smart = await import("../src/smartListening.js");
+  smart.resetSmartListening();
+  data.snapshots = [snapshot(data.origin), snapshot(data.target)];
+  smart.evaluateSmartListening();
+  expect(data.demand).toHaveBeenLastCalledWith("smart", []);
+  data.snapshots = [snapshot(data.origin, "advertisement"), snapshot(data.target)];
+  smart.evaluateSmartListening();
+  expect(data.demand).toHaveBeenLastCalledWith("smart", [data.origin, data.target]);
+  smart.switchSmartNow();
+  data.state.station = data.target;
+  data.snapshots = [snapshot(data.origin, "advertisement"), snapshot(data.target)];
+  smart.evaluateSmartListening();
+  expect(data.demand).toHaveBeenLastCalledWith("smart", [data.origin]);
+});
 it("disabled Smart Listening withdraws its monitor demand and cancels a warning", async () => {
   const smart = await import("../src/smartListening.js");
   smart.resetSmartListening();
