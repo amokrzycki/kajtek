@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.14.1
+
+Smart Listening wysyła mniej zapytań w tle. Sprawdza stacje zastępcze dopiero wtedy, gdy na słuchanej stacji pojawi się treść do pominięcia. Po przełączeniu nadal sprawdza poprzednią stację, żeby wiedzieć, kiedy wrócić.
+
 ## 0.14.0
 
 Smart Listening przełącza stację na czas reklam, wiadomości lub niechcianej muzyki i wraca, gdy znów jest czego słuchać.

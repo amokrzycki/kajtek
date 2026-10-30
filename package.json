@@ -1,5 +1,5 @@
 {
-  "version": "0.14.0",
+  "version": "0.14.1",
   "author": "Adrian Mokrzycki",
   "license": "MIT",
   "scripts": {
@@ -18,7 +18,7 @@
     "@biomejs/biome": "2.5.4",
     "esbuild": "0.28.1",
     "typescript": "7.0.2",
-    "vitest": "5.0.1"
+    "vitest": "5.0.5"
   },
   "allowScripts": {
     "esbuild@0.28.1": true

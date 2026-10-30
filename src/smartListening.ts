@@ -48,6 +48,15 @@ function requiredStations(): Station[] {
   return stations;
 }
 
+// The playing station is polled by the player; the rest are only worth fetching once a rule fires on it.
+function demandedStations(): Station[] {
+  const status = route.status;
+  const current = state.station ? sharedSnapshots.snapshots([state.station])[0] : undefined;
+  const triggered = evaluateSnapshot(current, state.smartListening, Date.now()).trigger !== null;
+  if (pendingManualSwitch || triggered || (status && status.phase !== "detour")) return requiredStations();
+  return status ? [status.originStation] : [];
+}
+
 function input(pool: Station[], stations: Station[]): SmartRouteInput {
   const catalog = getStoredRmfCatalog()?.stations ?? [];
   const origin = route.status?.originStation ?? state.station;
@@ -100,8 +109,9 @@ export function evaluateSmartListening(): void {
     const active = state.smartListening.enabled && state.playing && state.station;
     const stations = active ? requiredStations() : [];
     const pool = getSmartStations();
-    sharedSnapshots.setDemand("smart", stations);
-    if (active && sharedSnapshots.refreshingFor(stations)) return;
+    const demand = active ? demandedStations() : [];
+    sharedSnapshots.setDemand("smart", demand);
+    if (active && sharedSnapshots.refreshingFor(demand)) return;
     const previous = JSON.stringify(route.status);
     if (!state.smartListening.enabled && route.status) {
       endStatisticsRoute();
